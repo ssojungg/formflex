@@ -124,7 +124,8 @@ services:
       args:
         ELASTIC_VERSION: 8.5.2
     entrypoint: ["/bin/sh", "-c"]
-    command: ["filebeat modules enable nginx && filebeat -e -strict.perms=false"]
+    command:
+      ["filebeat modules enable nginx && filebeat -e -strict.perms=false"]
     volumes:
       - ./elk/filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml
       - ./elk/filebeat/config/nginx.yml:/usr/share/filebeat/modules.d/nginx.yml:ro
