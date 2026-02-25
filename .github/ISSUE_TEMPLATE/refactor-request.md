@@ -10,7 +10,7 @@ assignees: ''
 ---
 ♻️ Refactor
 ---
-## ♻️ Refactor Target
+## 🧑‍💻 code
 - 리팩토링 대상 코드나 파일을 작성해주세요.
 ex) src/auth/auth.service.ts
 
