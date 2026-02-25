@@ -1,13 +1,13 @@
 const Excel = require('exceljs');
-const fs = require('fs');
+//const fs = require('fs');
 const { Question, Answer, Choice } = require('../models');
 
-const dir = '/path/to/excel'; //엑셀 파일을 저장할 곳
+//const dir = '/path/to/excel'; //엑셀 파일을 저장할 곳
 
 // 'excel' 폴더가 없으면 생성
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
-}
+// if (!fs.existsSync(dir)) {
+//   fs.mkdirSync(dir, { recursive: true });
+// }
 
 const createAndDownloadExcel = async (req, res) => {
   const surveyId = req.params.surveyId;
