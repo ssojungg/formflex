@@ -46,46 +46,5 @@ services:
       - build_folder:/frontend/dist
     tty: true
 
-  nginx:
-    container_name: nginx
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    restart: always
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-      - frontend
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
-      - build_folder:/var/www/frontend
-
-  rabbitmq:
-    image: "rabbitmq:3-management"
-    container_name: rabbitmq
-    ports:
-      - "5672:5672" # RabbitMQ AMQP 포트
-      - "15672:15672" # RabbitMQ 관리자 포트
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-    restart: always
-
-  redis:
-    image: "redis"
-    container_name: redis
-    build:
-      context: ./redis
-      dockerfile: Dockerfile
-    ports:
-      - "6379:6379"
-  redis-insight:
-    image: "redislabs/redisinsight:latest"
-    container_name: "my-redis-insight"
-    ports:
-      - "8001:8001"
-    depends_on:
-      - redis
 volumes:
   build_folder: null
