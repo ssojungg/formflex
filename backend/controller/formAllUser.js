@@ -1,7 +1,12 @@
+const { performance } = require('perf_hooks');
+const { fn, col, literal, where } = require('sequelize');
 const { Survey, Answer, Question } = require('../models');
 const { surveyTitleSearch } = require('./surveyTitleSearch');
+const { group } = require('console');
 
 const getUserSurveys = async (req, res) => {
+  const start = performance.now();
+  let queryCount = 0;
   try {
     const userId = req.params.id;
     const pageLimit = req.query.limit;
@@ -11,45 +16,49 @@ const getUserSurveys = async (req, res) => {
     const title = req.query.title;
 
     if (!title) {
-      const preResult = [];
       const surveys = await Survey.findAll({
         where: { userId: userId },
         attributes: [
           'id',
           'title',
-          'mainImageUrl', // Make sure to include 'mainImageUrl' here
+          'mainImageUrl',
           'createdAt',
           'deadline',
           'open',
         ],
       });
-
-      // 각 설문조사에 대한 attended_count 계산
-      for (const survey of surveys) {
-        const attendedCount = await Answer.count({
-          distinct: true,
-          col: 'userId',
-          include: [
-            {
-              model: Question,
-              attributes: [],
-              where: { surveyId: survey.id },
-            },
-          ],
-        });
-
-        preResult.push({
-          surveyId: survey.id,
-          title: survey.title,
-          open: survey.open,
-          mainImageUrl: survey.mainImageUrl || null,
-          createdAt: survey.createdAt,
-          updatedAt: survey.updatedAt,
-          deadline: survey.deadline,
-          attendCount: attendedCount,
-        });
+      queryCount++;
+      const surveyIds = surveys.map((s) => s.id);
+      //한번의 퀴리로 모든 설문의 참여자 수 계산
+      const answerCounts = await Answer.findAll({
+        attributes: [[literal('COUNT(DISTINCT "Answer"."userId")'), 'count']],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: surveyIds },
+            required: true,
+          },
+        ],
+        group: [col('Question.surveyId')],
+        raw: true,
+      });
+      queryCount++;
+      const countMap = {};
+      for (const row of answerCounts) {
+        countMap[row['question.surveyId']] = parseInt(row.count);
       }
-
+      const preResult = surveys.map((survey) => ({
+        surveyId: survey.id,
+        title: survey.title,
+        open: survey.open,
+        mainImageUrl: survey.mainImageUrl || null,
+        createdAt: survey.createdAt,
+        updatedAt: survey.updatedAt,
+        deadline: survey.deadline,
+        attendCount: countMap[survey.id] || 0,
+      }));
+      queryCount++;
       if ('attendCount' in req.query) {
         preResult.sort((a, b) => b.attendCount - a.attendCount);
       } else if ('deadline' in req.query) {
@@ -59,9 +68,16 @@ const getUserSurveys = async (req, res) => {
       }
 
       const totalCount = await Survey.count({ where: { userId: userId } });
+      queryCount++;
       const totalPages = Math.ceil(totalCount / pageLimit);
       const currentPageData = preResult.slice(startIndex, endIndex);
-
+      const end = performance.now();
+      console.log(`=============`);
+      console.log(
+        `[수정 후(폼 모아보기)] 총 실행 시간: ${(end - start).toFixed(2)}ms`,
+      );
+      console.log(`[수정 후(폼 모아보기)] 총 쿼리 횟수: ${queryCount}번`);
+      console.log(`==============`);
       res
         .status(200)
         .json({ surveys: currentPageData, totalPages: totalPages });
@@ -70,6 +86,7 @@ const getUserSurveys = async (req, res) => {
         where: { userId: userId },
         attributes: ['id', 'title'],
       });
+      queryCount++; //내 설문 제목 목록
 
       if (!selectSurveys.length) {
         return res.status(204).json({ message: '작성된 설문지가 없습니다.' });
@@ -91,55 +108,67 @@ const getUserSurveys = async (req, res) => {
       if (len == 0) {
         return res.status(208).json({ message: '검색된 설문지가 없습니다.' });
       }
+      //검색된 설문 정보 한번에
+      const surveys = await Survey.findAll({
+        where: { id: resultList.surveys },
+        attributes: [
+          'id',
+          'title',
+          'open',
+          'mainImageUrl',
+          'createdAt',
+          'updatedAt',
+          'deadline',
+        ],
+      });
+      queryCount++;
+      //참여자 수
+      const answerCounts = await Answer.findAll({
+        attributes: [[literal('COUNT(DISTINCT "Answer"."userId")'), 'count']],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: resultList.surveys },
+            required: true,
+          },
+        ],
+        group: [col('Question.surveyId')],
+        raw: true,
+      });
+      queryCount++;
+      //내가 참여했는지
+      const myAnswers = await Answer.findAll({
+        attributes: ['questionId'],
+        where: { userId: userId },
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: resultList.surveys },
+            required: true,
+          },
+        ],
+        raw: true,
+      });
+      queryCount++;
 
-      const sortedList = [];
-      for (let i = 0; i < len; i++) {
-        const survey = await Survey.findOne({
-          where: { id: resultList.surveys[i] },
-          attributes: [
-            'id',
-            'title',
-            'open',
-            'mainImageUrl',
-            'createdAt',
-            'updatedAt',
-            'deadline',
-          ],
-        });
-
-        const answer = await Answer.findOne({
-          where: { userId: userId },
-          include: [
-            {
-              model: Question,
-              where: { surveyId: survey.id },
-            },
-          ],
-        });
-
-        const userCount = await Answer.count({
-          distinct: true,
-          col: 'userId',
-          include: [
-            {
-              model: Question,
-              where: { surveyId: survey.id },
-            },
-          ],
-        });
-
-        sortedList.push({
-          surveyId: survey.dataValues.id,
-          title: survey.dataValues.title,
-          open: survey.dataValues.open,
-          mainImageUrl: survey.dataValues.mainImageUrl,
-          createdAt: survey.dataValues.createdAt,
-          updatedAt: survey.dataValues.updatedAt,
-          deadline: survey.dataValues.deadline,
-          isAttended: !!answer,
-          attendCount: userCount,
-        });
+      const countMap = {};
+      for (const row of answerCounts) {
+        countMap[row['Question.surveyId']] = parseInt(row.count);
       }
+      const attendedSet = new Set(myAnswers.map((a) => a['Question.surveyId']));
+
+      const sortedList = surveys.map((survey) => ({
+        surveyId: survey.id,
+        title: survey.title,
+        mainImageUrl: survey.mainImageUrl || null,
+        createdAt: survey.createdAt,
+        updatedAt: survey.updatedAt,
+        deadline: survey.deadline,
+        isAttended: attendedSet.has(survey.id),
+        attendCount: countMap[survey.id] || 0,
+      }));
 
       // 정렬된 결과와 전체 페이지 수를 반환합니다.
       if ('attendCount' in req.query) {
@@ -153,6 +182,13 @@ const getUserSurveys = async (req, res) => {
       const startIndex = (page - 1) * pageLimit;
       const endIndex = startIndex + pageLimit;
       const pagedSortedList = sortedList.slice(startIndex, endIndex);
+      const end = performance.now();
+      console.log(`=============`);
+      console.log(
+        `[수정 후(제목 검색)] 총 실행 시간: ${(end - start).toFixed(2)}ms`,
+      );
+      console.log(`[수정 후(제목검색)] 총 쿼리 횟수: ${queryCount}번`);
+      console.log(`==============`);
 
       res.status(200).json({ sortedList: pagedSortedList, totalPages: tp });
     }

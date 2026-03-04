@@ -421,10 +421,10 @@ paths:
 
   /api/surveys/{id}/forms:
     get:
-      summary: 폼 모아보기
+      summary: 폼 모아보기 및 제목 검색
       tags:
         - GET
-      description: 특정 사용자에 대한 설문조사 목록을 페이징하여 가져옵니다.
+      description: 특정 사용자에 대한 설문조사 목록을 페이징하여 가져옵니다. title 파라미터가 있으면 제목 검색을 수행합니다.
       parameters:
         - in: path
           name: id
@@ -432,6 +432,11 @@ paths:
           schema:
             type: integer
           description: 사용자 ID
+        - in: query
+          name: title
+          schema:
+            type: string
+          description: 검색할 설문조사의 제목 (없으면 전체 목록)
         - in: query
           name: page
           schema:
@@ -458,57 +463,12 @@ paths:
                       $ref: '#/components/schemas/Survey'
                   totalPages:
                     type: integer
+        '400':
+          description: 필요한 파라미터가 없을 때 반환합니다.
+        '404':
+          description: 검색 결과가 없을 때 반환합니다.
         '500':
           description: 서버 에러 발생
-
-  /api/surveys/{userId}/search/{title}:
-    get:
-      summary: 제목 검색 기능
-      tags:
-        - GET
-      parameters:
-        - in: path
-          name: userId
-          schema:
-            type: integer
-          required: true
-          description: 검색하는 사용자 ID
-        - in: path
-          name: title
-          schema:
-            type: string
-          required: true
-          description: 검색할 설문조사의 제목
-        - in: query
-          name: limit
-          schema:
-            type: integer
-          description: 한 페이지에 표시할 설문조사의 수
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: 표시할 페이지 번호
-      responses:
-        200:
-          description: 검색 결과와 함께 성공 메시지를 반환합니다.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  surveys:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Survey'
-                  totalPages:
-                    type: integer
-        400:
-          description: 필요한 파라미터가 없을 때 반환합니다.
-        404:
-          description: 검색 결과가 없을 때 반환합니다.
-        500:
-          description: 서버 오류가 발생했을 때 반환합니다.
 
   paths:
   /api/surveys/{id}:
