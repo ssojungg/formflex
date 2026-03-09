@@ -1,10 +1,12 @@
 const { Survey, Answer, Question } = require('../models');
 const { surveyTitleSearch } = require('./surveyTitleSearch');
 const Redis = require('ioredis');
-const redisClient = new Redis({
-  host: '172.31.20.50',
-  port: 6379,
-});
+const redisClient = process.env.REDIS_HOST
+  ? new Redis({
+      host: process.env.REDIS_HOST,
+      port: 6379,
+    })
+  : null;
 
 const showAllSurveys = async (req, res) => {
   try {
