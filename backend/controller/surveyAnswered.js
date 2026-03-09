@@ -1,4 +1,5 @@
 const { performance } = require('perf_hooks');
+const { literal, col } = require('sequelize');
 const { Survey, User, Answer, Question } = require('../models');
 const { surveyTitleSearch } = require('./surveyTitleSearch');
 
@@ -59,52 +60,56 @@ const surveyAnswered = async (req, res) => {
       });
       queryCount++; //4번: 설문 정보
 
-      const preResult = [];
-      // 각 설문지에 대해 참여자 수 계산
-      for (const survey of surveys) {
-        const userCount = await Answer.count({
-          distinct: true,
-          col: 'userId',
-          include: [
-            {
-              model: Question,
-              where: { surveyId: survey.id },
-            },
-          ],
-        });
-        queryCount++; //N번: 설문마다 참여자 수
+      //N+1 제거: 참여자 수 한번에 조회
+      const answerCount = await Answer.findAll({
+        attributes: [[literal('COUNT(DISTINCT "Answer"."userId")'), 'count']],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: surveyIds },
+            required: true,
+          },
+        ],
+        group: [col('Question.surveyId')],
+        raw: true,
+      });
+      queryCount++; //5번 : 참여자 수 한번에
 
-        const answer = await Answer.findOne({
-          where: { userId: userId },
-          include: [
-            {
-              model: Question,
-              where: { surveyId: survey.id },
-            },
-          ],
-        });
-        queryCount++; //N번: 설문마다 내 참여 여부
-
-        // attendCount 추가
-        survey.dataValues.attendCount = userCount;
-
-        preResult.push({
-          surveyId: survey.id,
-          title: survey.title,
-          open: survey.open,
-          mainImageUrl: survey.mainImageUrl || null,
-          createdAt: survey.createdAt,
-          updatedAt: survey.updatedAt,
-          deadline: survey.deadline,
-          isAttended: !!answer,
-          attendCount: userCount,
-        });
+      const countMap = {};
+      for (const row of answerCount) {
+        countMap[row['Question.surveyId']] = parseInt(row.count);
       }
 
-      const total = await Survey.count({
-        where: { id: surveyIds },
+      //N+1제거 : 내가 참여했는지 한번에 조회
+      const myAnswers = await Answer.findAll({
+        where: { userId: userId },
+        attributes: ['questionId'],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: surveyIds },
+            required: true,
+          },
+        ],
+        raw: true,
       });
-      queryCount++; //총 개수
+      queryCount++; //6번: 내 참여 여부 한 번에
+
+      const attendSet = new Set(myAnswers.map((a) => a['Question.surveyId']));
+      const preResult = surveys.map((survey) => ({
+        surveyId: survey.id,
+        title: survey.title,
+        open: survey.open,
+        mainImageUrl: survey.mainImageUrl,
+        createdAt: survey.createdAt,
+        updatedAt: survey.updatedAt,
+        deadline: survey.deadline,
+        isAttended: attendSet.has(survey.id),
+        attendCount: countMap[survey.id] || 0,
+      }));
+      const total = surveys.length;
 
       // 총 페이지 수 계산
       const totalPages = Math.ceil(total / pageLimit);
@@ -124,9 +129,9 @@ const surveyAnswered = async (req, res) => {
       const end = performance.now();
       console.log(`============`);
       console.log(
-        `[수정 전(내 응답 조회)] 총 실행 시간: ${(end - start).toFixed(2)}ms`,
+        `[수정 후(내 응답 조회)] 총 실행 시간: ${(end - start).toFixed(2)}ms`,
       );
-      console.log(`[수정 전(낸 응답 조회)] 총 쿼리 횟수 : ${queryCount}번`);
+      console.log(`[수정 후(낸 응답 조회)] 총 쿼리 횟수 : ${queryCount}번`);
       console.log(`==============`);
 
       res.json({ surveys: paginatedSurveys, totalPages });
