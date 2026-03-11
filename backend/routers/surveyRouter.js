@@ -23,7 +23,11 @@ router.post(
 );
 //router.post('/', surveyController.createSurveyWithQuestionsAndChoices);
 router.get('/:userId/answers/:surveyId', getAnswerController.getAnswerByuserId);
-router.put('/:id', surveyModifyController.ModifySurveyWithQuestionsAndChoices);
+router.put(
+  '/:id',
+  upload.fields([{ name: 'mainImageUrl' }, { name: 'imageUrl' }]),
+  surveyModifyController.ModifySurveyWithQuestionsAndChoices,
+);
 router.get('/:id/forms', surveyAllUserController.getUserSurveys);
 router.get('/:id/join', surveyAnsweredController.surveyAnswered);
 router.get('/:id/results', surveyResultController.surveyResult);
