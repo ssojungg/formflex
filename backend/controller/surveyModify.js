@@ -1,9 +1,15 @@
+const { performance } = require('perf_hooks');
 const { sequelize } = require('../models');
 const { Survey, Question, Choice, Answer } = require('../models');
 
 const ModifySurveyWithQuestionsAndChoices = async (req, res) => {
+  const start = performance.now();
+  let queryCount = 0;
+
   try {
     const surveyId = req.params.id;
+    console.log('Request body:', req.body);
+    const surveyData = JSON.parse(req.body.survey);
     const {
       userId,
       title,
@@ -15,11 +21,13 @@ const ModifySurveyWithQuestionsAndChoices = async (req, res) => {
       mainImageUrl,
       deadline,
       questions,
-    } = req.body;
+    } = surveyData;
 
     console.log('Request body:', req.body); // 요청 본문 로그 찍기
 
     const survey = await Survey.findByPk(surveyId);
+    queryCount++;
+
     if (!survey) {
       return res
         .status(404)
@@ -40,19 +48,19 @@ const ModifySurveyWithQuestionsAndChoices = async (req, res) => {
         .json({ message: '설문이 잠겨있어 접근 및 수정 권한이 없습니다.' });
     }
 
-    for (const question of questions) {
-      const answersCount = await Answer.count({
-        where: {
-          userId: userId,
-          questionId: question.questionId,
-        },
-      });
+    const questionIds = questions.map((q) => q.questionId);
+    const answersCount = await Answer.count({
+      where: {
+        userId: userId,
+        questionId: questionIds,
+      },
+    });
+    queryCount++;
 
-      if (answersCount > 0) {
-        return res
-          .status(403)
-          .json({ message: '이미 답변이 있는 설문은 수정할 수 없습니다.' });
-      }
+    if (answersCount > 0) {
+      return res
+        .status(403)
+        .json({ message: '이미 답변이 있는 설문은 수정할 수 없습니다.' });
     }
 
     await sequelize.transaction(async (t) => {
@@ -70,6 +78,7 @@ const ModifySurveyWithQuestionsAndChoices = async (req, res) => {
         },
         { transaction: t },
       );
+      queryCount++; //설문 업데이트
 
       // 기존 질문들을 삭제하고 새로운 질문들을 추가합니다.
       await Question.destroy({
@@ -77,9 +86,9 @@ const ModifySurveyWithQuestionsAndChoices = async (req, res) => {
         transaction: t,
         force: true, // 하드 삭제를 적용
       });
+      queryCount++; // 기존 설문 삭제
 
       for (const question of questions) {
-        // 새로운 질문 추가
         const newQuestion = await Question.create(
           {
             surveyId,
@@ -89,6 +98,7 @@ const ModifySurveyWithQuestionsAndChoices = async (req, res) => {
           },
           { transaction: t },
         );
+        queryCount++;
 
         // 체크박스, 다중 선택, 드롭다운 질문의 경우 선택지 추가
         if (
@@ -102,15 +112,25 @@ const ModifySurveyWithQuestionsAndChoices = async (req, res) => {
               },
               { transaction: t },
             );
+            queryCount++;
           }
         }
       }
 
       // 설문 업데이트 시간 기록
       await survey.update({ updatedAt: new Date() }, { transaction: t });
+      queryCount++; //업데이트 시간 기록
     });
 
     const updatedSurvey = await Survey.findByPk(surveyId);
+    queryCount++; //마지막: 수정된 설문 조회
+
+    const end = performance.now();
+    console.log(
+      `[수정 후(설문 수정)] 총 실행 시간: ${(end - start).toFixed(2)}ms`,
+    );
+    console.log(`[수정 후(설문 수정)] 총 쿼리 횟수: ${queryCount}번`);
+    console.log(`==============`);
 
     console.log('Survey Update Result:', updatedSurvey);
 
