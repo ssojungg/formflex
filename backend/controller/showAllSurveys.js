@@ -1,14 +1,12 @@
+const { performance } = require('perf_hooks');
 const { Survey, Answer, Question } = require('../models');
 const { surveyTitleSearch } = require('./surveyTitleSearch');
-const Redis = require('ioredis');
-const redisClient = process.env.REDIS_HOST
-  ? new Redis({
-      host: process.env.REDIS_HOST,
-      port: 6379,
-    })
-  : null;
+const { literal, col } = require('sequelize');
 
 const showAllSurveys = async (req, res) => {
+  const start = performance.now();
+  let queryCount = 0;
+
   try {
     // Request로부터 Parameter 값들 가져오기
     const userId = req.params.id;
@@ -18,57 +16,6 @@ const showAllSurveys = async (req, res) => {
     const title = req.query.title;
 
     if (!title) {
-      const cachedSurveysAttendCount = await redisClient.get('cachedSurveysAttendCount');
-      const cachedSurveysDeadline = await redisClient.get('cachedSurveysDeadline');
-      const cachedSurveysCreatedAt = await redisClient.get('cachedSurveysCreatedAt');
-
-      if (cachedSurveysAttendCount && 'attendCount' in req.query) {  
-        const startTime = new Date();
-
-        const surveys = JSON.parse(cachedSurveysAttendCount);
-        const pagedSurveys = surveys.slice(startIndex, startIndex + pageLimit);
-
-        const endTime = new Date();
-        const elapsedTime = endTime - startTime;
-        console.log(`Redis cache에 삽입된 후 코드 실행 시간[참여자]: ${elapsedTime} 밀리초`);
-
-        res.status(200).json({
-          surveys: pagedSurveys,
-          totalPages: Math.ceil(surveys.length / pageLimit),
-        });
-      } else if(cachedSurveysDeadline && 'deadline' in req.query){
-        const startTime = new Date();
-
-        const surveys = JSON.parse(cachedSurveysDeadline);
-        const pagedSurveys = surveys.slice(startIndex, startIndex + pageLimit);
-
-        const endTime = new Date();
-        const elapsedTime = endTime - startTime;
-        console.log(`Redis cache에 삽입된 후 코드 실행 시간[데드라인]: ${elapsedTime} 밀리초`);
-
-        res.status(200).json({
-          surveys: pagedSurveys,
-          totalPages: Math.ceil(surveys.length / pageLimit),
-        });
-      } else if (cachedSurveysCreatedAt && !('deadline' in req.query || 'attendCount' in req.query)){
-        const startTime = new Date();
-
-        const surveys = JSON.parse(cachedSurveysCreatedAt);
-        
-        const pagedSurveys = surveys.slice(startIndex, startIndex + pageLimit);
-        console.log(pagedSurveys.length);
-        const endTime = new Date();
-        const elapsedTime = endTime - startTime;
-        console.log(`Redis cache에 삽입된 후 코드 실행 시간[생성]: ${elapsedTime} 밀리초`);
-
-        res.status(200).json({
-          surveys: pagedSurveys,
-          totalPages: Math.ceil(surveys.length / pageLimit),
-        });
-      } else {
-      // 전체 설문에 대해 attended_count 계산
-      const startTime = new Date();
-
       const surveys = await Survey.findAll({
         where: { open: true },
         attributes: [
@@ -81,225 +28,204 @@ const showAllSurveys = async (req, res) => {
           'deadline',
         ],
       });
+      queryCount++; //1번: 전체 설문 조회
 
       if (!surveys.length) {
-        return res.status(204).json({ message: '작성된 설문지가 없습니다.' });
+        return res.status(204).json({ message: '작성된 설문지가 없습니다' });
       }
 
-      const preResult = [];
-      for (const survey of surveys) {
-        const answer = await Answer.findOne({
-          where: { userId: userId },
-          include: [
-            {
-              model: Question,
-              where: { surveyId: survey.id },
-            },
-          ],
-        });
+      const surveyIds = surveys.map((s) => s.id);
 
-        const userCount = await Answer.count({
-          distinct: true,
-          col: 'userId',
-          include: [
-            {
-              model: Question,
-              where: { surveyId: survey.id },
-            },
-          ],
-        });
+      const answerCounts = await Answer.findAll({
+        attributes: [[literal('COUNT(DISTINCT "Answer"."userId")'), 'count']],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: surveyIds },
+            required: true,
+          },
+        ],
+        group: [col('Question.surveyId')],
+        raw: true,
+      });
+      queryCount++; //침야지스 힌반에
 
-        preResult.push({
-          surveyId: survey.id,
-          title: survey.title,
-          open: survey.open,
-          mainImageUrl: survey.mainImageUrl || null,
-          createdAt: survey.createdAt,
-          updatedAt: survey.updatedAt,
-          deadline: survey.deadline,
-          isAttended: !!answer,
-          attendCount: userCount,
-        });
+      const countMap = {};
+      for (const row of answerCounts) {
+        countMap[row['Question.surveyId']] = parseInt(row.count);
       }
 
-      // 정렬
+      const myAnswers = await Answer.findAll({
+        where: { userId: userId },
+        attributes: ['questionId'],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: surveyIds },
+            required: true,
+          },
+        ],
+        raw: true,
+      });
+      queryCount++; //내 참여 여부 한번에
+
+      const attendSet = new Set(myAnswers.map((a) => a['Question.surveyId']));
+
+      const preResult = surveys.map((survey) => ({
+        surveyId: survey.id,
+        title: survey.title,
+        open: survey.open,
+        mainImageUrl: survey.mainImageUrl || null,
+        createdAt: survey.createdAt,
+        updatedAt: survey.updatedAt,
+        deadline: survey.deadline,
+        isAttended: attendSet.has(survey.id),
+        attendCount: countMap[survey.id] || 0,
+      }));
+
       if ('attendCount' in req.query) {
         preResult.sort((a, b) => b.attendCount - a.attendCount);
-        await redisClient.set('cachedSurveysAttendCount', JSON.stringify(preResult));
       } else if ('deadline' in req.query) {
         preResult.sort((a, b) => a.deadline - b.deadline);
-        await redisClient.set('cachedSurveysDeadline', JSON.stringify(preResult));
       } else {
         preResult.sort((a, b) => b.createdAt - a.createdAt);
-        await redisClient.set('cachedSurveysCreatedAt', JSON.stringify(preResult));
       }
 
-      // 페이지에 해당하는 데이터 추출
       const pagedSurveys = preResult.slice(startIndex, startIndex + pageLimit);
 
-      const endTime = new Date();
+      const end = performance.now(); // ← 이거 추가!
+      console.log(`============`);
+      console.log(
+        `[수정 후(전체 설문 조회)] 총 실행 시간: ${(end - start).toFixed(2)}ms`,
+      );
+      console.log(`[수정 후(전체 설문 조회)] 총 쿼리 횟수: ${queryCount}번`);
+      console.log(`==============`);
 
-      const elapsedTime = endTime - startTime;
-      console.log(`Redis cache에 삽입되기 전 코드 실행 시간: ${elapsedTime} 밀리초`);
-  
       res.status(200).json({
         surveys: pagedSurveys,
         totalPages: Math.ceil(preResult.length / pageLimit),
-      });}
-    } else { // 여기서 부터 제목이 있을 때
+      });
+    } else {
+      const selectSurveys = await Survey.findAll({
+        where: { open: true },
+        attributes: ['id', 'title'],
+      });
+      queryCount++; // 1번: 전체 설문 제목
 
-      const cachedSurveysAttendCountTitle = await redisClient.get('cachedSurveysAttendCountTitle');
-      const cachedSurveysDeadlineTitle = await redisClient.get('cachedSurveysDeadlineTitle');
-      const cachedSurveysCreatedAtTitle = await redisClient.get('cachedSurveysCreatedAtTitle');
+      if (!selectSurveys.length) {
+        return res.status(204).json({ message: '작성된 설문지가 없습니다' });
+      }
 
-      if (cachedSurveysAttendCountTitle && 'attendCount' in req.query) {  
-        const startTime = new Date();
+      const titleList = selectSurveys.map((survey) => ({
+        surveyId: survey.id,
+        surveyTitle: survey.title,
+      }));
 
-        const surveys = JSON.parse(cachedSurveysAttendCountTitle);
-        const pagedSurveys = surveys.slice(startIndex, startIndex + pageLimit);
+      const searchList = { surveys: titleList, title: title };
+      const resultList = surveyTitleSearch(searchList);
+      const len = resultList.surveys.length;
 
-        const endTime = new Date();
-        const elapsedTime = endTime - startTime;
-        console.log(`Redis cache에 삽입된 후 코드 실행 시간: ${elapsedTime} 밀리초`);
+      if (len === 0) {
+        return res.status(208).json({ message: '검섹된 설문지 앖습니다' });
+      }
 
-        res.status(200).json({
-          surveys: pagedSurveys,
-          totalPages: Math.ceil(surveys.length / pageLimit),
-        });
-      } else if(cachedSurveysDeadlineTitle && 'deadline' in req.query){
-        const startTime = new Date();
+      const searchedIds = resultList.surveys;
 
-        const surveys = JSON.parse(cachedSurveysDeadlineTitle);
-        const pagedSurveys = surveys.slice(startIndex, startIndex + pageLimit);
+      const searchedSurveys = await Survey.findAll({
+        where: { id: searchedIds },
+        attributes: [
+          'id',
+          'title',
+          'open',
+          'mainImageUrl',
+          'createdAt',
+          'updatedAt',
+          'deadline',
+        ],
+      });
+      queryCount++; //설문 상세 한번에
 
-        const endTime = new Date();
-        const elapsedTime = endTime - startTime;
-        console.log(`Redis cache에 삽입된 후 코드 실행 시간: ${elapsedTime} 밀리초`);
+      const answerCounts = await Answer.findAll({
+        attributes: [[literal('COUNT(DISTINCT "Answer"."userId")'), 'count']],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: searchedIds },
+            required: true,
+          },
+        ],
+        group: [col('Question.surveyId')],
+        raw: true,
+      });
+      queryCount++; //참여자 수 한번에
 
-        res.status(200).json({
-          surveys: pagedSurveys,
-          totalPages: Math.ceil(surveys.length / pageLimit),
-        });
-      } else if (cachedSurveysCreatedAtTitle && !('deadline' in req.query || 'attendCount' in req.query)){
-        const startTime = new Date();
+      const countMap = {};
+      for (const row of answerCounts) {
+        countMap[row['Question.surveyId']] = parseInt(row.count);
+      }
 
-        const surveys = JSON.parse(cachedSurveysCreatedAtTitle);
-        const pagedSurveys = surveys.slice(startIndex, startIndex + pageLimit);
+      const myAnswers = await Answer.findAll({
+        where: { userId: userId },
+        attributes: ['questionId'],
+        include: [
+          {
+            model: Question,
+            attributes: ['surveyId'],
+            where: { surveyId: searchedIds },
+            required: true,
+          },
+        ],
+        raw: true,
+      });
+      queryCount++; //내 참여 여부 한번에
 
-        const endTime = new Date();
-        const elapsedTime = endTime - startTime;
-        console.log(`Redis cache에 삽입된 후 코드 실행 시간: ${elapsedTime} 밀리초`);
+      const attendSet = new Set(myAnswers.map((a) => a['Question.surveyId']));
 
-        res.status(200).json({
-          surveys: pagedSurveys,
-          totalPages: Math.ceil(surveys.length / pageLimit),
-        });
+      const sortedList = searchedSurveys.map((survey) => ({
+        surveyId: survey.id,
+        title: survey.title,
+        open: survey.open,
+        mainImageUrl: survey.mainImageUrl || null,
+        createdAt: survey.createdAt,
+        updatedAt: survey.updatedAt,
+        deadline: survey.deadline,
+        isAttended: attendSet.has(survey.id),
+      }));
+
+      if ('attendCount' in req.query) {
+        sortedList.sort((a, b) => b.attendCount - a.attendCount);
+      } else if ('deadline' in req.query) {
+        sortedList.sort((a, b) => a.deadline - b.deadline);
       } else {
-        const startTime = new Date();
-        const selectSurveys = await Survey.findAll({
-          where: { open: true },
-          attributes: ['id', 'title'],
-        });
-  
-        if (!selectSurveys.length) {
-          return res.status(204).json({ message: '작성된 설문지가 없습니다.' });
-        }
-       
-        const titleList = selectSurveys.map((survey) => ({
-          surveyId: survey.id,
-          surveyTitle: survey.title,
-        }));
-  
-        const searchList = { surveys: titleList, title: title };
-        const resultList = surveyTitleSearch(searchList);
-        const len = resultList.surveys.length;
-  
-        if (len === 0) {
-          return res.status(208).json({ message: '검색된 설문지가 없습니다.' });
-        }
-  
-        const sortedList = [];
-        for (const surveyId of resultList.surveys) {
-          const survey = await Survey.findOne({
-            where: { id: surveyId },
-            attributes: [
-              'id',
-              'title',
-              'open',
-              'mainImageUrl',
-              'createdAt',
-              'updatedAt',
-              'deadline',
-            ],
-          });
-  
-          const answer = await Answer.findOne({
-            where: { userId: userId },
-            include: [
-              {
-                model: Question,
-                where: { surveyId: survey.id },
-              },
-            ],
-          });
-  
-          const userCount = await Answer.count({
-            distinct: true,
-            col: 'userId',
-            include: [
-              {
-                model: Question,
-                where: { surveyId: survey.id },
-              },
-            ],
-          });
-  
-          sortedList.push({
-            surveyId: survey.dataValues.id,
-            title: survey.dataValues.title,
-            open: survey.dataValues.open,
-            mainImageUrl: survey.dataValues.mainImageUrl || null,
-            createdAt: survey.dataValues.createdAt,
-            updatedAt: survey.dataValues.updatedAt,
-            deadline: survey.dataValues.deadline,
-            isAttended: !!answer,
-            attendCount: userCount,
-          });
-        }
-  
-        // 정렬
-        if ('attendCount' in req.query) {
-          sortedList.sort((a, b) => b.attendCount - a.attendCount);
-          await redisClient.set('cachedSurveysAttendCountTitle', JSON.stringify(sortedList));
-        } else if ('deadline' in req.query) {
-          sortedList.sort((a, b) => a.deadline - b.deadline);
-          await redisClient.set('cachedSurveysDeadlineTitle', JSON.stringify(sortedList));
-        } else {
-          sortedList.sort((a, b) => b.createdAt - a.createdAt);
-          await redisClient.set('cachedSurveysCreatedAtTitle', JSON.stringify(sortedList));
-        }
-
-        // 페이지에 해당하는 데이터 추출
-        const startIndex = (page - 1) * pageLimit;
-        const endIndex = startIndex + pageLimit;
-        const pagedSortedList = sortedList.slice(startIndex, endIndex);
-  
-        const endTime = new Date();
-
-        const elapsedTime = endTime - startTime;
-        console.log(`Redis cache에 삽입되기 전 코드 실행 시간: ${elapsedTime} 밀리초`);
-  
-        res
-          .status(200)
-          .json({
-            sortedList: pagedSortedList,
-            totalPages: Math.ceil(len / pageLimit),
-          });
+        sortedList.sort((a, b) => b.createdAt - a.createdAt);
       }
-      }
+
+      const pagedSortedList = sortedList.slice(
+        startIndex,
+        startIndex + pageLimit,
+      );
+
+      const end = performance.now();
+      console.log(`===============`);
+      console.log(
+        `[수정 후(전체 설문 - 검색)] 총 실행 시간: ${(end - start).toFixed(
+          2,
+        )}ms`,
+      );
+      console.log(`[수정 후(전체 설문 - 검색)] 총 쿼리 횟수: ${queryCount}번`);
+      console.log(`==============`);
+
+      res.status(200).json({
+        sortedList: pagedSortedList,
+        totalPages: Math.ceil(len / pageLimit),
+      });
+    }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: '데이터를 불러오는데 실패했습니다.' });
+    res.status(500).json({ message: '데이터를 불러오는데 실패했습니다' });
   }
 };
 
