@@ -2,6 +2,8 @@
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.997.0",
     "@aws-sdk/client-s3": "^3.490.0",
+    "@img/sharp-libvips-linux-arm64": "^1.2.4",
+    "@img/sharp-linux-arm64": "^0.34.5",
     "amqplib": "^0.10.3",
     "aws-sdk": "^2.1535.0",
     "axios": "^1.6.5",

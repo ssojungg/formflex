@@ -195,10 +195,10 @@ async function handleExcelDownload(req) {
 const routes = [
   //User
   { method: 'POST', path: '/api/users/signup', handler: signup },
-  { method: 'POST', path: 'a,pi/users/login', handler: login },
+  { method: 'POST', path: '/api/users/login', handler: login },
   {
     method: 'POST',
-    path: ',api/users/:email/check-email',
+    path: '/api/users/:email/check-email',
     handler: isEmailRepeated,
   },
   { method: 'PATCH', path: '/api/users/:id', handler: modifyPassword },
@@ -268,6 +268,8 @@ const routes = [
 
 //메인 lambda핸들러
 exports.handler = async (event) => {
+  const method = event.requestContext?.http?.method || event.httpMethod;
+  const path = event.rawPath || event.path;
   //CORS
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers: corsHeaders, body: '' };
@@ -278,8 +280,6 @@ exports.handler = async (event) => {
     await sequelize.authenticate();
     isDbConnected = true;
   }
-  const method = event.httpMethod;
-  const path = event.path;
 
   //엑셀 다운로드 (별도 처리)
   const excelParams = matchPath('/api/surveys/:surveyId/download', path);
