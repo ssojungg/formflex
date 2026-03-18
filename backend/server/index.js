@@ -13,7 +13,7 @@ const specs = YAML.load(
 // const http = require('http');
 const { sequelize } = require('../models');
 const { createAndDownloadExcel } = require('../excel/excelGengerate');
-const { getGptReponse } = require('../gpt/gptAPI');
+//const { getGptReponse } = require('../gpt/gptAPI');
 const surveyRouters = require('../routers/surveyRouter');
 const userRouters = require('../routers/UserRouter');
 const { getImageByAPI } = require('../controller/getImageBySearch');
@@ -66,7 +66,7 @@ sequelize
 
     app.get('/api/images/search/:query', getImageByAPI);
 
-    app.post('/api/gpt-prompt', getGptReponse);
+    //app.post('/api/gpt-prompt', getGptReponse);
 
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);

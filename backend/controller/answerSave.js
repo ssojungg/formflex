@@ -12,13 +12,13 @@ const createAnswer = async (req, res) => {
     }
     for (const question of questions) {
       // 질문의 타입을 확인
-      const questionData = await Question.findByPk(question.questionId, { t });
+      const questionData = await Question.findByPk(question.questionId, {
+        transaction: t,
+      });
       if (!questionData) {
-        return res
-          .status(400)
-          .json({
-            message: `Question with ID ${question.questionId} not found`,
-          });
+        return res.status(400).json({
+          message: `Question with ID ${question.questionId} not found`,
+        });
       }
       if (questionData.surveyId != surveyId) {
         return res
@@ -38,7 +38,9 @@ const createAnswer = async (req, res) => {
         // objContent의 각 요소에 대한 별도의 Answer 레코드 생성
         for (const objContentItem of question.objContent) {
           // console.log(`question objContentItem : ${objContentItem}`);
-          const option = await Choice.findByPk(objContentItem, { t });
+          const option = await Choice.findByPk(objContentItem, {
+            transaction: t,
+          });
           if (!option) {
             return res
               .status(400)
@@ -120,12 +122,15 @@ const createAnswer = async (req, res) => {
         });
 
         if (!existingAnswer) {
-          await Answer.create({
-            questionId: question.questionId,
-            userId: userId,
-            subContent: question.subContent || null,
-            objContent: null,
-          });
+          await Answer.create(
+            {
+              questionId: question.questionId,
+              userId: userId,
+              subContent: question.subContent || null,
+              objContent: null,
+            },
+            { transaction: t },
+          );
         }
       }
       console.log(`questionId : ${question.questionId}`);

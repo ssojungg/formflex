@@ -1,0 +1,24 @@
+service: formflex
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: ap-northeast-2
+  timeout: 30
+  environment:
+    NODE_ENV: production
+functions:
+  api:
+    name: formflex
+    handler: index.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+plugins:
+  - serverless-dotenv-plugin

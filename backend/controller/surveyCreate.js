@@ -5,6 +5,7 @@ const createSurveyWithQuestionsAndChoices = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
+    const surveyData = JSON.parse(req.body.survey);
     const {
       userId,
       title,
@@ -16,7 +17,7 @@ const createSurveyWithQuestionsAndChoices = async (req, res) => {
       mainImageUrl,
       deadline,
       questions,
-    } = req.body;
+    } = surveyData;
 
     // surveyUrl을 미리 정의
     const surveyUrl = `https://www.formflex.site/surveys/placeholder`;

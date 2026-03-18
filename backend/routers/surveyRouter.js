@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer'); // ← S3 대신 기본 multer 사용
+const upload = multer(); // ← 로컬 테스트용
 const surveyController = require('../controller/surveyCreate');
 const surveyModifyController = require('../controller/surveyModify');
 const surveyAllUserController = require('../controller/formAllUser');
@@ -14,10 +16,18 @@ const getAnswerController = require('../controller/answerReadByuserId');
 const { sendSurveyEmailWithSurveyId } = require('../controller/urlShare');
 const getResultController = require('../controller/getResultsByRes');
 
-
-router.post('/', surveyController.createSurveyWithQuestionsAndChoices);
+router.post(
+  '/',
+  upload.fields([{ name: 'mainImageUrl' }, { name: 'imageUrl' }]),
+  surveyController.createSurveyWithQuestionsAndChoices,
+);
+//router.post('/', surveyController.createSurveyWithQuestionsAndChoices);
 router.get('/:userId/answers/:surveyId', getAnswerController.getAnswerByuserId);
-router.put('/:id', surveyModifyController.ModifySurveyWithQuestionsAndChoices);
+router.put(
+  '/:id',
+  upload.fields([{ name: 'mainImageUrl' }, { name: 'imageUrl' }]),
+  surveyModifyController.ModifySurveyWithQuestionsAndChoices,
+);
 router.get('/:id/forms', surveyAllUserController.getUserSurveys);
 router.get('/:id/join', surveyAnsweredController.surveyAnswered);
 router.get('/:id/results', surveyResultController.surveyResult);
@@ -47,6 +57,5 @@ router.post('/:id/share', async (req, res) => {
 });
 
 router.get('/:id/list', getResultController.getResultsByResponses);
-
 
 module.exports = router;
