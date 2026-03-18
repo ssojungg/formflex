@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { api } from '../queryClient';
 import { restFetcher } from '../queryClient';
 
 export const getQuestionResultAPI = async (surveyId: number) => {
@@ -18,7 +18,7 @@ export const getAnswerResultAPI = async (surveyId: number) => {
 };
 
 export const getExcelDownloadAPI = async (surveyId: number) => {
-  const response = await axios.get(`https://www.formflex.site/api/surveys/downloadExcel/${surveyId}`, {
+  const response = await api.get(`/surveys/downloadExcel/${surveyId}`, {
     responseType: 'blob',
   });
   return response;
