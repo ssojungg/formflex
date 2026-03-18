@@ -1,6 +1,5 @@
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import axios, { AxiosRequestConfig } from 'axios';
-import { api } from '../queryClient';
 
 type AnyOBJ = {
   [key: string]: any;

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { api } from '../queryClient';
 import { restFetcher } from '../queryClient';
 
 export const getQuestionResultAPI = async (surveyId: number) => {
