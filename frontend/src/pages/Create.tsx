@@ -1,7 +1,7 @@
-import FormEditor from '../components/editor/FormEditor';
+import SurveyEditor from '../components/editor/SurveyEditor';
 
 function Create() {
-  return <FormEditor />;
+  return <SurveyEditor />;
 }
 
 export default Create;

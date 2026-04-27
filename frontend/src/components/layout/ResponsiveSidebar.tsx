@@ -77,9 +77,19 @@ type NavItem = {
   path: string;
 };
 
+const SurveyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+    <path d="M14 2v6h6" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
+
 const NAV_ITEMS: NavItem[] = [
-  { id: 'myforms', icon: DashboardIcon, text: '대시보드', path: '/myform' },
-  { id: 'templates', icon: TemplateIcon, text: '템플릿 라이브러리', path: '/all' },
+  { id: 'surveys', icon: SurveyIcon, text: '설문 탐색', path: '/surveys' },
+  { id: 'myforms', icon: DashboardIcon, text: '내 설문', path: '/myform' },
+  { id: 'templates', icon: TemplateIcon, text: '템플릿 라이브러리', path: '/templates' },
   { id: 'analytics', icon: AnalyticsIcon, text: '분석', path: '/result' },
   { id: 'profile', icon: ProfileIcon, text: '내 정보', path: '/mypage' },
 ];
