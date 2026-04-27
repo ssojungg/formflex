@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { useSurveyStore, Question, QuestionType, QuestionOption } from '../../store/SurveyStore';
 import { useResponsive } from '../../hooks/useResponsive';
+import QuestionCard from './QuestionCard';
 
 // Icons
 const PlusIcon = () => (
@@ -48,23 +49,9 @@ const TrashIcon = () => (
   </svg>
 );
 
-const CopyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-  </svg>
-);
 
-const DragIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="9" cy="5" r="1" fill="currentColor" />
-    <circle cx="9" cy="12" r="1" fill="currentColor" />
-    <circle cx="9" cy="19" r="1" fill="currentColor" />
-    <circle cx="15" cy="5" r="1" fill="currentColor" />
-    <circle cx="15" cy="12" r="1" fill="currentColor" />
-    <circle cx="15" cy="19" r="1" fill="currentColor" />
-  </svg>
-);
+
+
 
 const CloseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -89,17 +76,7 @@ const SparkleIcon = () => (
   </svg>
 );
 
-const ChevronUpIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="18 15 12 9 6 15" />
-  </svg>
-);
 
-const ChevronDownIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
 
 const CalendarIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -272,62 +249,76 @@ function SurveyEditor() {
     }
   };
 
-  const updateQuestion = (questionId: string, updates: Partial<Question>) => {
+  const updateQuestion = useCallback((questionId: string, updates: Partial<Question>) => {
     setQuestions(prev => prev.map((q) => q.id === questionId ? { ...q, ...updates } : q));
-  };
+  }, []);
 
-  const deleteQuestion = (questionId: string) => {
-    const index = questions.findIndex((q) => q.id === questionId);
-    const newQuestions = questions.filter((q) => q.id !== questionId);
-    setQuestions(newQuestions);
-    if (selectedQuestionId === questionId) {
-      if (newQuestions.length > 0) {
-        const newIndex = Math.min(index, newQuestions.length - 1);
-        setSelectedQuestionId(newQuestions[newIndex]?.id || null);
-      } else {
-        setSelectedQuestionId(null);
-      }
-    }
-  };
-
-  const copyQuestion = (questionId: string) => {
-    const question = questions.find((q) => q.id === questionId);
-    if (!question) return;
-    
-    const newQuestion: Question = {
-      ...JSON.parse(JSON.stringify(question)),
-      id: generateId(),
-    };
-    const index = questions.findIndex((q) => q.id === questionId);
-    const newQuestions = [...questions];
-    newQuestions.splice(index + 1, 0, newQuestion);
-    setQuestions(newQuestions);
-    setSelectedQuestionId(newQuestion.id);
-  };
-
-  const moveQuestion = (questionId: string, direction: 'up' | 'down') => {
-    const index = questions.findIndex((q) => q.id === questionId);
-    if (direction === 'up' && index > 0) {
-      const newQuestions = [...questions];
-      [newQuestions[index - 1], newQuestions[index]] = [newQuestions[index], newQuestions[index - 1]];
-      setQuestions(newQuestions);
-    } else if (direction === 'down' && index < questions.length - 1) {
-      const newQuestions = [...questions];
-      [newQuestions[index], newQuestions[index + 1]] = [newQuestions[index + 1], newQuestions[index]];
-      setQuestions(newQuestions);
-    }
-  };
-
-  const addOption = (questionId: string) => {
-    const question = questions.find((q) => q.id === questionId);
-    if (!question?.options) return;
-    
-    updateQuestion(questionId, {
-      options: [...question.options, { id: `opt-${Date.now()}`, text: `옵션 ${question.options.length + 1}` }],
+  const deleteQuestion = useCallback((questionId: string) => {
+    setQuestions(prev => {
+      const index = prev.findIndex((q) => q.id === questionId);
+      const newQuestions = prev.filter((q) => q.id !== questionId);
+      
+      // Update selection
+      setSelectedQuestionId(currentSelected => {
+        if (currentSelected === questionId) {
+          if (newQuestions.length > 0) {
+            const newIndex = Math.min(index, newQuestions.length - 1);
+            return newQuestions[newIndex]?.id || null;
+          }
+          return null;
+        }
+        return currentSelected;
+      });
+      
+      return newQuestions;
     });
-  };
+  }, []);
 
-  const updateOption = (questionId: string, optionId: string, text: string) => {
+  const copyQuestion = useCallback((questionId: string) => {
+    setQuestions(prev => {
+      const question = prev.find((q) => q.id === questionId);
+      if (!question) return prev;
+      
+      const newQuestion: Question = {
+        ...JSON.parse(JSON.stringify(question)),
+        id: generateId(),
+      };
+      const index = prev.findIndex((q) => q.id === questionId);
+      const newQuestions = [...prev];
+      newQuestions.splice(index + 1, 0, newQuestion);
+      
+      setSelectedQuestionId(newQuestion.id);
+      return newQuestions;
+    });
+  }, []);
+
+  const moveQuestion = useCallback((questionId: string, direction: 'up' | 'down') => {
+    setQuestions(prev => {
+      const index = prev.findIndex((q) => q.id === questionId);
+      if (direction === 'up' && index > 0) {
+        const newQuestions = [...prev];
+        [newQuestions[index - 1], newQuestions[index]] = [newQuestions[index], newQuestions[index - 1]];
+        return newQuestions;
+      } else if (direction === 'down' && index < prev.length - 1) {
+        const newQuestions = [...prev];
+        [newQuestions[index], newQuestions[index + 1]] = [newQuestions[index + 1], newQuestions[index]];
+        return newQuestions;
+      }
+      return prev;
+    });
+  }, []);
+
+  const addOption = useCallback((questionId: string) => {
+    setQuestions(prev => prev.map(q => {
+      if (q.id !== questionId || !q.options) return q;
+      return {
+        ...q,
+        options: [...q.options, { id: `opt-${Date.now()}`, text: `옵션 ${q.options.length + 1}` }],
+      };
+    }));
+  }, []);
+
+  const updateOption = useCallback((questionId: string, optionId: string, text: string) => {
     setQuestions(prev => prev.map(q => {
       if (q.id !== questionId || !q.options) return q;
       return {
@@ -335,16 +326,17 @@ function SurveyEditor() {
         options: q.options.map(o => o.id === optionId ? { ...o, text } : o),
       };
     }));
-  };
+  }, []);
 
-  const deleteOption = (questionId: string, optionId: string) => {
-    const question = questions.find((q) => q.id === questionId);
-    if (!question?.options || question.options.length <= 1) return;
-    
-    updateQuestion(questionId, {
-      options: question.options.filter((o) => o.id !== optionId),
-    });
-  };
+  const deleteOption = useCallback((questionId: string, optionId: string) => {
+    setQuestions(prev => prev.map(q => {
+      if (q.id !== questionId || !q.options || q.options.length <= 1) return q;
+      return {
+        ...q,
+        options: q.options.filter((o) => o.id !== optionId),
+      };
+    }));
+  }, []);
 
   const handleAddHashtag = () => {
     const tag = hashtagInput.trim().replace(/^#/, '');
@@ -397,14 +389,24 @@ function SurveyEditor() {
     }
   };
 
-  const removeQuestionImage = (questionId: string, imageIndex: number) => {
-    const question = questions.find((q) => q.id === questionId);
-    if (!question?.imageUrls) return;
+  const removeQuestionImage = useCallback((questionId: string, imageIndex: number) => {
+    setQuestions(prev => prev.map(q => {
+      if (q.id !== questionId || !q.imageUrls) return q;
+      return {
+        ...q,
+        imageUrls: q.imageUrls.filter((_, i) => i !== imageIndex),
+      };
+    }));
+  }, []);
 
-    updateQuestion(questionId, {
-      imageUrls: question.imageUrls.filter((_, i) => i !== imageIndex),
-    });
-  };
+  const handleSelectQuestion = useCallback((id: string) => {
+    setSelectedQuestionId(id);
+  }, []);
+
+  const handleUploadImageForQuestion = useCallback((id: string) => {
+    setUploadingImageForQuestion(id);
+    questionImageInputRef.current?.click();
+  }, []);
 
   const handleSave = () => {
     const surveyData = {
@@ -486,7 +488,7 @@ function SurveyEditor() {
       // Generate question suggestions for input types
       const mockQuestions = [
         '이 서비스를 사용하면서 가장 만족스러웠던 점은 무엇인가요?',
-        '개선이 필요하다고 생각하시는 부분이 있다면 알려주세요.',
+        '개선이 필��하다고 생각하시는 부분이 있다면 알려주세요.',
         '다른 분들께 이 서비스를 추천하시겠습니까? 그 이유는?',
       ];
       
@@ -719,289 +721,6 @@ function SurveyEditor() {
     </div>
   );
 
-  // Question Card Component
-  const QuestionCard = ({ question, index }: { question: Question; index: number }) => {
-    const isSelected = selectedQuestionId === question.id;
-    const hasSelectOptions = ['single_choice', 'multiple_choice', 'dropdown'].includes(question.type);
-
-    return (
-      <Reorder.Item
-        key={question.id}
-        value={question}
-        onClick={() => setSelectedQuestionId(question.id)}
-        className={`bg-white rounded-xl shadow-card cursor-pointer transition-all ${
-          cardStyle === 'filled' ? 'bg-secondary-50' : ''
-        } ${cardStyle === 'minimal' ? 'shadow-none border-b border-border-light rounded-none' : ''} ${
-          isSelected
-            ? 'ring-2 ring-primary-500 shadow-card-hover'
-            : 'hover:shadow-card-hover'
-        }`}
-      >
-        {/* Question Images */}
-        {question.imageUrls && question.imageUrls.length > 0 && (
-          <div className="flex gap-2 p-3 pb-0 overflow-x-auto">
-            {question.imageUrls.map((url, imgIndex) => (
-              <div key={imgIndex} className="relative flex-shrink-0">
-                <img src={url} alt={`Question image ${imgIndex + 1}`} className="w-32 h-24 object-cover rounded-lg" />
-                {isSelected && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeQuestionImage(question.id, imgIndex);
-                    }}
-                    className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="cursor-grab active:cursor-grabbing text-text-tertiary hover:text-text-secondary">
-                <DragIcon />
-              </div>
-              <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded">
-                Q{index + 1}
-              </span>
-              {question.required && (
-                <span className="text-xs text-red-500 font-medium">필수</span>
-              )}
-            </div>
-            
-            {isSelected && (
-              <div className="flex items-center gap-1">
-                {/* AI Button for ALL question types */}
-                {question.type !== 'section_divider' && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openAIForQuestion(question.id);
-                    }}
-                    className="p-2 hover:bg-amber-50 rounded-lg transition-colors text-amber-500 hover:text-amber-600"
-                    title="AI로 질문 생성"
-                  >
-                    <SparkleIcon />
-                  </button>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setUploadingImageForQuestion(question.id);
-                    questionImageInputRef.current?.click();
-                  }}
-                  className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-text-tertiary hover:text-primary-600"
-                  title="이미지 추가"
-                >
-                  <ImageIcon />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    moveQuestion(question.id, 'up');
-                  }}
-                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary disabled:opacity-30"
-                  disabled={index === 0}
-                >
-                  <ChevronUpIcon />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    moveQuestion(question.id, 'down');
-                  }}
-                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary disabled:opacity-30"
-                  disabled={index === questions.length - 1}
-                >
-                  <ChevronDownIcon />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyQuestion(question.id);
-                  }}
-                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary"
-                >
-                  <CopyIcon />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteQuestion(question.id);
-                  }}
-                  className="p-2 hover:bg-red-50 rounded-lg transition-colors text-text-tertiary hover:text-red-500"
-                >
-                  <TrashIcon />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Question Label */}
-          {question.type === 'section_divider' ? (
-            <input
-              type="text"
-              value={question.label}
-              onChange={(e) => updateQuestion(question.id, { label: e.target.value })}
-              placeholder="섹션 제목"
-              className="w-full text-lg font-bold text-text-primary bg-transparent border-none focus:outline-none placeholder-text-tertiary border-b-2 border-primary-300 pb-2"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <input
-              type="text"
-              value={question.label}
-              onChange={(e) => updateQuestion(question.id, { label: e.target.value })}
-              placeholder="질문을 입력하세요"
-              className="w-full font-medium text-text-primary bg-transparent border-none focus:outline-none placeholder-text-tertiary mb-1"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
-
-          {/* Question Input Preview */}
-          {(question.type === 'short_text' || question.type === 'email' || question.type === 'number') && (
-            <input
-              type="text"
-              placeholder={question.placeholder || '답변을 입력하세요'}
-              disabled
-              className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary mt-3"
-            />
-          )}
-
-          {question.type === 'long_text' && (
-            <textarea
-              placeholder={question.placeholder || '답변을 입력하세요'}
-              disabled
-              className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary resize-none mt-3"
-              rows={3}
-            />
-          )}
-
-          {(question.type === 'single_choice' || question.type === 'multiple_choice') && question.options && (
-            <div className="space-y-2 mt-3">
-              {question.options.map((option, optIndex) => (
-                <div key={option.id} className="flex items-center gap-3 group">
-                  <div className={`w-5 h-5 border-2 border-border flex-shrink-0 ${
-                    question.type === 'single_choice' ? 'rounded-full' : 'rounded'
-                  }`} />
-                  <input
-                    type="text"
-                    value={option.text}
-                    onChange={(e) => updateOption(question.id, option.id, e.target.value)}
-                    className="flex-1 py-2 bg-transparent border-none focus:outline-none text-text-secondary focus:ring-0"
-                    placeholder="옵션 입력"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  {isSelected && (
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {question.options!.length > 1 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteOption(question.id, option.id);
-                          }}
-                          className="p-1 hover:bg-red-50 rounded text-text-tertiary hover:text-red-500"
-                        >
-                          <CloseIcon />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {isSelected && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addOption(question.id);
-                  }}
-                  className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 mt-2 py-2"
-                >
-                  <PlusIcon /> 옵션 추가
-                </button>
-              )}
-            </div>
-          )}
-
-          {question.type === 'dropdown' && question.options && (
-            <div className="mt-3">
-              <select disabled className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary">
-                <option>선택하세요</option>
-                {question.options.map((opt) => (
-                  <option key={opt.id}>{opt.text}</option>
-                ))}
-              </select>
-              {isSelected && (
-                <div className="mt-3 space-y-2">
-                  {question.options.map((option, optIndex) => (
-                    <div key={option.id} className="flex items-center gap-2 group">
-                      <span className="text-xs text-text-tertiary w-6">{optIndex + 1}.</span>
-                      <input
-                        type="text"
-                        value={option.text}
-                        onChange={(e) => updateOption(question.id, option.id, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
-                        placeholder="옵션 입력"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {question.options!.length > 1 && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteOption(question.id, option.id);
-                            }}
-                            className="p-2 hover:bg-red-50 rounded text-text-tertiary hover:text-red-500"
-                          >
-                            <TrashIcon />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addOption(question.id);
-                    }}
-                    className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700"
-                  >
-                    <PlusIcon /> 옵션 추가
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {question.type === 'rating' && (
-            <div className="flex gap-2 mt-3">
-              {Array.from({ length: question.ratingMax || 5 }).map((_, i) => (
-                <div key={i} className="w-10 h-10 rounded-lg border-2 border-border flex items-center justify-center text-text-tertiary hover:border-primary-300 hover:text-primary-500 transition-colors">
-                  {i + 1}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {question.type === 'date' && (
-            <input
-              type="date"
-              disabled
-              className="px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary mt-3"
-            />
-          )}
-        </div>
-      </Reorder.Item>
-    );
-  };
-
   // Preview Panel
   const PreviewPanel = () => (
     <div 
@@ -1048,7 +767,26 @@ function SurveyEditor() {
         {/* Questions */}
         <Reorder.Group axis="y" values={questions} onReorder={setQuestions} className="space-y-4">
           {questions.map((question, index) => (
-            <QuestionCard key={question.id} question={question} index={index} />
+            <QuestionCard
+              key={question.id}
+              question={question}
+              index={index}
+              isSelected={selectedQuestionId === question.id}
+              isFirst={index === 0}
+              isLast={index === questions.length - 1}
+              cardStyle={cardStyle}
+              onSelect={handleSelectQuestion}
+              onUpdate={updateQuestion}
+              onDelete={deleteQuestion}
+              onCopy={copyQuestion}
+              onMove={moveQuestion}
+              onAddOption={addOption}
+              onUpdateOption={updateOption}
+              onDeleteOption={deleteOption}
+              onRemoveImage={removeQuestionImage}
+              onOpenAI={openAIForQuestion}
+              onUploadImage={handleUploadImageForQuestion}
+            />
           ))}
         </Reorder.Group>
 
