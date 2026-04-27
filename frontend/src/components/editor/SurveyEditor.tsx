@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { useSurveyStore, Survey, Question, QuestionType, QuestionOption } from '../../store/SurveyStore';
+import { useSurveyStore, Question, QuestionType, QuestionOption } from '../../store/SurveyStore';
 import { useResponsive } from '../../hooks/useResponsive';
 
 // Icons
@@ -81,9 +81,11 @@ const ImageIcon = () => (
   </svg>
 );
 
-const AIIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+const SparkleIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z" />
+    <path d="M19 15l.88 2.12L22 18l-2.12.88L19 21l-.88-2.12L16 18l2.12-.88L19 15z" />
+    <path d="M5 19l.53 1.47L7 21l-1.47.53L5 23l-.53-1.47L3 21l1.47-.53L5 19z" />
   </svg>
 );
 
@@ -108,7 +110,37 @@ const CalendarIcon = () => (
   </svg>
 );
 
-// Question type icons and configs
+const MailIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="2" y="4" width="20" height="16" rx="2" />
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+    <line x1="12" y1="18" x2="12.01" y2="18" />
+  </svg>
+);
+
+const DesktopIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+    <line x1="8" y1="21" x2="16" y2="21" />
+    <line x1="12" y1="17" x2="12" y2="21" />
+  </svg>
+);
+
+const MenuIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
+
+// Question type configs
 const QUESTION_TYPES: { type: QuestionType; label: string; category: 'input' | 'select' | 'other'; icon: React.FC }[] = [
   { type: 'short_text', label: '단답형', category: 'input', icon: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg> },
   { type: 'email', label: '이메일', category: 'input', icon: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg> },
@@ -135,20 +167,10 @@ const CARD_STYLES = [
   { value: 'minimal', label: '미니멀' },
 ];
 
-// AI Prompt suggestions
-const AI_PROMPT_SUGGESTIONS = [
-  '고객 만족도 조사 10문항 생성해줘',
-  '신제품 시장 조사 설문 15문항',
-  '직원 만족도 설문 12문항',
-  '이벤트 피드백 설문 8문항',
-  'NPS 조사 설문 5문항',
-];
-
 function SurveyEditor() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isMobile, isTablet } = useResponsive();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const questionImageInputRef = useRef<HTMLInputElement>(null);
   
@@ -173,17 +195,27 @@ function SurveyEditor() {
   const [hashtags, setHashtags] = useState<string[]>(existingSurvey?.hashtags || []);
   const [hashtagInput, setHashtagInput] = useState('');
   
+  // Auto email settings
+  const [autoEmailEnabled, setAutoEmailEnabled] = useState(false);
+  const [targetResponseCount, setTargetResponseCount] = useState(100);
+  const [notificationEmail, setNotificationEmail] = useState('');
+  
   // UI state
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'questions' | 'preview' | 'properties'>('preview');
   const [activeTab, setActiveTab] = useState<'components' | 'style'>('components');
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [showAIModal, setShowAIModal] = useState(false);
+  const [aiTargetQuestionId, setAiTargetQuestionId] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
+  const [aiMessages, setAiMessages] = useState<{role: 'user' | 'ai'; content: string; options?: string[]}[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [draggedType, setDraggedType] = useState<QuestionType | null>(null);
   const [uploadingImageForQuestion, setUploadingImageForQuestion] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Auto-select first question
   useEffect(() => {
@@ -194,7 +226,7 @@ function SurveyEditor() {
 
   const generateId = () => `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  const addQuestion = useCallback((type: QuestionType, index?: number) => {
+  const addQuestion = (type: QuestionType, index?: number) => {
     const defaultLabels: Record<QuestionType, string> = {
       short_text: '짧은 답변을 입력하세요',
       long_text: '자세한 답변을 입력하세요',
@@ -236,27 +268,29 @@ function SurveyEditor() {
     
     if (isMobile || isTablet) {
       setActivePanel('preview');
+      setSidebarOpen(false);
     }
-  }, [questions, isMobile, isTablet]);
+  };
 
-  const updateQuestion = useCallback((questionId: string, updates: Partial<Question>) => {
-    setQuestions(questions.map((q) => q.id === questionId ? { ...q, ...updates } : q));
-  }, [questions]);
+  const updateQuestion = (questionId: string, updates: Partial<Question>) => {
+    setQuestions(prev => prev.map((q) => q.id === questionId ? { ...q, ...updates } : q));
+  };
 
-  const deleteQuestion = useCallback((questionId: string) => {
+  const deleteQuestion = (questionId: string) => {
     const index = questions.findIndex((q) => q.id === questionId);
-    setQuestions(questions.filter((q) => q.id !== questionId));
+    const newQuestions = questions.filter((q) => q.id !== questionId);
+    setQuestions(newQuestions);
     if (selectedQuestionId === questionId) {
-      if (questions.length > 1) {
-        const newIndex = Math.min(index, questions.length - 2);
-        setSelectedQuestionId(questions[newIndex === index ? Math.max(0, index - 1) : newIndex]?.id || null);
+      if (newQuestions.length > 0) {
+        const newIndex = Math.min(index, newQuestions.length - 1);
+        setSelectedQuestionId(newQuestions[newIndex]?.id || null);
       } else {
         setSelectedQuestionId(null);
       }
     }
-  }, [questions, selectedQuestionId]);
+  };
 
-  const copyQuestion = useCallback((questionId: string) => {
+  const copyQuestion = (questionId: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (!question) return;
     
@@ -269,9 +303,9 @@ function SurveyEditor() {
     newQuestions.splice(index + 1, 0, newQuestion);
     setQuestions(newQuestions);
     setSelectedQuestionId(newQuestion.id);
-  }, [questions]);
+  };
 
-  const moveQuestion = useCallback((questionId: string, direction: 'up' | 'down') => {
+  const moveQuestion = (questionId: string, direction: 'up' | 'down') => {
     const index = questions.findIndex((q) => q.id === questionId);
     if (direction === 'up' && index > 0) {
       const newQuestions = [...questions];
@@ -282,65 +316,50 @@ function SurveyEditor() {
       [newQuestions[index], newQuestions[index + 1]] = [newQuestions[index + 1], newQuestions[index]];
       setQuestions(newQuestions);
     }
-  }, [questions]);
+  };
 
-  const addOption = useCallback((questionId: string) => {
+  const addOption = (questionId: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (!question?.options) return;
     
     updateQuestion(questionId, {
       options: [...question.options, { id: `opt-${Date.now()}`, text: `옵션 ${question.options.length + 1}` }],
     });
-  }, [questions, updateQuestion]);
+  };
 
-  const updateOption = useCallback((questionId: string, optionId: string, text: string) => {
-    const question = questions.find((q) => q.id === questionId);
-    if (!question?.options) return;
-    
-    updateQuestion(questionId, {
-      options: question.options.map((o) => o.id === optionId ? { ...o, text } : o),
-    });
-  }, [questions, updateQuestion]);
+  const updateOption = (questionId: string, optionId: string, text: string) => {
+    setQuestions(prev => prev.map(q => {
+      if (q.id !== questionId || !q.options) return q;
+      return {
+        ...q,
+        options: q.options.map(o => o.id === optionId ? { ...o, text } : o),
+      };
+    }));
+  };
 
-  const deleteOption = useCallback((questionId: string, optionId: string) => {
+  const deleteOption = (questionId: string, optionId: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (!question?.options || question.options.length <= 1) return;
     
     updateQuestion(questionId, {
       options: question.options.filter((o) => o.id !== optionId),
     });
-  }, [questions, updateQuestion]);
+  };
 
-  const moveOption = useCallback((questionId: string, optionId: string, direction: 'up' | 'down') => {
-    const question = questions.find((q) => q.id === questionId);
-    if (!question?.options) return;
-
-    const index = question.options.findIndex((o) => o.id === optionId);
-    if (direction === 'up' && index > 0) {
-      const newOptions = [...question.options];
-      [newOptions[index - 1], newOptions[index]] = [newOptions[index], newOptions[index - 1]];
-      updateQuestion(questionId, { options: newOptions });
-    } else if (direction === 'down' && index < question.options.length - 1) {
-      const newOptions = [...question.options];
-      [newOptions[index], newOptions[index + 1]] = [newOptions[index + 1], newOptions[index]];
-      updateQuestion(questionId, { options: newOptions });
-    }
-  }, [questions, updateQuestion]);
-
-  const handleAddHashtag = useCallback(() => {
+  const handleAddHashtag = () => {
     const tag = hashtagInput.trim().replace(/^#/, '');
     if (tag && !hashtags.includes(tag)) {
       setHashtags([...hashtags, tag]);
     }
     setHashtagInput('');
-  }, [hashtagInput, hashtags]);
+  };
 
-  const handleRemoveHashtag = useCallback((tag: string) => {
+  const handleRemoveHashtag = (tag: string) => {
     setHashtags(hashtags.filter((t) => t !== tag));
-  }, [hashtags]);
+  };
 
   // Image upload handlers
-  const handleCoverImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -349,23 +368,25 @@ function SurveyEditor() {
       };
       reader.readAsDataURL(file);
     }
-  }, []);
+  };
 
-  const handleQuestionImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleQuestionImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !uploadingImageForQuestion) return;
 
     const question = questions.find((q) => q.id === uploadingImageForQuestion);
     if (!question) return;
 
-    const currentImages = question.imageUrls || [];
-    
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        updateQuestion(uploadingImageForQuestion, {
-          imageUrls: [...currentImages, reader.result as string],
-        });
+        setQuestions(prev => prev.map(q => {
+          if (q.id !== uploadingImageForQuestion) return q;
+          return {
+            ...q,
+            imageUrls: [...(q.imageUrls || []), reader.result as string],
+          };
+        }));
       };
       reader.readAsDataURL(file);
     });
@@ -374,18 +395,18 @@ function SurveyEditor() {
     if (questionImageInputRef.current) {
       questionImageInputRef.current.value = '';
     }
-  }, [uploadingImageForQuestion, questions, updateQuestion]);
+  };
 
-  const removeQuestionImage = useCallback((questionId: string, imageIndex: number) => {
+  const removeQuestionImage = (questionId: string, imageIndex: number) => {
     const question = questions.find((q) => q.id === questionId);
     if (!question?.imageUrls) return;
 
     updateQuestion(questionId, {
       imageUrls: question.imageUrls.filter((_, i) => i !== imageIndex),
     });
-  }, [questions, updateQuestion]);
+  };
 
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     const surveyData = {
       title,
       description,
@@ -410,77 +431,90 @@ function SurveyEditor() {
     }
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
-  }, [title, description, questions, themeColor, fontFamily, cardStyle, coverImageUrl, isPublic, deadline, hashtags, existingSurvey, updateSurvey, addSurvey, navigate]);
+  };
 
-  const handlePublish = useCallback(() => {
+  const handlePublish = () => {
     handleSave();
     if (existingSurvey) {
       publishSurvey(existingSurvey.id);
     }
     setShowPublishModal(false);
     navigate('/myform');
-  }, [handleSave, existingSurvey, publishSurvey, navigate]);
+  };
 
-  // AI Generation (mock)
-  const handleAIGenerate = useCallback(async () => {
+  // AI Generation for specific question
+  const openAIForQuestion = (questionId: string) => {
+    setAiTargetQuestionId(questionId);
+    setAiMessages([]);
+    setAiPrompt('');
+    setShowAIModal(true);
+  };
+
+  const handleAIGenerate = async () => {
     if (!aiPrompt.trim()) return;
     
+    // Add user message
+    setAiMessages(prev => [...prev, { role: 'user', content: aiPrompt }]);
     setIsGenerating(true);
     
-    // Simulate AI generation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Generate mock questions based on prompt
-    const generatedQuestions: Question[] = [
-      { id: generateId(), type: 'rating', label: '전반적인 만족도를 평가해주세요', required: true, ratingMax: 5, imageUrls: [] },
-      { id: generateId(), type: 'single_choice', label: '저희 서비스를 어떻게 알게 되셨나요?', required: true, options: [
-        { id: `opt-${Date.now()}-1`, text: '검색 엔진' },
-        { id: `opt-${Date.now()}-2`, text: '소셜 미디어' },
-        { id: `opt-${Date.now()}-3`, text: '지인 추천' },
-        { id: `opt-${Date.now()}-4`, text: '광고' },
-        { id: `opt-${Date.now()}-5`, text: '기타' },
-      ], imageUrls: [] },
-      { id: generateId(), type: 'multiple_choice', label: '가장 만족스러웠던 부분을 선택해주세요 (복수 선택 가능)', required: true, options: [
-        { id: `opt-${Date.now()}-6`, text: '제품 품질' },
-        { id: `opt-${Date.now()}-7`, text: '가격 경쟁력' },
-        { id: `opt-${Date.now()}-8`, text: '고객 서비스' },
-        { id: `opt-${Date.now()}-9`, text: '배송 속도' },
-        { id: `opt-${Date.now()}-10`, text: '웹사이트/앱 사용성' },
-      ], imageUrls: [] },
-      { id: generateId(), type: 'rating', label: '다른 분들에게 추천할 의향이 얼마나 있으신가요?', required: true, ratingMax: 10, imageUrls: [] },
-      { id: generateId(), type: 'long_text', label: '개선이 필요한 부분이나 건의사항이 있다면 자유롭게 작성해주세요', required: false, imageUrls: [] },
-    ];
-    
-    setQuestions([...questions, ...generatedQuestions]);
-    setIsGenerating(false);
-    setShowAIModal(false);
+    const currentPrompt = aiPrompt;
     setAiPrompt('');
     
-    if (generatedQuestions.length > 0) {
-      setSelectedQuestionId(generatedQuestions[0].id);
-    }
-  }, [aiPrompt, questions]);
+    // Simulate AI generation delay
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    // Generate mock options based on prompt
+    const mockOptions = [
+      '트와이스 모모',
+      '블랙핑크 리사',
+      '아이브 안유진',
+      '에스파 카리나',
+      '르세라핌 카즈하',
+    ];
+    
+    setAiMessages(prev => [...prev, { 
+      role: 'ai', 
+      content: '여자 아이돌 춤신춤왕에 대한 선택지를 생성했어요!',
+      options: mockOptions 
+    }]);
+    
+    setIsGenerating(false);
+  };
+
+  const applyAIOptions = (options: string[]) => {
+    if (!aiTargetQuestionId) return;
+    
+    const newOptions: QuestionOption[] = options.map((text, i) => ({
+      id: `opt-${Date.now()}-${i}`,
+      text,
+    }));
+    
+    updateQuestion(aiTargetQuestionId, { options: newOptions });
+    setShowAIModal(false);
+    setAiTargetQuestionId(null);
+    setAiMessages([]);
+  };
 
   // Drag and drop handlers
-  const handleDragStart = useCallback((type: QuestionType) => {
+  const handleDragStart = (type: QuestionType) => {
     setDraggedType(type);
-  }, []);
+  };
 
-  const handleDragEnd = useCallback(() => {
+  const handleDragEnd = () => {
     setDraggedType(null);
-  }, []);
+  };
 
-  const handleDrop = useCallback((e: React.DragEvent, index?: number) => {
+  const handleDrop = (e: React.DragEvent, index?: number) => {
     e.preventDefault();
     if (draggedType) {
       addQuestion(draggedType, index);
       setDraggedType(null);
     }
-  }, [draggedType, addQuestion]);
+  };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-  }, []);
+  };
 
   const selectedQuestion = questions.find((q) => q.id === selectedQuestionId);
 
@@ -575,7 +609,7 @@ function SurveyEditor() {
           {/* Tip */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
             <p className="text-xs text-amber-800">
-              <strong>이미지 추가 방법:</strong> 선택형 질문 카드를 클릭하면 상단에 이미지 버튼이 나타납니다. AI 생성 또는 PC에서 직접 업로드할 수 있어요.
+              <strong>AI로 선택지 생성:</strong> 선택형 질문 카드의 <SparkleIcon /> 아이콘을 클릭하면 AI가 선택지를 자동으로 생성해드립니다.
             </p>
           </div>
         </div>
@@ -660,6 +694,289 @@ function SurveyEditor() {
     </div>
   );
 
+  // Question Card Component
+  const QuestionCard = ({ question, index }: { question: Question; index: number }) => {
+    const isSelected = selectedQuestionId === question.id;
+    const hasSelectOptions = ['single_choice', 'multiple_choice', 'dropdown'].includes(question.type);
+
+    return (
+      <Reorder.Item
+        key={question.id}
+        value={question}
+        onClick={() => setSelectedQuestionId(question.id)}
+        className={`bg-white rounded-xl shadow-card cursor-pointer transition-all ${
+          cardStyle === 'filled' ? 'bg-secondary-50' : ''
+        } ${cardStyle === 'minimal' ? 'shadow-none border-b border-border-light rounded-none' : ''} ${
+          isSelected
+            ? 'ring-2 ring-primary-500 shadow-card-hover'
+            : 'hover:shadow-card-hover'
+        }`}
+      >
+        {/* Question Images */}
+        {question.imageUrls && question.imageUrls.length > 0 && (
+          <div className="flex gap-2 p-3 pb-0 overflow-x-auto">
+            {question.imageUrls.map((url, imgIndex) => (
+              <div key={imgIndex} className="relative flex-shrink-0">
+                <img src={url} alt={`Question image ${imgIndex + 1}`} className="w-32 h-24 object-cover rounded-lg" />
+                {isSelected && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeQuestionImage(question.id, imgIndex);
+                    }}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="cursor-grab active:cursor-grabbing text-text-tertiary hover:text-text-secondary">
+                <DragIcon />
+              </div>
+              <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded">
+                Q{index + 1}
+              </span>
+              {question.required && (
+                <span className="text-xs text-red-500 font-medium">필수</span>
+              )}
+            </div>
+            
+            {isSelected && (
+              <div className="flex items-center gap-1">
+                {/* AI Button for select types */}
+                {hasSelectOptions && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openAIForQuestion(question.id);
+                    }}
+                    className="p-2 hover:bg-amber-50 rounded-lg transition-colors text-amber-500 hover:text-amber-600"
+                    title="AI로 선택지 생성"
+                  >
+                    <SparkleIcon />
+                  </button>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUploadingImageForQuestion(question.id);
+                    questionImageInputRef.current?.click();
+                  }}
+                  className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-text-tertiary hover:text-primary-600"
+                  title="이미지 추가"
+                >
+                  <ImageIcon />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    moveQuestion(question.id, 'up');
+                  }}
+                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary disabled:opacity-30"
+                  disabled={index === 0}
+                >
+                  <ChevronUpIcon />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    moveQuestion(question.id, 'down');
+                  }}
+                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary disabled:opacity-30"
+                  disabled={index === questions.length - 1}
+                >
+                  <ChevronDownIcon />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    copyQuestion(question.id);
+                  }}
+                  className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary"
+                >
+                  <CopyIcon />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteQuestion(question.id);
+                  }}
+                  className="p-2 hover:bg-red-50 rounded-lg transition-colors text-text-tertiary hover:text-red-500"
+                >
+                  <TrashIcon />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Question Label */}
+          {question.type === 'section_divider' ? (
+            <input
+              type="text"
+              value={question.label}
+              onChange={(e) => updateQuestion(question.id, { label: e.target.value })}
+              placeholder="섹션 제목"
+              className="w-full text-lg font-bold text-text-primary bg-transparent border-none focus:outline-none placeholder-text-tertiary border-b-2 border-primary-300 pb-2"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <input
+              type="text"
+              value={question.label}
+              onChange={(e) => updateQuestion(question.id, { label: e.target.value })}
+              placeholder="질문을 입력하세요"
+              className="w-full font-medium text-text-primary bg-transparent border-none focus:outline-none placeholder-text-tertiary mb-1"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+
+          {/* Question Input Preview */}
+          {(question.type === 'short_text' || question.type === 'email' || question.type === 'number') && (
+            <input
+              type="text"
+              placeholder={question.placeholder || '답변을 입력하세요'}
+              disabled
+              className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary mt-3"
+            />
+          )}
+
+          {question.type === 'long_text' && (
+            <textarea
+              placeholder={question.placeholder || '답변을 입력하세요'}
+              disabled
+              className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary resize-none mt-3"
+              rows={3}
+            />
+          )}
+
+          {(question.type === 'single_choice' || question.type === 'multiple_choice') && question.options && (
+            <div className="space-y-2 mt-3">
+              {question.options.map((option, optIndex) => (
+                <div key={option.id} className="flex items-center gap-3 group">
+                  <div className={`w-5 h-5 border-2 border-border flex-shrink-0 ${
+                    question.type === 'single_choice' ? 'rounded-full' : 'rounded'
+                  }`} />
+                  <input
+                    type="text"
+                    value={option.text}
+                    onChange={(e) => updateOption(question.id, option.id, e.target.value)}
+                    className="flex-1 py-2 bg-transparent border-none focus:outline-none text-text-secondary focus:ring-0"
+                    placeholder="옵션 입력"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  {isSelected && (
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {question.options!.length > 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteOption(question.id, option.id);
+                          }}
+                          className="p-1 hover:bg-red-50 rounded text-text-tertiary hover:text-red-500"
+                        >
+                          <CloseIcon />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {isSelected && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addOption(question.id);
+                  }}
+                  className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 mt-2 py-2"
+                >
+                  <PlusIcon /> 옵션 추가
+                </button>
+              )}
+            </div>
+          )}
+
+          {question.type === 'dropdown' && question.options && (
+            <div className="mt-3">
+              <select disabled className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary">
+                <option>선택하세요</option>
+                {question.options.map((opt) => (
+                  <option key={opt.id}>{opt.text}</option>
+                ))}
+              </select>
+              {isSelected && (
+                <div className="mt-3 space-y-2">
+                  {question.options.map((option, optIndex) => (
+                    <div key={option.id} className="flex items-center gap-2 group">
+                      <span className="text-xs text-text-tertiary w-6">{optIndex + 1}.</span>
+                      <input
+                        type="text"
+                        value={option.text}
+                        onChange={(e) => updateOption(question.id, option.id, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
+                        placeholder="옵션 입력"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {question.options!.length > 1 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteOption(question.id, option.id);
+                            }}
+                            className="p-2 hover:bg-red-50 rounded text-text-tertiary hover:text-red-500"
+                          >
+                            <TrashIcon />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addOption(question.id);
+                    }}
+                    className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700"
+                  >
+                    <PlusIcon /> 옵션 추가
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {question.type === 'rating' && (
+            <div className="flex gap-2 mt-3">
+              {Array.from({ length: question.ratingMax || 5 }).map((_, i) => (
+                <div key={i} className="w-10 h-10 rounded-lg border-2 border-border flex items-center justify-center text-text-tertiary hover:border-primary-300 hover:text-primary-500 transition-colors">
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {question.type === 'date' && (
+            <input
+              type="date"
+              disabled
+              className="px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary mt-3"
+            />
+          )}
+        </div>
+      </Reorder.Item>
+    );
+  };
+
   // Preview Panel
   const PreviewPanel = () => (
     <div 
@@ -706,294 +1023,7 @@ function SurveyEditor() {
         {/* Questions */}
         <Reorder.Group axis="y" values={questions} onReorder={setQuestions} className="space-y-4">
           {questions.map((question, index) => (
-            <Reorder.Item
-              key={question.id}
-              value={question}
-              onClick={() => setSelectedQuestionId(question.id)}
-              className={`bg-white rounded-xl shadow-card cursor-pointer transition-all ${
-                cardStyle === 'filled' ? 'bg-secondary-50' : ''
-              } ${cardStyle === 'minimal' ? 'shadow-none border-b border-border-light rounded-none' : ''} ${
-                selectedQuestionId === question.id
-                  ? 'ring-2 ring-primary-500 shadow-card-hover'
-                  : 'hover:shadow-card-hover'
-              }`}
-            >
-              {/* Question Images */}
-              {question.imageUrls && question.imageUrls.length > 0 && (
-                <div className="flex gap-2 p-3 pb-0 overflow-x-auto">
-                  {question.imageUrls.map((url, imgIndex) => (
-                    <div key={imgIndex} className="relative flex-shrink-0">
-                      <img src={url} alt={`Question image ${imgIndex + 1}`} className="w-32 h-24 object-cover rounded-lg" />
-                      {selectedQuestionId === question.id && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeQuestionImage(question.id, imgIndex);
-                          }}
-                          className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="cursor-grab active:cursor-grabbing text-text-tertiary hover:text-text-secondary">
-                      <DragIcon />
-                    </div>
-                    <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded">
-                      Q{index + 1}
-                    </span>
-                    {question.required && (
-                      <span className="text-xs text-red-500 font-medium">필수</span>
-                    )}
-                  </div>
-                  
-                  {selectedQuestionId === question.id && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUploadingImageForQuestion(question.id);
-                          questionImageInputRef.current?.click();
-                        }}
-                        className="p-2 hover:bg-primary-50 rounded-lg transition-colors text-text-tertiary hover:text-primary-600"
-                        title="이미지 추가"
-                      >
-                        <ImageIcon />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveQuestion(question.id, 'up');
-                        }}
-                        className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary disabled:opacity-30"
-                        disabled={index === 0}
-                      >
-                        <ChevronUpIcon />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveQuestion(question.id, 'down');
-                        }}
-                        className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary disabled:opacity-30"
-                        disabled={index === questions.length - 1}
-                      >
-                        <ChevronDownIcon />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyQuestion(question.id);
-                        }}
-                        className="p-2 hover:bg-secondary-100 rounded-lg transition-colors text-text-tertiary hover:text-text-secondary"
-                      >
-                        <CopyIcon />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteQuestion(question.id);
-                        }}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors text-text-tertiary hover:text-red-500"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Section Divider */}
-                {question.type === 'section_divider' ? (
-                  <input
-                    type="text"
-                    value={question.label}
-                    onChange={(e) => updateQuestion(question.id, { label: e.target.value })}
-                    placeholder="섹션 제목"
-                    className="w-full text-lg font-bold text-text-primary bg-transparent border-none focus:outline-none placeholder-text-tertiary border-b-2 border-primary-300 pb-2"
-                  />
-                ) : (
-                  <>
-                    <input
-                      type="text"
-                      value={question.label}
-                      onChange={(e) => updateQuestion(question.id, { label: e.target.value })}
-                      placeholder="질문을 입력하세요"
-                      className="w-full font-medium text-text-primary bg-transparent border-none focus:outline-none placeholder-text-tertiary mb-1"
-                    />
-                    {question.description !== undefined && (
-                      <input
-                        type="text"
-                        value={question.description || ''}
-                        onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
-                        placeholder="설명 추가 (선택사항)"
-                        className="w-full text-sm text-text-tertiary bg-transparent border-none focus:outline-none placeholder-text-tertiary mb-3"
-                      />
-                    )}
-                  </>
-                )}
-
-                {/* Question Input Preview */}
-                {(question.type === 'short_text' || question.type === 'email' || question.type === 'number') && (
-                  <input
-                    type="text"
-                    placeholder={question.placeholder || '답변을 입력하세요'}
-                    disabled
-                    className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary mt-3"
-                  />
-                )}
-
-                {question.type === 'long_text' && (
-                  <textarea
-                    placeholder={question.placeholder || '답변을 입력하세요'}
-                    disabled
-                    className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary resize-none mt-3"
-                    rows={3}
-                  />
-                )}
-
-                {(question.type === 'single_choice' || question.type === 'multiple_choice') && question.options && (
-                  <div className="space-y-2 mt-3">
-                    {question.options.map((option, optIndex) => (
-                      <div key={option.id} className="flex items-center gap-3 group">
-                        <div className={`w-5 h-5 border-2 border-border flex-shrink-0 ${
-                          question.type === 'single_choice' ? 'rounded-full' : 'rounded'
-                        }`} />
-                        <input
-                          type="text"
-                          value={option.text}
-                          onChange={(e) => updateOption(question.id, option.id, e.target.value)}
-                          className="flex-1 py-2 bg-transparent border-none focus:outline-none text-text-secondary"
-                          placeholder="옵션 입력"
-                        />
-                        {selectedQuestionId === question.id && (
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                moveOption(question.id, option.id, 'up');
-                              }}
-                              className="p-1 hover:bg-secondary-100 rounded text-text-tertiary hover:text-text-secondary disabled:opacity-30"
-                              disabled={optIndex === 0}
-                            >
-                              <ChevronUpIcon />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                moveOption(question.id, option.id, 'down');
-                              }}
-                              className="p-1 hover:bg-secondary-100 rounded text-text-tertiary hover:text-text-secondary disabled:opacity-30"
-                              disabled={optIndex === question.options!.length - 1}
-                            >
-                              <ChevronDownIcon />
-                            </button>
-                            {question.options!.length > 1 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteOption(question.id, option.id);
-                                }}
-                                className="p-1 hover:bg-red-50 rounded text-text-tertiary hover:text-red-500"
-                              >
-                                <CloseIcon />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {selectedQuestionId === question.id && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addOption(question.id);
-                        }}
-                        className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 mt-2 py-2"
-                      >
-                        <PlusIcon /> 옵션 추가
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {question.type === 'dropdown' && question.options && (
-                  <div className="mt-3">
-                    <select disabled className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary">
-                      <option>선택하세요</option>
-                      {question.options.map((opt) => (
-                        <option key={opt.id}>{opt.text}</option>
-                      ))}
-                    </select>
-                    {selectedQuestionId === question.id && (
-                      <div className="mt-3 space-y-2">
-                        {question.options.map((option, optIndex) => (
-                          <div key={option.id} className="flex items-center gap-2 group">
-                            <span className="text-xs text-text-tertiary w-6">{optIndex + 1}.</span>
-                            <input
-                              type="text"
-                              value={option.text}
-                              onChange={(e) => updateOption(question.id, option.id, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
-                              placeholder="옵션 입력"
-                            />
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {question.options!.length > 1 && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteOption(question.id, option.id);
-                                  }}
-                                  className="p-2 hover:bg-red-50 rounded text-text-tertiary hover:text-red-500"
-                                >
-                                  <TrashIcon />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addOption(question.id);
-                          }}
-                          className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700"
-                        >
-                          <PlusIcon /> 옵션 추가
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {question.type === 'rating' && (
-                  <div className="flex gap-2 mt-3">
-                    {Array.from({ length: question.ratingMax || 5 }).map((_, i) => (
-                      <div key={i} className="w-10 h-10 rounded-lg border-2 border-border flex items-center justify-center text-text-tertiary hover:border-primary-300 hover:text-primary-500 transition-colors">
-                        {i + 1}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {question.type === 'date' && (
-                  <input
-                    type="date"
-                    disabled
-                    className="px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary mt-3"
-                  />
-                )}
-              </div>
-            </Reorder.Item>
+            <QuestionCard key={question.id} question={question} index={index} />
           ))}
         </Reorder.Group>
 
@@ -1045,18 +1075,6 @@ function SurveyEditor() {
                     className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
                   />
                 </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">설명</label>
-                  <input
-                    type="text"
-                    value={selectedQuestion.description || ''}
-                    onChange={(e) => updateQuestion(selectedQuestion.id, { description: e.target.value })}
-                    placeholder="추가 설명 (선택사항)"
-                    className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
-                  />
-                </div>
                 
                 {/* Placeholder */}
                 {['short_text', 'long_text', 'email', 'number'].includes(selectedQuestion.type) && (
@@ -1094,34 +1112,6 @@ function SurveyEditor() {
                   </div>
                 )}
 
-                {/* Min/Max length for text */}
-                {['short_text', 'long_text'].includes(selectedQuestion.type) && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">최소 글자</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={selectedQuestion.minLength || ''}
-                        onChange={(e) => updateQuestion(selectedQuestion.id, { minLength: Number(e.target.value) || undefined })}
-                        placeholder="0"
-                        className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-secondary mb-1">최대 글자</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={selectedQuestion.maxLength || ''}
-                        onChange={(e) => updateQuestion(selectedQuestion.id, { maxLength: Number(e.target.value) || undefined })}
-                        placeholder="무제한"
-                        className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
-                      />
-                    </div>
-                  </div>
-                )}
-
                 {/* Required toggle */}
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm font-medium text-text-secondary">필수 응답</span>
@@ -1136,56 +1126,7 @@ function SurveyEditor() {
                     }`} />
                   </button>
                 </div>
-
-                {/* Options for select types */}
-                {['single_choice', 'multiple_choice', 'dropdown'].includes(selectedQuestion.type) && selectedQuestion.options && (
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">옵션 목록</label>
-                    <div className="space-y-2">
-                      {selectedQuestion.options.map((option, index) => (
-                        <div key={option.id} className="flex items-center gap-2">
-                          <span className="text-xs text-text-tertiary w-5">{index + 1}</span>
-                          <input
-                            type="text"
-                            value={option.text}
-                            onChange={(e) => updateOption(selectedQuestion.id, option.id, e.target.value)}
-                            className="flex-1 px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
-                          />
-                          {selectedQuestion.options!.length > 1 && (
-                            <button
-                              onClick={() => deleteOption(selectedQuestion.id, option.id)}
-                              className="p-2 hover:bg-red-50 rounded text-text-tertiary hover:text-red-500"
-                            >
-                              <TrashIcon />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => addOption(selectedQuestion.id)}
-                        className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 py-2"
-                      >
-                        <PlusIcon /> 옵션 추가
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
-
-            {/* AI Question Tab */}
-            <div className="border-t border-border-light pt-6">
-              <h3 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
-                <AIIcon />
-                AI 질문
-              </h3>
-              <button
-                onClick={() => setShowAIModal(true)}
-                className="w-full py-3 border border-primary-300 rounded-xl text-primary-600 font-medium hover:bg-primary-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <AIIcon />
-                AI로 질문 생성하기
-              </button>
             </div>
           </>
         ) : (
@@ -1214,6 +1155,69 @@ function SurveyEditor() {
                 className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500"
               />
               <p className="text-xs text-text-tertiary mt-1">설정된 날짜 이후 응답이 자동으로 마감됩니다</p>
+            </div>
+
+            {/* Auto Email Settings */}
+            <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <MailIcon />
+                  <span className="text-sm font-medium text-text-primary">자동 이메일 발송</span>
+                </div>
+                <button
+                  onClick={() => setAutoEmailEnabled(!autoEmailEnabled)}
+                  className={`w-12 h-6 rounded-full transition-colors ${
+                    autoEmailEnabled ? 'bg-primary-500' : 'bg-secondary-200'
+                  }`}
+                >
+                  <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    autoEmailEnabled ? 'translate-x-6' : 'translate-x-0.5'
+                  }`} />
+                </button>
+              </div>
+              
+              {autoEmailEnabled && (
+                <div className="space-y-3 mt-3">
+                  <p className="text-xs text-text-tertiary">설정한 응답 수 달성 시 분석 결과를 이메일로 자동 발송합니다</p>
+                  
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-2">몇 명이 응답하면 이메일을 보낼까요?</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {[50, 100, 200, 500].map((n) => (
+                        <button
+                          key={n}
+                          onClick={() => setTargetResponseCount(n)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            targetResponseCount === n
+                              ? 'bg-primary-500 text-white'
+                              : 'bg-white text-text-secondary hover:bg-secondary-100'
+                          }`}
+                        >
+                          {n}명
+                        </button>
+                      ))}
+                      <input
+                        type="number"
+                        value={targetResponseCount}
+                        onChange={(e) => setTargetResponseCount(Number(e.target.value))}
+                        className="w-20 px-2 py-1.5 border border-border-light rounded-lg text-xs focus:outline-none focus:border-primary-500"
+                        min={1}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">이메일 주소</label>
+                    <input
+                      type="email"
+                      value={notificationEmail}
+                      onChange={(e) => setNotificationEmail(e.target.value)}
+                      placeholder="report@example.com"
+                      className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:border-primary-500 bg-white"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Public toggle */}
@@ -1279,6 +1283,378 @@ function SurveyEditor() {
     </div>
   );
 
+  // Preview Modal with Mobile Frame
+  const PreviewModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPreviewModal(false)} />
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative bg-white rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
+          <h3 className="text-lg font-semibold text-text-primary">미리보기</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center bg-secondary-100 rounded-lg p-1">
+              <button
+                onClick={() => setPreviewDevice('desktop')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  previewDevice === 'desktop' ? 'bg-white shadow text-text-primary' : 'text-text-tertiary'
+                }`}
+              >
+                <DesktopIcon />
+              </button>
+              <button
+                onClick={() => setPreviewDevice('mobile')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  previewDevice === 'mobile' ? 'bg-white shadow text-text-primary' : 'text-text-tertiary'
+                }`}
+              >
+                <PhoneIcon />
+              </button>
+            </div>
+            <button onClick={() => setShowPreviewModal(false)} className="p-2 hover:bg-secondary-100 rounded-lg">
+              <CloseIcon />
+            </button>
+          </div>
+        </div>
+
+        {/* Preview Content */}
+        <div className="flex-1 overflow-auto bg-secondary-100 p-6 flex items-center justify-center">
+          {previewDevice === 'mobile' ? (
+            // Mobile Frame
+            <div className="relative">
+              <div className="w-[375px] h-[667px] bg-white rounded-[40px] shadow-2xl overflow-hidden border-[10px] border-gray-800 relative">
+                {/* Phone Notch */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10" />
+                
+                {/* Screen Content */}
+                <div className="h-full overflow-y-auto pt-8">
+                  <div className="p-4" style={{ fontFamily }}>
+                    <div 
+                      className="rounded-xl overflow-hidden mb-4"
+                      style={{ 
+                        background: coverImageUrl 
+                          ? `url(${coverImageUrl}) center/cover` 
+                          : `linear-gradient(135deg, ${themeColor}30 0%, ${themeColor}50 100%)` 
+                      }}
+                    >
+                      <div className="p-4">
+                        <h1 className="text-lg font-bold text-text-primary">{title || '설문 제목'}</h1>
+                        <p className="text-xs text-text-secondary mt-1">{description}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {questions.map((question, index) => (
+                        <div key={question.id} className="bg-white rounded-lg p-3 shadow-sm border border-border-light">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">Q{index + 1}</span>
+                            {question.required && <span className="text-[10px] text-red-500">필수</span>}
+                          </div>
+                          <p className="text-sm font-medium text-text-primary mb-2">{question.label}</p>
+                          
+                          {(question.type === 'single_choice' || question.type === 'multiple_choice') && question.options && (
+                            <div className="space-y-1.5">
+                              {question.options.map((opt) => (
+                                <div key={opt.id} className="flex items-center gap-2 py-1.5 px-2 bg-secondary-50 rounded text-xs">
+                                  <div className={`w-3 h-3 border border-border ${question.type === 'single_choice' ? 'rounded-full' : 'rounded'}`} />
+                                  {opt.text}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {question.type === 'rating' && (
+                            <div className="flex gap-1">
+                              {Array.from({ length: question.ratingMax || 5 }).map((_, i) => (
+                                <div key={i} className="w-6 h-6 rounded border border-border flex items-center justify-center text-[10px] text-text-tertiary">
+                                  {i + 1}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <button className="w-full mt-4 py-3 bg-primary-500 text-white text-sm font-medium rounded-lg">
+                      제출하기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Desktop Preview
+            <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="max-h-[70vh] overflow-y-auto p-6" style={{ fontFamily }}>
+                <div 
+                  className="rounded-xl overflow-hidden mb-6"
+                  style={{ 
+                    background: coverImageUrl 
+                      ? `url(${coverImageUrl}) center/cover` 
+                      : `linear-gradient(135deg, ${themeColor}30 0%, ${themeColor}50 100%)` 
+                  }}
+                >
+                  <div className="p-6">
+                    <h1 className="text-2xl font-bold text-text-primary">{title || '설문 제목'}</h1>
+                    <p className="text-sm text-text-secondary mt-2">{description}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {questions.map((question, index) => (
+                    <div key={question.id} className="bg-white rounded-xl p-5 shadow-card border border-border-light">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded">Q{index + 1}</span>
+                        {question.required && <span className="text-xs text-red-500">필수</span>}
+                      </div>
+                      <p className="font-medium text-text-primary mb-3">{question.label}</p>
+                      
+                      {(question.type === 'single_choice' || question.type === 'multiple_choice') && question.options && (
+                        <div className="space-y-2">
+                          {question.options.map((opt) => (
+                            <div key={opt.id} className="flex items-center gap-3 py-2 px-3 bg-secondary-50 rounded-lg text-sm">
+                              <div className={`w-4 h-4 border-2 border-border ${question.type === 'single_choice' ? 'rounded-full' : 'rounded'}`} />
+                              {opt.text}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {question.type === 'rating' && (
+                        <div className="flex gap-2">
+                          {Array.from({ length: question.ratingMax || 5 }).map((_, i) => (
+                            <div key={i} className="w-10 h-10 rounded-lg border-2 border-border flex items-center justify-center text-text-tertiary">
+                              {i + 1}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {(question.type === 'short_text' || question.type === 'email' || question.type === 'number') && (
+                        <input
+                          type="text"
+                          placeholder={question.placeholder || '답변을 입력하세요'}
+                          disabled
+                          className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary"
+                        />
+                      )}
+
+                      {question.type === 'long_text' && (
+                        <textarea
+                          placeholder={question.placeholder || '답변을 입력하세요'}
+                          disabled
+                          className="w-full px-4 py-3 bg-secondary-50 border border-border-light rounded-lg text-text-tertiary resize-none"
+                          rows={3}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button className="w-full mt-6 py-4 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors">
+                  제출하기
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  // AI Chat Modal
+  const AIChatModal = () => {
+    const targetQuestion = questions.find(q => q.id === aiTargetQuestionId);
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAIModal(false)} />
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative bg-white rounded-2xl w-full max-w-lg h-[600px] flex flex-col shadow-2xl"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white">
+                <SparkleIcon />
+              </div>
+              <div>
+                <h3 className="font-semibold text-text-primary">AI 선택지 생성</h3>
+                {targetQuestion && (
+                  <p className="text-xs text-text-tertiary truncate max-w-[250px]">{targetQuestion.label}</p>
+                )}
+              </div>
+            </div>
+            <button onClick={() => setShowAIModal(false)} className="p-2 hover:bg-secondary-100 rounded-lg">
+              <CloseIcon />
+            </button>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {aiMessages.length === 0 && (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                  <SparkleIcon />
+                </div>
+                <h4 className="font-medium text-text-primary mb-2">AI에게 선택지 생성을 요청하세요</h4>
+                <p className="text-sm text-text-tertiary">
+                  예: &quot;여자 아이돌 춤신춤왕에 대해 5개 선택지 만들어줘&quot;
+                </p>
+              </div>
+            )}
+            
+            {aiMessages.map((msg, index) => (
+              <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.role === 'user' ? (
+                  <div className="max-w-[80%] bg-primary-500 text-white px-4 py-3 rounded-2xl rounded-br-sm">
+                    <p className="text-sm">{msg.content}</p>
+                  </div>
+                ) : (
+                  <div className="max-w-[85%]">
+                    <div className="bg-secondary-100 px-4 py-3 rounded-2xl rounded-bl-sm mb-2">
+                      <p className="text-sm text-text-primary">{msg.content}</p>
+                    </div>
+                    {msg.options && (
+                      <div className="bg-white border border-border-light rounded-xl p-4 shadow-card">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded">생성된 선택지</span>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          {msg.options.map((opt, i) => (
+                            <div key={i} className="flex items-center gap-3 py-2 px-3 bg-secondary-50 rounded-lg text-sm">
+                              <div className="w-4 h-4 border-2 border-primary-400 rounded-full" />
+                              {opt}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => applyAIOptions(msg.options!)}
+                            className="flex-1 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors"
+                          >
+                            적용하기
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAiPrompt('다시 생성해줘');
+                              handleAIGenerate();
+                            }}
+                            className="px-4 py-2 border border-border-light text-text-secondary text-sm font-medium rounded-lg hover:bg-secondary-50 transition-colors"
+                          >
+                            재생성
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {isGenerating && (
+              <div className="flex justify-start">
+                <div className="bg-secondary-100 px-4 py-3 rounded-2xl rounded-bl-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 rounded-full bg-text-tertiary animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-text-tertiary animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-text-tertiary animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span className="text-sm text-text-tertiary">생성 중...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Input */}
+          <div className="p-4 border-t border-border-light">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !isGenerating && handleAIGenerate()}
+                placeholder="선택지 생성을 요청해보세요..."
+                className="flex-1 px-4 py-3 border border-border-light rounded-xl text-sm focus:outline-none focus:border-primary-500"
+                disabled={isGenerating}
+              />
+              <button
+                onClick={handleAIGenerate}
+                disabled={isGenerating || !aiPrompt.trim()}
+                className="px-4 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // Publish Modal
+  const PublishModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPublishModal(false)} />
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl"
+      >
+        <h3 className="text-lg font-semibold text-text-primary mb-2">설문 배포하기</h3>
+        <p className="text-sm text-text-tertiary mb-6">
+          배포하면 다른 사용자들이 이 설문에 참여할 수 있습니다.
+          {isPublic ? ' 공개 설문으로 설정되어 있습니다.' : ' 비공개 설문으로 설정되어 있습니다.'}
+        </p>
+        
+        {deadline && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-amber-800 flex items-center gap-2">
+              <CalendarIcon />
+              마감일: {new Date(deadline).toLocaleDateString('ko-KR')}
+            </p>
+          </div>
+        )}
+
+        {autoEmailEnabled && notificationEmail && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-blue-800 flex items-center gap-2">
+              <MailIcon />
+              {targetResponseCount}명 응답 시 {notificationEmail}로 알림
+            </p>
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowPublishModal(false)}
+            className="flex-1 py-3 border border-border rounded-xl font-medium hover:bg-secondary-50 transition-colors"
+          >
+            취소
+          </button>
+          <button
+            onClick={handlePublish}
+            className="flex-1 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
+          >
+            <PublishIcon />
+            배포하기
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+
   // Hidden file inputs
   const FileInputs = () => (
     <>
@@ -1308,16 +1684,21 @@ function SurveyEditor() {
         
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
-          <button onClick={() => navigate('/myform')} className="p-2 hover:bg-secondary-100 rounded-lg">
-            <ArrowLeftIcon />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate('/myform')} className="p-2 hover:bg-secondary-100 rounded-lg">
+              <ArrowLeftIcon />
+            </button>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-secondary-100 rounded-lg lg:hidden">
+              <MenuIcon />
+            </button>
+          </div>
           <h1 className="font-semibold text-text-primary truncate flex-1 text-center">{title || '새 설문'}</h1>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowAIModal(true)}
-              className="p-2 hover:bg-primary-50 rounded-lg text-primary-600"
+              onClick={() => setShowPreviewModal(true)}
+              className="p-2 hover:bg-secondary-100 rounded-lg text-text-secondary"
             >
-              <AIIcon />
+              <PreviewIcon />
             </button>
             <button
               onClick={handleSave}
@@ -1333,6 +1714,35 @@ function SurveyEditor() {
             </button>
           </div>
         </div>
+
+        {/* Mobile Sidebar Overlay */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-40"
+                onClick={() => setSidebarOpen(false)}
+              />
+              <motion.div
+                initial={{ x: -300 }}
+                animate={{ x: 0 }}
+                exit={{ x: -300 }}
+                className="fixed left-0 top-0 bottom-0 w-72 bg-white z-50 shadow-xl"
+              >
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
+                  <h2 className="font-semibold text-text-primary">컴포넌트</h2>
+                  <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-secondary-100 rounded-lg">
+                    <CloseIcon />
+                  </button>
+                </div>
+                <ComponentPanel />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* Tab Navigation */}
         <div className="flex border-b border-border-light">
@@ -1370,16 +1780,6 @@ function SurveyEditor() {
         </div>
 
         {/* Modals */}
-        {renderModals()}
-      </div>
-    );
-  }
-
-  // Render modals
-  function renderModals() {
-    return (
-      <>
-        {/* Save Toast */}
         <AnimatePresence>
           {isSaved && (
             <motion.div
@@ -1392,124 +1792,10 @@ function SurveyEditor() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Publish Modal */}
-        {showPublishModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPublishModal(false)} />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="relative bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl"
-            >
-              <h3 className="text-lg font-semibold text-text-primary mb-2">설문 배포하기</h3>
-              <p className="text-sm text-text-tertiary mb-6">
-                배포하면 다른 사용자들이 이 설문에 참여할 수 있습니다.
-                {isPublic ? ' 공개 설문으로 설정되어 있습니다.' : ' 비공개 설문으로 설정되어 있습니다.'}
-              </p>
-              
-              {deadline && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
-                  <p className="text-sm text-amber-800">
-                    마감일: {new Date(deadline).toLocaleDateString('ko-KR')}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowPublishModal(false)}
-                  className="flex-1 py-3 border border-border rounded-xl font-medium hover:bg-secondary-50 transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handlePublish}
-                  className="flex-1 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
-                >
-                  <PublishIcon />
-                  배포하기
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* AI Modal */}
-        {showAIModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAIModal(false)} />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="relative bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                  <AIIcon />
-                  AI로 설문 생성하기
-                </h3>
-                <button onClick={() => setShowAIModal(false)} className="p-2 hover:bg-secondary-100 rounded-lg">
-                  <CloseIcon />
-                </button>
-              </div>
-              
-              <p className="text-sm text-text-tertiary mb-4">
-                원하는 설문 내용을 설명해주시면 AI가 질문을 생성해드립니다.
-              </p>
-
-              <textarea
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="예: 고객 만족도 조사 설문을 10개 문항으로 만들어줘"
-                className="w-full px-4 py-3 border border-border-light rounded-xl text-sm focus:outline-none focus:border-primary-500 resize-none mb-4"
-                rows={4}
-              />
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                {AI_PROMPT_SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => setAiPrompt(suggestion)}
-                    className="px-3 py-1.5 bg-secondary-50 text-text-secondary text-xs rounded-full hover:bg-secondary-100 transition-colors"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowAIModal(false)}
-                  className="flex-1 py-3 border border-border rounded-xl font-medium hover:bg-secondary-50 transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleAIGenerate}
-                  disabled={isGenerating || !aiPrompt.trim()}
-                  className="flex-1 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGenerating ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      생성 중...
-                    </>
-                  ) : (
-                    <>
-                      <AIIcon />
-                      생성하기
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </>
+        {showPublishModal && <PublishModal />}
+        {showPreviewModal && <PreviewModal />}
+        {showAIModal && <AIChatModal />}
+      </div>
     );
   }
 
@@ -1535,13 +1821,6 @@ function SurveyEditor() {
         
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowAIModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 border border-primary-300 text-primary-600 rounded-xl font-medium hover:bg-primary-50 transition-colors"
-          >
-            <AIIcon />
-            AI로 생성
-          </button>
-          <button
             onClick={handleSave}
             className="flex items-center gap-2 px-4 py-2.5 border border-border-light rounded-xl font-medium hover:bg-secondary-50 transition-colors"
           >
@@ -1549,7 +1828,7 @@ function SurveyEditor() {
             저장
           </button>
           <button
-            onClick={() => navigate(`/responseform?id=${existingSurvey?.id || 'preview'}`)}
+            onClick={() => setShowPreviewModal(true)}
             className="flex items-center gap-2 px-4 py-2.5 border border-border-light rounded-xl font-medium hover:bg-secondary-50 transition-colors"
           >
             <PreviewIcon />
@@ -1584,7 +1863,21 @@ function SurveyEditor() {
       </div>
 
       {/* Modals */}
-      {renderModals()}
+      <AnimatePresence>
+        {isSaved && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-text-primary text-white text-sm rounded-lg shadow-lg z-50"
+          >
+            저장되었습니다
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {showPublishModal && <PublishModal />}
+      {showPreviewModal && <PreviewModal />}
+      {showAIModal && <AIChatModal />}
     </div>
   );
 }
