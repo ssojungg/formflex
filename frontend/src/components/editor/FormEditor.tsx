@@ -9,7 +9,6 @@ import { responseformAPI } from '../../api/responseform';
 import { editSurveyAPI } from '../../api/editSurvey';
 import { getClient } from '../../queryClient';
 import { uploadS3 } from '../../utils/s3ImgUpload';
-import { formatDeadlineDate } from '../../utils/formatDeadlineDate';
 import { ApiResponseError } from '../../types/apiResponseError';
 import {
   EditableObjectiveQuestion,
@@ -38,8 +37,9 @@ function FormEditor() {
   const [showMobilePanel, setShowMobilePanel] = useState<'components' | 'properties' | 'preview'>('preview');
   const [createErrorMessage, setCreateErrorMessage] = useState<string>();
   const [editErrorMessage, setEditErrorMessage] = useState<string>();
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
 
-  // 설문 수정 시 사용할 설문 ID
   const editId = Number(new URLSearchParams(location.search).get('id'));
   const isEditMode = editId !== null && !Number.isNaN(editId) && location.pathname.includes('/edit');
 
@@ -76,7 +76,6 @@ function FormEditor() {
     }
   }, [editSurveyData]);
 
-  // 설문 생성
   const { mutate, isSuccess } = useMutation({
     mutationFn: createSurveyAPI,
     onSuccess: () => {
@@ -93,7 +92,6 @@ function FormEditor() {
     },
   });
 
-  // 문항 추가
   const addQuestion = (type: 'MULTIPLE_CHOICE' | 'SUBJECTIVE_QUESTION' | 'CHECKBOX' | 'DROPDOWN') => {
     let newQuestion: EditableQuestions;
     if (type === 'SUBJECTIVE_QUESTION') {
@@ -115,9 +113,12 @@ function FormEditor() {
       questions: [...prev.questions, newQuestion],
     }));
     setSelectedQuestionIndex(survey.questions.length);
+    
+    if (isMobile || isTablet) {
+      setShowMobilePanel('preview');
+    }
   };
 
-  // 문항 업데이트
   const updateQuestion = (questionId: number, updatedData: EditableQuestions) => {
     const updatedQuestions = survey.questions.map((question, index) =>
       index === questionId ? { ...question, ...updatedData } : question,
@@ -125,7 +126,6 @@ function FormEditor() {
     setSurvey({ ...survey, questions: updatedQuestions });
   };
 
-  // 문항 복제
   const copyQuestion = (index: number) => {
     const questionToCopy = JSON.parse(JSON.stringify(survey.questions[index]));
     const newQuestions = [
@@ -137,7 +137,6 @@ function FormEditor() {
     setSelectedQuestionIndex(index + 1);
   };
 
-  // 문항 삭제
   const deleteQuestion = (index: number) => {
     const newQuestions = survey.questions.filter((_, i) => i !== index);
     setSurvey({ ...survey, questions: newQuestions });
@@ -148,7 +147,6 @@ function FormEditor() {
     }
   };
 
-  // 이미지 업로드
   const handleImageUpload = async (
     idx: number,
     data: EditableQuestions,
@@ -167,7 +165,6 @@ function FormEditor() {
     }
   };
 
-  // 커버 이미지 업로드
   const handleCoverImageUpload = async (file: File) => {
     try {
       const uploadedUrl = await uploadS3(file);
@@ -177,12 +174,10 @@ function FormEditor() {
     }
   };
 
-  // 설문 저장
   const handleSubmit = () => {
     mutate(survey);
   };
 
-  // 설문 수정
   const handleEditSubmit = () => {
     if (userId === null) return;
     const surveyDataWithUserId = {
@@ -192,10 +187,15 @@ function FormEditor() {
     editMutate({ surveyId: editId, editSurveyData: surveyDataWithUserId });
   };
 
-  // 모바일 뷰
+  const handleAiGenerate = () => {
+    setShowAiModal(false);
+    setAiPrompt('');
+  };
+
+  // Mobile/Tablet View
   if (isMobile || isTablet) {
     return (
-      <div className="flex flex-col h-screen bg-background">
+      <div className="flex flex-col h-screen bg-surface-primary">
         <EditorHeader
           survey={survey}
           setSurvey={setSurvey}
@@ -204,39 +204,49 @@ function FormEditor() {
           onSave={isEditMode ? handleEditSubmit : handleSubmit}
           isEditMode={isEditMode}
           isMobile={true}
+          onAiGenerate={() => setShowAiModal(true)}
         />
         
         {/* Mobile Tab Navigation */}
-        <div className="flex border-b border-border bg-card">
+        <div className="flex border-b border-border-light bg-white">
           <button
             onClick={() => setShowMobilePanel('components')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3.5 text-sm font-medium transition-all relative ${
               showMobilePanel === 'components'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-muted-foreground'
+                ? 'text-text-primary'
+                : 'text-text-tertiary'
             }`}
           >
             컴포넌트
+            {showMobilePanel === 'components' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
           </button>
           <button
             onClick={() => setShowMobilePanel('preview')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3.5 text-sm font-medium transition-all relative ${
               showMobilePanel === 'preview'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-muted-foreground'
+                ? 'text-text-primary'
+                : 'text-text-tertiary'
             }`}
           >
             미리보기
+            {showMobilePanel === 'preview' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
           </button>
           <button
             onClick={() => setShowMobilePanel('properties')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-3.5 text-sm font-medium transition-all relative ${
               showMobilePanel === 'properties'
-                ? 'text-primary border-b-2 border-primary'
-                : 'text-muted-foreground'
+                ? 'text-text-primary'
+                : 'text-text-tertiary'
             }`}
           >
             속성
+            {showMobilePanel === 'properties' && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
           </button>
         </div>
 
@@ -311,9 +321,9 @@ function FormEditor() {
     );
   }
 
-  // 데스크톱 뷰
+  // Desktop View
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-surface-primary">
       <EditorHeader
         survey={survey}
         setSurvey={setSurvey}
@@ -322,11 +332,12 @@ function FormEditor() {
         onSave={isEditMode ? handleEditSubmit : handleSubmit}
         isEditMode={isEditMode}
         isMobile={false}
+        onAiGenerate={() => setShowAiModal(true)}
       />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Components */}
-        <div className="w-64 border-r border-border bg-card flex-shrink-0 overflow-y-auto">
+        <div className="w-64 xl:w-72 border-r border-border-light bg-white flex-shrink-0 overflow-y-auto">
           <ComponentPanel
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -338,7 +349,7 @@ function FormEditor() {
         </div>
 
         {/* Center - Preview */}
-        <div className="flex-1 overflow-hidden bg-muted/30">
+        <div className="flex-1 overflow-hidden">
           <FormPreview
             survey={survey}
             setSurvey={setSurvey}
@@ -353,7 +364,7 @@ function FormEditor() {
         </div>
 
         {/* Right Panel - Properties */}
-        <div className="w-72 border-l border-border bg-card flex-shrink-0 overflow-y-auto">
+        <div className="w-72 xl:w-80 border-l border-border-light bg-white flex-shrink-0 overflow-y-auto">
           <PropertyPanel
             survey={survey}
             setSurvey={setSurvey}
@@ -362,6 +373,67 @@ function FormEditor() {
           />
         </div>
       </div>
+
+      {/* AI Generation Modal */}
+      {showAiModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAiModal(false)} />
+          <div className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 p-5 border-b border-border-light">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                  <path d="M20 3v4" />
+                  <path d="M22 5h-4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-text-primary">AI 설문 생성</h3>
+                <p className="text-sm text-text-tertiary">원하는 설문을 설명해주세요</p>
+              </div>
+              <button 
+                onClick={() => setShowAiModal(false)}
+                className="ml-auto p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-5">
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="예: 고객 만족도 조사를 위한 설문을 만들어줘. NPS 점수와 서비스 개선 의견을 물어보고 싶어."
+                className="w-full h-32 px-4 py-3 border border-border-light rounded-xl resize-none focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all text-sm"
+              />
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setShowAiModal(false)}
+                  className="flex-1 py-3 border border-border-light rounded-xl font-medium hover:bg-surface-secondary transition-colors text-text-secondary"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleAiGenerate}
+                  disabled={!aiPrompt.trim()}
+                  className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                    <path d="M20 3v4" />
+                    <path d="M22 5h-4" />
+                  </svg>
+                  생성하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Alerts */}
       {createErrorMessage && (
