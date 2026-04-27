@@ -94,10 +94,10 @@ const MySurveyIcon = () => (
 );
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'surveys', icon: SurveyIcon, text: '대시보드', path: '/surveys' },
+  { id: 'surveys', icon: DashboardIcon, text: '대시보드', path: '/surveys' },
+  { id: 'templates', icon: TemplateIcon, text: '템플릿 라이브러리', path: '/templates' },
   { id: 'analytics', icon: AnalyticsIcon, text: '분석', path: '/result' },
   { id: 'myforms', icon: MySurveyIcon, text: '내 설문', path: '/myform' },
-  { id: 'templates', icon: TemplateIcon, text: '템플릿 라이브러리', path: '/templates' },
   { id: 'profile', icon: ProfileIcon, text: '내 정보', path: '/mypage' },
 ];
 
