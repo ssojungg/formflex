@@ -166,9 +166,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           </button>
           
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">FF</span>
-            </div>
+            <img src="/logo.jpg" alt="FormFlex" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-text-inverse font-semibold text-lg">FormFlex</span>
           </div>
           
@@ -198,9 +196,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-secondary-800">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">FF</span>
-            </div>
+            <img src="/logo.jpg" alt="FormFlex" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-text-inverse font-semibold">FormFlex</span>
           </div>
           

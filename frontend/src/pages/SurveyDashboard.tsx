@@ -182,81 +182,95 @@ function SurveyDashboard() {
   return (
     <div className="min-h-full bg-background-secondary">
       <div className="p-4 md:p-6 lg:p-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-text-primary mb-2">설문 탐색</h1>
-          <p className="text-text-tertiary">다양한 설문에 참여하고 의견을 공유하세요</p>
-        </div>
-
         {/* Search & Filters */}
         <div className="bg-white rounded-xl p-4 shadow-card mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-text-tertiary">
-                <SearchIcon />
+          <div className="flex flex-col gap-4">
+            {/* Top Row: Search + Create Button */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search */}
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-text-tertiary">
+                  <SearchIcon />
+                </div>
+                <input
+                  type="text"
+                  placeholder="설문 제목 또는 내용으로 검색..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-background-secondary border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="설문 제목 또는 내용으로 검색..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-background-secondary border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-              />
+              
+              {/* Create New Survey Button */}
+              {isLoggedIn && (
+                <button
+                  onClick={() => navigate('/create')}
+                  className="flex items-center justify-center gap-2 px-5 py-3 bg-primary-500 text-white text-sm font-medium rounded-xl hover:bg-primary-600 transition-colors whitespace-nowrap"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  새 설문 만들기
+                </button>
+              )}
             </div>
             
-            {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  statusFilter === 'all'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
-                }`}
-              >
-                전체
-              </button>
-              <button
-                onClick={() => setStatusFilter('active')}
-                className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  statusFilter === 'active'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
-                }`}
-              >
-                Active
-              </button>
-              <button
-                onClick={() => setStatusFilter('closed')}
-                className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  statusFilter === 'closed'
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
-                }`}
-              >
-                Closed
-              </button>
-            </div>
+            {/* Bottom Row: Filters + View Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* Status Filter - Scrollable on mobile */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    statusFilter === 'all'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
+                  }`}
+                >
+                  전체
+                </button>
+                <button
+                  onClick={() => setStatusFilter('active')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    statusFilter === 'active'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
+                  }`}
+                >
+                  Active
+                </button>
+                <button
+                  onClick={() => setStatusFilter('closed')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    statusFilter === 'closed'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
+                  }`}
+                >
+                  Closed
+                </button>
+              </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 bg-background-secondary rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid' ? 'bg-white shadow-sm text-primary-600' : 'text-text-tertiary hover:text-text-secondary'
-                }`}
-              >
-                <GridIcon />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-text-tertiary hover:text-text-secondary'
-                }`}
-              >
-                <ListIcon />
-              </button>
+              {/* View Mode Toggle */}
+              <div className="hidden sm:flex items-center gap-1 bg-background-secondary rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' ? 'bg-white shadow-sm text-primary-600' : 'text-text-tertiary hover:text-text-secondary'
+                  }`}
+                >
+                  <GridIcon />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-text-tertiary hover:text-text-secondary'
+                  }`}
+                >
+                  <ListIcon />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -319,15 +333,15 @@ function SurveyDashboard() {
           </div>
         </div>
 
-        {/* Survey Grid/List */}
+        {/* Survey Grid/List - Force grid view on mobile */}
         <AnimatePresence mode="wait">
-          {viewMode === 'grid' ? (
+          {(viewMode === 'grid' || typeof window !== 'undefined' && window.innerWidth < 640) ? (
             <motion.div
               key="grid"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
             >
               {filteredSurveys.map((survey, index) => (
                 <motion.div
@@ -340,24 +354,24 @@ function SurveyDashboard() {
                 >
                   {/* Card Header with gradient */}
                   <div 
-                    className="relative h-32 p-4"
+                    className="relative h-24 sm:h-32 p-3 sm:p-4"
                     style={{ 
                       background: `linear-gradient(135deg, ${survey.themeColor}20 0%, ${survey.themeColor}40 100%)` 
                     }}
                   >
-                    <span className={`absolute top-3 left-3 px-2 py-1 text-xs font-medium rounded ${STATUS_LABELS[survey.status].color}`}>
+                    <span className={`absolute top-2 sm:top-3 left-2 sm:left-3 px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded ${STATUS_LABELS[survey.status].color}`}>
                       {STATUS_LABELS[survey.status].label}
                     </span>
                     
                     {/* Decorative lines (like the design image) */}
-                    <div className="absolute bottom-4 right-4 opacity-50">
-                      <div className="flex flex-col gap-1.5">
+                    <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 opacity-50">
+                      <div className="flex flex-col gap-1 sm:gap-1.5">
                         {[1, 2, 3].map((i) => (
                           <div 
                             key={i} 
-                            className="h-1 rounded-full"
+                            className="h-0.5 sm:h-1 rounded-full"
                             style={{ 
-                              width: `${60 - i * 15}px`,
+                              width: `${50 - i * 12}px`,
                               backgroundColor: survey.themeColor 
                             }}
                           />
@@ -367,31 +381,31 @@ function SurveyDashboard() {
                   </div>
                   
                   {/* Card Content */}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-text-primary mb-1 line-clamp-1 group-hover:text-primary-600 transition-colors">
+                  <div className="p-3 sm:p-4">
+                    <h3 className="font-semibold text-sm sm:text-base text-text-primary mb-1 line-clamp-1 group-hover:text-primary-600 transition-colors">
                       {survey.title}
                     </h3>
-                    <p className="text-sm text-text-tertiary mb-3 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-text-tertiary mb-2 sm:mb-3 line-clamp-2">
                       {survey.description}
                     </p>
                     
                     {/* Author */}
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
                       <div 
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white"
+                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-medium text-white"
                         style={{ backgroundColor: survey.themeColor }}
                       >
                         {survey.authorName[0]}
                       </div>
-                      <span className="text-sm text-text-secondary">{survey.authorName}</span>
+                      <span className="text-xs sm:text-sm text-text-secondary">{survey.authorName}</span>
                     </div>
                     
-                    {/* Hashtags */}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {survey.hashtags.slice(0, 3).map((tag) => (
+                    {/* Hashtags - Hidden on very small screens */}
+                    <div className="hidden xs:flex flex-wrap gap-1 mb-2 sm:mb-3">
+                      {survey.hashtags.slice(0, 2).map((tag) => (
                         <span
                           key={tag}
-                          className="text-xs text-primary-600 bg-primary-50 px-2 py-0.5 rounded"
+                          className="text-[10px] sm:text-xs text-primary-600 bg-primary-50 px-1.5 sm:px-2 py-0.5 rounded"
                         >
                           #{tag}
                         </span>
@@ -399,7 +413,7 @@ function SurveyDashboard() {
                     </div>
                     
                     {/* Meta */}
-                    <div className="flex items-center justify-between text-xs text-text-tertiary pt-3 border-t border-border-light">
+                    <div className="flex items-center justify-between text-[10px] sm:text-xs text-text-tertiary pt-2 sm:pt-3 border-t border-border-light">
                       <span className="flex items-center gap-1">
                         <UsersIcon />
                         {survey.responseCount.toLocaleString()}명 참여
@@ -412,7 +426,7 @@ function SurveyDashboard() {
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
-                        미리보기
+                        <span className="hidden xs:inline">미리보기</span>
                       </button>
                     </div>
                   </div>

@@ -4,7 +4,7 @@ export default {
   theme: {
     // Custom breakpoints for responsive design
     screens: {
-      'xs': '320px',      // Extra small devices
+      'xs': '400px',      // Extra small devices (small phones)
       'sm': '640px',      // Small devices (landscape phones)
       'md': '768px',      // Tablets
       'lg': '1024px',     // Desktop
