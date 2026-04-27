@@ -1,13 +1,73 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/src/assets/logo.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Form:Flex</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#6B8E6B" />
+    <meta name="description" content="FormFlex - 설문지 작성, 배포, 분석을 쉽게 할 수 있는 스마트 폼 빌더" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="FormFlex" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icon-192x192.jpg" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.jpg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.jpg" />
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FormFlex - 스마트 설문 빌더" />
+    <meta property="og:description" content="설문지 작성, 배포, 분석을 쉽게 할 수 있는 스마트 폼 빌더" />
+    <meta property="og:site_name" content="FormFlex" />
+    
+    <!-- TWA (Trusted Web Activity) support for Google Play Store -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <title>FormFlex</title>
+    
+    <style>
+      /* Prevent FOUC */
+      html {
+        background-color: #f8faf8;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA Install Prompt Script -->
+    <script>
+      // Register service worker update listener
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+      
+      // Store the install prompt event
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Dispatch custom event for React components
+        window.dispatchEvent(new CustomEvent('pwaInstallAvailable', { detail: e }));
+      });
+      
+      // Handle successful install
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        window.dispatchEvent(new CustomEvent('pwaInstalled'));
+      });
+    </script>
   </body>
 </html>

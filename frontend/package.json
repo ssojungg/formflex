@@ -34,8 +34,10 @@
     "react-slick": "^0.29.0",
     "slick-carousel": "^1.8.1",
     "vite": "^5.0.12",
+    "vite-plugin-pwa": "^1.2.0",
     "vite-plugin-svgr": "^4.2.0",
     "vite-tsconfig-paths": "^4.2.3",
+    "workbox-window": "^7.4.0",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
