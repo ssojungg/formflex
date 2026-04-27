@@ -12,76 +12,77 @@ export default {
       '2xl': '1536px',    // Extra large desktop
     },
     extend: {
-      // 2025-2026 트렌드 컬러 시스템 (Sage Green 기반)
+      // Modern Indigo/Blue color system (2025-2026 트렌드)
       colors: {
-        // Primary colors - Sage Green
+        // Primary colors - Modern Indigo
         primary: {
-          50: '#f0f4f0',
-          100: '#dce6dc',
-          200: '#c4d7c4',
-          300: '#a8c4a8',
-          400: '#8ab08a',
-          500: '#6B8E6B',  // Main primary
-          600: '#5a7a5a',
-          700: '#4a654a',
-          800: '#3a503a',
-          900: '#2a3b2a',
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',  // Main primary
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
         },
-        // Secondary - Warm neutrals
+        // Secondary - Cool Gray
         secondary: {
-          50: '#fafafa',
-          100: '#f5f5f5',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          200: '#e5e7eb',
+          300: '#d1d5db',
+          400: '#9ca3af',
+          500: '#6b7280',
+          600: '#4b5563',
+          700: '#374151',
+          800: '#1f2937',
+          900: '#111827',
         },
         // Accent colors
         accent: {
-          green: '#22c55e',
-          greenLight: '#dcfce7',
-          mint: '#a8d5ba',
+          violet: '#8b5cf6',
+          cyan: '#06b6d4',
+          rose: '#f43f5e',
+          amber: '#f59e0b',
         },
         // Semantic colors
-        success: '#22c55e',
+        success: '#10b981',
         warning: '#f59e0b',
         error: '#ef4444',
         info: '#3b82f6',
         
         // Status colors (for survey states)
         status: {
-          active: '#22c55e',
+          active: '#10b981',
           closed: '#ef4444',
-          draft: '#a3a3a3',
+          draft: '#9ca3af',
         },
         
         // Background colors
         background: {
           primary: '#ffffff',
-          secondary: '#f8faf8',
-          tertiary: '#f0f4f0',
-          sidebar: '#1a1a1a',
+          secondary: '#f9fafb',
+          tertiary: '#f3f4f6',
+          sidebar: '#111827',
           card: '#ffffff',
         },
         
         // Text colors
         text: {
-          primary: '#171717',
-          secondary: '#525252',
-          tertiary: '#737373',
-          muted: '#a3a3a3',
+          primary: '#111827',
+          secondary: '#4b5563',
+          tertiary: '#6b7280',
+          muted: '#9ca3af',
           inverse: '#ffffff',
         },
         
         // Border colors
         border: {
-          light: '#e5e5e5',
-          DEFAULT: '#d4d4d4',
-          dark: '#a3a3a3',
+          light: '#e5e7eb',
+          DEFAULT: '#d1d5db',
+          dark: '#9ca3af',
         },
 
         // Legacy colors (for backward compatibility)
@@ -92,14 +93,14 @@ export default {
         gray: '#B4B4B4',
         lightGray: '#D9D9D9',
         white: '#FFFFFF',
-        green: '#07A480',
-        darkGreen: '#0A795E',
+        green: '#10b981',
+        darkGreen: '#059669',
       },
       backgroundImage: {
-        'custom-gradient': 'linear-gradient(135deg, #f8faf8 0%, #e8f0e8 50%, #dce6dc 100%)',
-        'custom-gradient-re': 'linear-gradient(135deg, #dce6dc 0%, #e8f0e8 50%, #f8faf8 100%)',
-        'card-gradient': 'linear-gradient(180deg, rgba(107, 142, 107, 0.1) 0%, rgba(107, 142, 107, 0.05) 100%)',
-        'sidebar-gradient': 'linear-gradient(180deg, #1a1a1a 0%, #262626 100%)',
+        'custom-gradient': 'linear-gradient(135deg, #f9fafb 0%, #eef2ff 50%, #e0e7ff 100%)',
+        'custom-gradient-re': 'linear-gradient(135deg, #e0e7ff 0%, #eef2ff 50%, #f9fafb 100%)',
+        'card-gradient': 'linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)',
+        'sidebar-gradient': 'linear-gradient(180deg, #111827 0%, #1f2937 100%)',
       },
       fontFamily: {
         sans: ['Pretendard-Regular', 'system-ui', '-apple-system', 'sans-serif'],

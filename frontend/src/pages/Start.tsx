@@ -403,14 +403,14 @@ function Start() {
       {/* CTA Section */}
       <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl p-8 lg:p-16 text-center text-white">
+          <div className="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl p-8 lg:p-16 text-center text-white">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">지금 바로 시작하세요</h2>
             <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
               무료로 시작하고 필요할 때 업그레이드하세요. 복잡한 설정 없이 바로 설문을 만들 수 있습니다.
             </p>
             <button
               onClick={() => navigate('/signup')}
-              className="px-8 py-4 bg-white text-primary-600 font-semibold rounded-2xl hover:bg-primary-50 transition-colors"
+              className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-2xl hover:bg-indigo-50 transition-colors"
             >
               무료로 시작하기
             </button>

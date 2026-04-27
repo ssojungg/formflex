@@ -120,14 +120,14 @@ function SurveyDashboard() {
                 placeholder="설문 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                className="w-full pl-10 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               />
             </div>
             
             {isLoggedIn && (
               <button
                 onClick={() => navigate('/create')}
-                className="flex items-center gap-2 px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors shrink-0"
+                className="flex items-center gap-2 px-4 py-3 bg-indigo-500 text-white text-sm font-medium rounded-xl hover:bg-indigo-600 transition-colors shrink-0"
               >
                 <PlusIcon />
                 <span className="hidden sm:inline">새 설문</span>
@@ -143,7 +143,7 @@ function SurveyDashboard() {
                 onClick={() => setStatusFilter(status)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                   statusFilter === status
-                    ? 'bg-green-600 text-white'
+                    ? 'bg-indigo-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -160,7 +160,7 @@ function SurveyDashboard() {
                 onClick={() => setSelectedHashtag(selectedHashtag === tag ? null : tag)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
                   selectedHashtag === tag
-                    ? 'bg-green-600 text-white'
+                    ? 'bg-indigo-500 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -173,7 +173,7 @@ function SurveyDashboard() {
         {/* Results Count */}
         <p className="text-sm text-gray-500 mb-3 px-1">
           {filteredSurveys.length}개의 설문
-          {selectedHashtag && <span className="text-green-600 font-medium"> (#{selectedHashtag})</span>}
+          {selectedHashtag && <span className="text-indigo-600 font-medium"> (#{selectedHashtag})</span>}
         </p>
 
         {/* Survey Grid - Pure CSS responsive */}
@@ -228,7 +228,7 @@ function SurveyDashboard() {
                 {/* Tags - Show only on larger screens */}
                 <div className="hidden sm:flex flex-wrap gap-1 mb-3">
                   {survey.hashtags.slice(0, 2).map((tag) => (
-                    <span key={tag} className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                    <span key={tag} className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
                       #{tag}
                     </span>
                   ))}
@@ -242,7 +242,7 @@ function SurveyDashboard() {
                   </span>
                   <button
                     onClick={(e) => handlePreview(e, survey)}
-                    className="flex items-center gap-1 text-[10px] sm:text-xs text-green-600 font-medium hover:text-green-700"
+                    className="flex items-center gap-1 text-[10px] sm:text-xs text-indigo-600 font-medium hover:text-indigo-700"
                   >
                     <EyeIcon />
                     <span className="hidden sm:inline">미리보기</span>
@@ -348,7 +348,7 @@ function SurveyDashboard() {
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-5">
                   {previewSurvey.hashtags.map((tag) => (
-                    <span key={tag} className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded-full">
+                    <span key={tag} className="px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-full">
                       #{tag}
                     </span>
                   ))}
@@ -365,7 +365,7 @@ function SurveyDashboard() {
                         setShowLoginModal(true);
                       }
                     }}
-                    className="flex-1 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
+                    className="flex-1 py-3 bg-indigo-500 text-white font-medium rounded-xl hover:bg-indigo-600 transition-colors"
                   >
                     설문 참여하기
                   </button>

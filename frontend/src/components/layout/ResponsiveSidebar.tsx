@@ -93,7 +93,15 @@ const MySurveyIcon = () => (
   </svg>
 );
 
+const HomeIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
 const NAV_ITEMS: NavItem[] = [
+  { id: 'home', icon: HomeIcon, text: '홈', path: '/' },
   { id: 'surveys', icon: DashboardIcon, text: '대시보드', path: '/surveys' },
   { id: 'templates', icon: TemplateIcon, text: '템플릿 라이브러리', path: '/templates' },
   { id: 'analytics', icon: AnalyticsIcon, text: '분석', path: '/result' },
