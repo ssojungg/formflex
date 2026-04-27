@@ -210,7 +210,7 @@ function SurveyEditor() {
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiTargetQuestionId, setAiTargetQuestionId] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
-  const [aiMessages, setAiMessages] = useState<{role: 'user' | 'ai'; content: string; options?: string[]}[]>([]);
+  const [aiMessages, setAiMessages] = useState<{role: 'user' | 'ai'; content: string; options?: string[]; questions?: string[]}[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [draggedType, setDraggedType] = useState<QuestionType | null>(null);
@@ -451,32 +451,51 @@ function SurveyEditor() {
   };
 
   const handleAIGenerate = async () => {
-    if (!aiPrompt.trim()) return;
+    if (!aiPrompt.trim() || !aiTargetQuestionId) return;
+    
+    const targetQuestion = questions.find(q => q.id === aiTargetQuestionId);
+    if (!targetQuestion) return;
     
     // Add user message
     setAiMessages(prev => [...prev, { role: 'user', content: aiPrompt }]);
     setIsGenerating(true);
     
-    const currentPrompt = aiPrompt;
     setAiPrompt('');
     
     // Simulate AI generation delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
-    // Generate mock options based on prompt
-    const mockOptions = [
-      '트와이스 모모',
-      '블랙핑크 리사',
-      '아이브 안유진',
-      '에스파 카리나',
-      '르세라핌 카즈하',
-    ];
+    const hasSelectOptions = ['single_choice', 'multiple_choice', 'dropdown'].includes(targetQuestion.type);
     
-    setAiMessages(prev => [...prev, { 
-      role: 'ai', 
-      content: '여자 아이돌 춤신춤왕에 대한 선택지를 생성했어요!',
-      options: mockOptions 
-    }]);
+    if (hasSelectOptions) {
+      // Generate mock options for selection types
+      const mockOptions = [
+        '트와이스 모모',
+        '블랙핑크 리사',
+        '아이브 안유진',
+        '에스파 카리나',
+        '르세라핌 카즈하',
+      ];
+      
+      setAiMessages(prev => [...prev, { 
+        role: 'ai', 
+        content: '선택지를 생성했어요!',
+        options: mockOptions 
+      }]);
+    } else {
+      // Generate question suggestions for input types
+      const mockQuestions = [
+        '이 서비스를 사용하면서 가장 만족스러웠던 점은 무엇인가요?',
+        '개선이 필요하다고 생각하시는 부분이 있다면 알려주세요.',
+        '다른 분들께 이 서비스를 추천하시겠습니까? 그 이유는?',
+      ];
+      
+      setAiMessages(prev => [...prev, { 
+        role: 'ai', 
+        content: '질문을 생성했어요! 원하는 질문을 선택하세요.',
+        questions: mockQuestions 
+      }]);
+    }
     
     setIsGenerating(false);
   };
@@ -490,6 +509,15 @@ function SurveyEditor() {
     }));
     
     updateQuestion(aiTargetQuestionId, { options: newOptions });
+    setShowAIModal(false);
+    setAiTargetQuestionId(null);
+    setAiMessages([]);
+  };
+
+  const applyAIQuestion = (question: string) => {
+    if (!aiTargetQuestionId) return;
+    
+    updateQuestion(aiTargetQuestionId, { label: question });
     setShowAIModal(false);
     setAiTargetQuestionId(null);
     setAiMessages([]);
@@ -565,10 +593,7 @@ function SurveyEditor() {
 
           {/* Select types */}
           <div>
-            <h3 className="font-medium text-text-primary mb-3 text-sm flex items-center gap-2">
-              선택형
-              <span className="text-xs text-primary-600 bg-primary-50 px-2 py-0.5 rounded">이미지 추가 가능</span>
-            </h3>
+            <h3 className="font-medium text-text-primary mb-3 text-sm">선택형</h3>
             <div className="space-y-2">
               {QUESTION_TYPES.filter((t) => t.category === 'select').map(({ type, label, icon: Icon }) => (
                 <button
@@ -609,7 +634,7 @@ function SurveyEditor() {
           {/* Tip */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
             <p className="text-xs text-amber-800">
-              <strong>AI로 선택지 생성:</strong> 선택형 질문 카드의 <SparkleIcon /> 아이콘을 클릭하면 AI가 선택지를 자동으로 생성해드립니다.
+              <strong>AI로 질문 생성:</strong> 질문 카드의 <span className="inline-block align-middle"><SparkleIcon /></span> 아이콘을 클릭하면 AI가 질문과 선택지를 자동으로 생성해드립니다.
             </p>
           </div>
         </div>
@@ -753,15 +778,15 @@ function SurveyEditor() {
             
             {isSelected && (
               <div className="flex items-center gap-1">
-                {/* AI Button for select types */}
-                {hasSelectOptions && (
+                {/* AI Button for ALL question types */}
+                {question.type !== 'section_divider' && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       openAIForQuestion(question.id);
                     }}
                     className="p-2 hover:bg-amber-50 rounded-lg transition-colors text-amber-500 hover:text-amber-600"
-                    title="AI로 선택지 생성"
+                    title="AI로 질문 생성"
                   >
                     <SparkleIcon />
                   </button>
@@ -1469,6 +1494,7 @@ function SurveyEditor() {
   // AI Chat Modal
   const AIChatModal = () => {
     const targetQuestion = questions.find(q => q.id === aiTargetQuestionId);
+    const hasSelectOptions = targetQuestion && ['single_choice', 'multiple_choice', 'dropdown'].includes(targetQuestion.type);
     
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -1485,7 +1511,9 @@ function SurveyEditor() {
                 <SparkleIcon />
               </div>
               <div>
-                <h3 className="font-semibold text-text-primary">AI 선택지 생성</h3>
+                <h3 className="font-semibold text-text-primary">
+                  {hasSelectOptions ? 'AI 선택지 생성' : 'AI 질문 생성'}
+                </h3>
                 {targetQuestion && (
                   <p className="text-xs text-text-tertiary truncate max-w-[250px]">{targetQuestion.label}</p>
                 )}
@@ -1503,9 +1531,14 @@ function SurveyEditor() {
                 <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
                   <SparkleIcon />
                 </div>
-                <h4 className="font-medium text-text-primary mb-2">AI에게 선택지 생성을 요청하세요</h4>
+                <h4 className="font-medium text-text-primary mb-2">
+                  {hasSelectOptions ? 'AI에게 선택지 생성을 요청하세요' : 'AI에게 질문 생성을 요청하세요'}
+                </h4>
                 <p className="text-sm text-text-tertiary">
-                  예: &quot;여자 아이돌 춤신춤왕에 대해 5개 선택지 만들어줘&quot;
+                  {hasSelectOptions 
+                    ? '예: "여자 아이돌 춤신춤왕에 대해 5개 선택지 만들어줘"'
+                    : '예: "고객 만족도에 대한 주관식 질문 3개 만들어줘"'
+                  }
                 </p>
               </div>
             )}
@@ -1521,6 +1554,7 @@ function SurveyEditor() {
                     <div className="bg-secondary-100 px-4 py-3 rounded-2xl rounded-bl-sm mb-2">
                       <p className="text-sm text-text-primary">{msg.content}</p>
                     </div>
+                    {/* Options for selection type questions */}
                     {msg.options && (
                       <div className="bg-white border border-border-light rounded-xl p-4 shadow-card">
                         <div className="flex items-center gap-2 mb-3">
@@ -1553,6 +1587,34 @@ function SurveyEditor() {
                         </div>
                       </div>
                     )}
+                    {/* Questions for input type questions */}
+                    {msg.questions && (
+                      <div className="bg-white border border-border-light rounded-xl p-4 shadow-card">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">생성된 질문</span>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          {msg.questions.map((q, i) => (
+                            <button
+                              key={i}
+                              onClick={() => applyAIQuestion(q)}
+                              className="w-full text-left py-3 px-4 bg-secondary-50 hover:bg-primary-50 rounded-lg text-sm transition-colors border border-transparent hover:border-primary-200"
+                            >
+                              {q}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setAiPrompt('다시 생성해줘');
+                            handleAIGenerate();
+                          }}
+                          className="w-full py-2 border border-border-light text-text-secondary text-sm font-medium rounded-lg hover:bg-secondary-50 transition-colors"
+                        >
+                          재생성
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1582,7 +1644,7 @@ function SurveyEditor() {
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !isGenerating && handleAIGenerate()}
-                placeholder="선택지 생성을 요청해보세요..."
+                placeholder={hasSelectOptions ? "선택지 생성을 요청해보세요..." : "질문 생성을 요청해보세요..."}
                 className="flex-1 px-4 py-3 border border-border-light rounded-xl text-sm focus:outline-none focus:border-primary-500"
                 disabled={isGenerating}
               />
@@ -1715,7 +1777,72 @@ function SurveyEditor() {
           </div>
         </div>
 
-        {/* Mobile Sidebar Overlay */}
+        {/* Tab Navigation */}
+        <div className="flex border-b border-border-light">
+          <button
+            onClick={() => setActivePanel('preview')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activePanel === 'preview' ? 'text-primary-600 border-b-2 border-primary-500' : 'text-text-tertiary'
+            }`}
+          >
+            편집
+          </button>
+          <button
+            onClick={() => setActivePanel('properties')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activePanel === 'properties' ? 'text-primary-600 border-b-2 border-primary-500' : 'text-text-tertiary'
+            }`}
+          >
+            속성
+          </button>
+          <button
+            onClick={() => setActiveTab(activeTab === 'components' ? 'style' : 'components')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors ${
+              activeTab === 'style' ? 'text-primary-600 border-b-2 border-primary-500' : 'text-text-tertiary'
+            }`}
+          >
+            스타일
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden pb-20">
+          {activePanel === 'preview' && <PreviewPanel />}
+          {activePanel === 'properties' && <PropertiesPanel />}
+          {activeTab === 'style' && activePanel !== 'preview' && activePanel !== 'properties' && (
+            <div className="p-4 space-y-5">
+              {/* Theme Colors */}
+              <div>
+                <h3 className="font-medium text-text-primary mb-3 text-sm">테마 색상</h3>
+                <div className="flex flex-wrap gap-2">
+                  {THEME_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setThemeColor(color)}
+                      className={`w-8 h-8 rounded-full transition-all ${
+                        themeColor === color ? 'ring-2 ring-offset-2 ring-primary-500 scale-110' : 'hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+              {/* Cover Image */}
+              <div>
+                <h3 className="font-medium text-text-primary mb-3 text-sm">커버 이미지</h3>
+                <button
+                  onClick={() => coverInputRef.current?.click()}
+                  className="w-full py-6 border-2 border-dashed border-border-light rounded-xl text-text-tertiary hover:border-primary-300 hover:text-primary-600 transition-colors flex flex-col items-center gap-2"
+                >
+                  <ImageIcon />
+                  <span className="text-sm">이미지 업로드</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Sheet for Question Types */}
         <AnimatePresence>
           {sidebarOpen && (
             <>
@@ -1727,56 +1854,49 @@ function SurveyEditor() {
                 onClick={() => setSidebarOpen(false)}
               />
               <motion.div
-                initial={{ x: -300 }}
-                animate={{ x: 0 }}
-                exit={{ x: -300 }}
-                className="fixed left-0 top-0 bottom-0 w-72 bg-white z-50 shadow-xl"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="fixed left-0 right-0 bottom-0 bg-white z-50 rounded-t-3xl shadow-xl max-h-[70vh] overflow-hidden"
               >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
-                  <h2 className="font-semibold text-text-primary">컴포넌트</h2>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border-light">
+                  <h2 className="font-semibold text-text-primary">질문 유형 선택</h2>
                   <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-secondary-100 rounded-lg">
                     <CloseIcon />
                   </button>
                 </div>
-                <ComponentPanel />
+                <div className="p-4 overflow-y-auto max-h-[calc(70vh-60px)]">
+                  <div className="grid grid-cols-3 gap-3">
+                    {QUESTION_TYPES.map(({ type, label, icon: Icon }) => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          addQuestion(type);
+                          setSidebarOpen(false);
+                        }}
+                        className="flex flex-col items-center gap-2 p-4 rounded-xl border border-border-light hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                      >
+                        <span className="text-primary-600"><Icon /></span>
+                        <span className="text-xs text-text-secondary text-center">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </motion.div>
             </>
           )}
         </AnimatePresence>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-border-light">
+        {/* Floating Action Bar at Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light px-4 py-3 z-30 safe-area-pb">
           <button
-            onClick={() => setActivePanel('questions')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activePanel === 'questions' ? 'text-primary-600 border-b-2 border-primary-500' : 'text-text-tertiary'
-            }`}
+            onClick={() => setSidebarOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 transition-colors shadow-lg"
           >
+            <PlusIcon />
             질문 추가
           </button>
-          <button
-            onClick={() => setActivePanel('preview')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activePanel === 'preview' ? 'text-primary-600 border-b-2 border-primary-500' : 'text-text-tertiary'
-            }`}
-          >
-            미리보기
-          </button>
-          <button
-            onClick={() => setActivePanel('properties')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activePanel === 'properties' ? 'text-primary-600 border-b-2 border-primary-500' : 'text-text-tertiary'
-            }`}
-          >
-            속성
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          {activePanel === 'questions' && <ComponentPanel />}
-          {activePanel === 'preview' && <PreviewPanel />}
-          {activePanel === 'properties' && <PropertiesPanel />}
         </div>
 
         {/* Modals */}
