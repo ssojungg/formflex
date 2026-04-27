@@ -1,9 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// Question types
-export type QuestionType = 'short_text' | 'long_text' | 'single_choice' | 'multiple_choice' | 'dropdown' | 'rating' | 'date' | 'email' | 'number';
-
 export interface QuestionOption {
   id: string;
   text: string;
@@ -14,12 +11,24 @@ export interface Question {
   id: string;
   type: QuestionType;
   label: string;
+  description?: string;
   placeholder?: string;
   required: boolean;
   options?: QuestionOption[];
   ratingMax?: number;
-  imageUrl?: string;
+  imageUrls?: string[];
+  minLength?: number;
+  maxLength?: number;
+  conditionalLogic?: {
+    showIf: {
+      questionId: string;
+      condition: 'equals' | 'not_equals' | 'contains';
+      value: string;
+    };
+  };
 }
+
+export type QuestionType = 'short_text' | 'long_text' | 'single_choice' | 'multiple_choice' | 'dropdown' | 'rating' | 'date' | 'email' | 'number' | 'section_divider';
 
 export interface Survey {
   id: string;
@@ -28,8 +37,11 @@ export interface Survey {
   questions: Question[];
   coverImageUrl?: string;
   themeColor: string;
+  fontFamily?: string;
+  cardStyle?: 'bordered' | 'filled' | 'minimal';
   status: 'draft' | 'active' | 'closed';
   isPublic: boolean;
+  deadline?: Date;
   createdAt: Date;
   updatedAt: Date;
   authorId: string;
