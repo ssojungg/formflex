@@ -2,7 +2,9 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSurveyStore, Template } from '../store/SurveyStore';
+import { useAuthStore } from '../store/AuthStore';
 import { useResponsive } from '../hooks/useResponsive';
+import Alert from '../components/common/Alert';
 
 // Icons
 const SearchIcon = () => (
@@ -95,7 +97,9 @@ function TemplateLibrary() {
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
   
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const templates = useSurveyStore((state) => state.templates);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const mySurveys = useSurveyStore((state) => state.mySurveys);
   const likedTemplates = useSurveyStore((state) => state.likedTemplates);
   const savedTemplates = useSurveyStore((state) => state.savedTemplates);
@@ -146,8 +150,20 @@ function TemplateLibrary() {
 
   const handleCopyTemplate = (templateId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     const newSurvey = copyTemplate(templateId);
     navigate(`/create?id=${newSurvey.id}`);
+  };
+
+  const handleShareClick = () => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
+    setShowShareModal(true);
   };
 
   const handleShareTemplate = () => {
@@ -186,7 +202,7 @@ function TemplateLibrary() {
             
             {/* Share Template Button */}
             <button
-              onClick={() => setShowShareModal(true)}
+              onClick={handleShareClick}
               className="px-4 py-2.5 bg-primary-500 text-white text-sm font-medium rounded-xl hover:bg-primary-600 transition-colors whitespace-nowrap"
             >
               + 템플릿 공유하기
@@ -541,6 +557,20 @@ function TemplateLibrary() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Login Required Modal */}
+        {showLoginModal && (
+          <Alert
+            type="login"
+            title="로그인이 필요합니다"
+            message="템플릿을 복사하거나 공유하려면 로그인이 필요합니다."
+            buttonText="로그인하기"
+            buttonClick={() => navigate('/login')}
+            secondaryButtonText="회원가입"
+            secondaryButtonClick={() => navigate('/signup')}
+            onClose={() => setShowLoginModal(false)}
+          />
+        )}
       </div>
     </div>
   );

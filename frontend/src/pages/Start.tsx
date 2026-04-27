@@ -129,34 +129,75 @@ function Start() {
             </button>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu - Full screen overlay */}
           {isMobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-secondary-100">
-              <div className="flex flex-col gap-4">
-                <a href="#features" className="text-secondary-600 hover:text-secondary-900 py-2">
-                  기능
-                </a>
-                <button
-                  onClick={() => navigate('/all')}
-                  className="text-secondary-600 hover:text-secondary-900 py-2 text-left"
-                >
-                  템플릿
-                </button>
-                <hr className="border-secondary-100" />
-                <button
-                  onClick={() => navigate('/login')}
-                  className="text-secondary-700 font-medium py-2 text-left"
-                >
-                  로그인
-                </button>
-                <button
-                  onClick={() => navigate('/signup')}
-                  className="w-full py-3 bg-primary-500 text-white font-medium rounded-xl"
-                >
-                  무료로 시작하기
-                </button>
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                onClick={() => setIsMobileMenuOpen(false)}
+              />
+              {/* Menu Panel */}
+              <div className="fixed top-0 right-0 bottom-0 w-72 bg-white z-50 md:hidden shadow-2xl transform transition-transform duration-300 ease-out">
+                <div className="flex items-center justify-between p-4 border-b border-secondary-100">
+                  <span className="font-semibold text-secondary-900">메뉴</span>
+                  <button 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 hover:bg-secondary-100 rounded-lg"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex flex-col p-4 gap-2">
+                  <a 
+                    href="#features" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-4 py-3 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-xl"
+                  >
+                    기능
+                  </a>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate('/surveys');
+                    }}
+                    className="px-4 py-3 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-xl text-left"
+                  >
+                    설문 둘러보기
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate('/templates');
+                    }}
+                    className="px-4 py-3 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-xl text-left"
+                  >
+                    템플릿
+                  </button>
+                  <hr className="my-2 border-secondary-100" />
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate('/login');
+                    }}
+                    className="px-4 py-3 text-secondary-700 font-medium hover:bg-secondary-50 rounded-xl text-left"
+                  >
+                    로그인
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate('/signup');
+                    }}
+                    className="mt-2 w-full py-3 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors"
+                  >
+                    무료로 시작하기
+                  </button>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </nav>
@@ -192,7 +233,7 @@ function Start() {
                 무료로 시작하기
               </button>
               <button
-                onClick={() => navigate('/all')}
+                onClick={() => navigate('/surveys')}
                 className="w-full sm:w-auto px-8 py-4 bg-white text-secondary-700 font-semibold rounded-2xl border border-secondary-200 hover:border-secondary-300 hover:bg-secondary-50 transition-all"
               >
                 설문 둘러보기

@@ -2,7 +2,9 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSurveyStore, Survey } from '../store/SurveyStore';
+import { useAuthStore } from '../store/AuthStore';
 import { useResponsive } from '../hooks/useResponsive';
+import Alert from '../components/common/Alert';
 
 // Icons
 const SearchIcon = () => (
@@ -98,6 +100,7 @@ function SurveyDashboard() {
   const navigate = useNavigate();
   const { isMobile, isTablet } = useResponsive();
   
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const publicSurveys = useSurveyStore((state) => state.publicSurveys);
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -106,6 +109,9 @@ function SurveyDashboard() {
   const [sortOption, setSortOption] = useState('latest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [previewSurvey, setPreviewSurvey] = useState<Survey | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Filter and sort surveys
   const filteredSurveys = useMemo(() => {
@@ -151,7 +157,18 @@ function SurveyDashboard() {
   }, [publicSurveys]);
 
   const handleSurveyClick = (surveyId: string) => {
+    // Check if user is logged in before allowing to respond
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
     navigate(`/responseform?id=${surveyId}`);
+  };
+
+  const handlePreviewClick = (e: React.MouseEvent, survey: Survey) => {
+    e.stopPropagation();
+    setPreviewSurvey(survey);
+    setShowPreviewModal(true);
   };
 
   const formatDate = (date: Date) => {
@@ -387,10 +404,16 @@ function SurveyDashboard() {
                         <UsersIcon />
                         {survey.responseCount.toLocaleString()}명 참여
                       </span>
-                      <span className="flex items-center gap-1">
-                        <ClockIcon />
-                        {formatDate(survey.createdAt)}
-                      </span>
+                      <button
+                        onClick={(e) => handlePreviewClick(e, survey)}
+                        className="flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        미리보기
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -484,6 +507,123 @@ function SurveyDashboard() {
           </div>
         )}
       </div>
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <Alert
+          type="login"
+          title="로그인이 필요합니다"
+          message="설문에 참여하려면 로그인이 필요합니다. 로그인 후 다시 시도해주세요."
+          buttonText="로그인하기"
+          buttonClick={() => navigate('/login')}
+          secondaryButtonText="회원가입"
+          secondaryButtonClick={() => navigate('/signup')}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
+
+      {/* Survey Preview Modal */}
+      {showPreviewModal && previewSurvey && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowPreviewModal(false)}
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden"
+          >
+            {/* Header */}
+            <div 
+              className="h-32 p-6 relative"
+              style={{ 
+                background: `linear-gradient(135deg, ${previewSurvey.themeColor}30 0%, ${previewSurvey.themeColor}60 100%)` 
+              }}
+            >
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="absolute right-4 top-4 p-2 bg-white/80 hover:bg-white rounded-lg transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+              <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${STATUS_LABELS[previewSurvey.status].color}`}>
+                {STATUS_LABELS[previewSurvey.status].label}
+              </span>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-text-primary mb-2">{previewSurvey.title}</h2>
+              <p className="text-text-secondary mb-4">{previewSurvey.description}</p>
+
+              {/* Author */}
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border-light">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                  style={{ backgroundColor: previewSurvey.themeColor }}
+                >
+                  {previewSurvey.authorName[0]}
+                </div>
+                <div>
+                  <p className="font-medium text-text-primary">{previewSurvey.authorName}</p>
+                  <p className="text-sm text-text-tertiary">{formatDate(previewSurvey.createdAt)}</p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-secondary-50 rounded-xl p-4">
+                  <p className="text-2xl font-bold text-text-primary">{previewSurvey.questions.length}</p>
+                  <p className="text-sm text-text-tertiary">질문 수</p>
+                </div>
+                <div className="bg-secondary-50 rounded-xl p-4">
+                  <p className="text-2xl font-bold text-text-primary">{previewSurvey.responseCount.toLocaleString()}</p>
+                  <p className="text-sm text-text-tertiary">참여자 수</p>
+                </div>
+              </div>
+
+              {/* Hashtags */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {previewSurvey.hashtags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 text-sm bg-primary-50 text-primary-600 rounded-full"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    if (isLoggedIn) {
+                      navigate(`/responseform?id=${previewSurvey.id}`);
+                    } else {
+                      setShowLoginModal(true);
+                    }
+                  }}
+                  className="flex-1 py-3 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors"
+                >
+                  설문 참여하기
+                </button>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  className="px-6 py-3 bg-secondary-100 text-text-secondary font-medium rounded-xl hover:bg-secondary-200 transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

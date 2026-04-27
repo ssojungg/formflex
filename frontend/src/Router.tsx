@@ -29,10 +29,10 @@ const routerData: RouterElement[] = [
   { id: 1, path: '/', element: <Start />, withAuth: false },
   { id: 2, path: '/login', element: <Login />, withAuth: false },
   { id: 3, path: '/signup', element: <Signup />, withAuth: false },
-  // Survey Dashboard - ALL public surveys from ALL users
-  { id: 4, path: '/surveys', element: <SurveyDashboard />, withAuth: true, isNavbar: true },
-  // Template Library - Community templates (separate page)
-  { id: 5, path: '/templates', element: <TemplateLibrary />, withAuth: true, isNavbar: true },
+  // Survey Dashboard - ALL public surveys from ALL users (viewable without login)
+  { id: 4, path: '/surveys', element: <SurveyDashboard />, withAuth: false, isNavbar: true },
+  // Template Library - Community templates (viewable without login)
+  { id: 5, path: '/templates', element: <TemplateLibrary />, withAuth: false, isNavbar: true },
   // My Forms - User's own surveys
   { id: 6, path: '/myform', element: <MyForm />, withAuth: true, isNavbar: true },
   { id: 7, path: '/myresponses', element: <MyResponse />, withAuth: true, isNavbar: true },
