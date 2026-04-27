@@ -1,15 +1,11 @@
-import Navbar from '../components/common/Navbar';
+import { ResponsiveSidebar } from '../components/layout/ResponsiveSidebar';
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 function MainLayout({ children }: MainLayoutProps) {
-  return (
-    <div className="flex items-center justify-center w-full h-screen p-16 bg-custom-gradient">
-      <Navbar>{children}</Navbar>
-    </div>
-  );
+  return <ResponsiveSidebar>{children}</ResponsiveSidebar>;
 }
 
 export default MainLayout;
