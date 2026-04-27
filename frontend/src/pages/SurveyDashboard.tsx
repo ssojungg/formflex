@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSurveyStore, Survey } from '../store/SurveyStore';
 import { useAuthStore } from '../store/AuthStore';
-import { useResponsive } from '../hooks/useResponsive';
 import Alert from '../components/common/Alert';
 
 // Icons
@@ -14,150 +13,78 @@ const SearchIcon = () => (
   </svg>
 );
 
-const GridIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="3" width="7" height="7" />
-    <rect x="14" y="3" width="7" height="7" />
-    <rect x="3" y="14" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" />
-  </svg>
-);
-
-const ListIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="8" y1="6" x2="21" y2="6" />
-    <line x1="8" y1="12" x2="21" y2="12" />
-    <line x1="8" y1="18" x2="21" y2="18" />
-    <line x1="3" y1="6" x2="3.01" y2="6" />
-    <line x1="3" y1="12" x2="3.01" y2="12" />
-    <line x1="3" y1="18" x2="3.01" y2="18" />
-  </svg>
-);
-
 const UsersIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
     <circle cx="9" cy="7" r="4" />
-    <path d="M23 21v-2a4 4 0 00-3-3.87" />
-    <path d="M16 3.13a4 4 0 010 7.75" />
   </svg>
 );
 
-const ClockIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);
-
-const HashtagIcon = () => (
+const EyeIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="4" y1="9" x2="20" y2="9" />
-    <line x1="4" y1="15" x2="20" y2="15" />
-    <line x1="10" y1="3" x2="8" y2="21" />
-    <line x1="16" y1="3" x2="14" y2="21" />
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
-const FilterIcon = () => (
+const PlusIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
-const SortIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M11 5h10" />
-    <path d="M11 9h7" />
-    <path d="M11 13h4" />
-    <path d="M3 17l3 3 3-3" />
-    <path d="M6 18V4" />
+const CloseIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
-const ChevronDownIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
-
-// Popular hashtags
-const POPULAR_HASHTAGS = ['#고객만족', '#시장조사', '#HR', '#이벤트', '#NPS', '#UX', '#피드백', '#마케팅'];
+// Status badge styles
+const STATUS_STYLES = {
+  active: 'bg-emerald-100 text-emerald-700',
+  closed: 'bg-red-100 text-red-700',
+  draft: 'bg-gray-100 text-gray-700',
+} as const;
 
 const STATUS_LABELS = {
-  active: { label: 'Active', color: 'bg-emerald-100 text-emerald-700' },
-  closed: { label: 'Closed', color: 'bg-red-100 text-red-700' },
-  draft: { label: 'Draft', color: 'bg-gray-100 text-gray-700' },
-};
+  active: 'Active',
+  closed: 'Closed',
+  draft: 'Draft',
+} as const;
 
-const SORT_OPTIONS = [
-  { value: 'latest', label: '최신순' },
-  { value: 'popular', label: '인기순' },
-  { value: 'responses', label: '응답순' },
-];
+// Popular hashtags
+const POPULAR_HASHTAGS = ['고객만족', '시장조사', 'HR', '이벤트', 'NPS', 'UX'];
 
 function SurveyDashboard() {
   const navigate = useNavigate();
-  const { isMobile, isTablet } = useResponsive();
-  
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const publicSurveys = useSurveyStore((state) => state.publicSurveys);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'closed'>('all');
-  const [sortOption, setSortOption] = useState('latest');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [previewSurvey, setPreviewSurvey] = useState<Survey | null>(null);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // Filter and sort surveys
+  // Filter surveys
   const filteredSurveys = useMemo(() => {
-    let result = publicSurveys.filter((survey) => {
-      // Search filter
+    return publicSurveys.filter((survey) => {
       const matchesSearch = searchTerm === '' || 
         survey.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         survey.description.toLowerCase().includes(searchTerm.toLowerCase());
       
-      // Hashtag filter
       const matchesHashtag = !selectedHashtag || 
-        survey.hashtags.some((tag) => `#${tag}`.toLowerCase() === selectedHashtag.toLowerCase());
+        survey.hashtags.some((tag) => tag.toLowerCase() === selectedHashtag.toLowerCase());
       
-      // Status filter
       const matchesStatus = statusFilter === 'all' || survey.status === statusFilter;
       
       return matchesSearch && matchesHashtag && matchesStatus;
-    });
-    
-    // Sort
-    switch (sortOption) {
-      case 'popular':
-        result.sort((a, b) => b.responseCount - a.responseCount);
-        break;
-      case 'responses':
-        result.sort((a, b) => b.responseCount - a.responseCount);
-        break;
-      case 'latest':
-      default:
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-    
-    return result;
-  }, [publicSurveys, searchTerm, selectedHashtag, statusFilter, sortOption]);
-
-  // Get all unique hashtags from surveys
-  const allHashtags = useMemo(() => {
-    const tags = new Set<string>();
-    publicSurveys.forEach((survey) => {
-      survey.hashtags.forEach((tag) => tags.add(`#${tag}`));
-    });
-    return Array.from(tags);
-  }, [publicSurveys]);
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [publicSurveys, searchTerm, selectedHashtag, statusFilter]);
 
   const handleSurveyClick = (surveyId: string) => {
-    // Check if user is logged in before allowing to respond
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
@@ -165,369 +92,185 @@ function SurveyDashboard() {
     navigate(`/responseform?id=${surveyId}`);
   };
 
-  const handlePreviewClick = (e: React.MouseEvent, survey: Survey) => {
+  const handlePreview = (e: React.MouseEvent, survey: Survey) => {
     e.stopPropagation();
     setPreviewSurvey(survey);
-    setShowPreviewModal(true);
   };
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('ko-KR', {
-      year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
   };
 
   return (
-    <div className="min-h-full bg-background-secondary">
-      <div className="p-4 md:p-6 lg:p-8">
-        {/* Search & Filters */}
-        <div className="bg-white rounded-xl p-4 shadow-card mb-6">
-          <div className="flex flex-col gap-4">
-            {/* Top Row: Search + Create Button */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Search */}
-              <div className="relative flex-1">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-text-tertiary">
-                  <SearchIcon />
-                </div>
-                <input
-                  type="text"
-                  placeholder="설문 제목 또는 내용으로 검색..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-background-secondary border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-                />
+    <div className="min-h-screen bg-gray-50">
+      <div className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        {/* Search Bar */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
+          {/* Search + Create Button Row */}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+                <SearchIcon />
               </div>
-              
-              {/* Create New Survey Button */}
-              {isLoggedIn && (
-                <button
-                  onClick={() => navigate('/create')}
-                  className="flex items-center justify-center gap-2 px-5 py-3 bg-primary-500 text-white text-sm font-medium rounded-xl hover:bg-primary-600 transition-colors whitespace-nowrap"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  새 설문 만들기
-                </button>
-              )}
+              <input
+                type="text"
+                placeholder="설문 검색..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500/30"
+              />
             </div>
             
-            {/* Bottom Row: Filters + View Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              {/* Status Filter - Scrollable on mobile */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                <button
-                  onClick={() => setStatusFilter('all')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-                    statusFilter === 'all'
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
-                  }`}
-                >
-                  전체
-                </button>
-                <button
-                  onClick={() => setStatusFilter('active')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-                    statusFilter === 'active'
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
-                  }`}
-                >
-                  Active
-                </button>
-                <button
-                  onClick={() => setStatusFilter('closed')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
-                    statusFilter === 'closed'
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-background-secondary text-text-secondary hover:bg-secondary-100'
-                  }`}
-                >
-                  Closed
-                </button>
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="hidden sm:flex items-center gap-1 bg-background-secondary rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'grid' ? 'bg-white shadow-sm text-primary-600' : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
-                >
-                  <GridIcon />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-text-tertiary hover:text-text-secondary'
-                  }`}
-                >
-                  <ListIcon />
-                </button>
-              </div>
-            </div>
+            {isLoggedIn && (
+              <button
+                onClick={() => navigate('/create')}
+                className="flex items-center gap-2 px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors shrink-0"
+              >
+                <PlusIcon />
+                <span className="hidden sm:inline">새 설문</span>
+              </button>
+            )}
           </div>
-
-          {/* Hashtag Pills */}
-          <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
-            <span className="text-sm text-text-tertiary whitespace-nowrap flex items-center gap-1">
-              <HashtagIcon /> 인기 태그:
-            </span>
+          
+          {/* Status Filters */}
+          <div className="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-1 px-1">
+            {(['all', 'active', 'closed'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                  statusFilter === status
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {status === 'all' ? '전체' : status === 'active' ? 'Active' : 'Closed'}
+              </button>
+            ))}
+          </div>
+          
+          {/* Hashtags */}
+          <div className="flex gap-2 mt-3 overflow-x-auto pb-1 -mx-1 px-1">
             {POPULAR_HASHTAGS.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setSelectedHashtag(selectedHashtag === tag ? null : tag)}
-                className={`px-3 py-1.5 text-sm rounded-full whitespace-nowrap transition-colors ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
                   selectedHashtag === tag
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-secondary-100 text-text-secondary hover:bg-secondary-200'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {tag}
+                #{tag}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Results Count & Sort */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-text-secondary">
-            {filteredSurveys.length}개의 설문
-            {selectedHashtag && <span className="text-primary-600 font-medium"> ({selectedHashtag})</span>}
-          </p>
-          
-          <div className="relative">
-            <button
-              onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-text-primary"
-            >
-              <SortIcon />
-              {SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
-              <ChevronDownIcon />
-            </button>
-            
-            {showSortDropdown && (
-              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-border py-1 z-10 min-w-[120px]">
-                {SORT_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setSortOption(option.value);
-                      setShowSortDropdown(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm hover:bg-secondary-50 ${
-                      sortOption === option.value ? 'text-primary-600 font-medium' : 'text-text-secondary'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Results Count */}
+        <p className="text-sm text-gray-500 mb-3 px-1">
+          {filteredSurveys.length}개의 설문
+          {selectedHashtag && <span className="text-green-600 font-medium"> (#{selectedHashtag})</span>}
+        </p>
 
-        {/* Survey Grid/List - Force grid view on mobile */}
-        <AnimatePresence mode="wait">
-          {(viewMode === 'grid' || typeof window !== 'undefined' && window.innerWidth < 640) ? (
-            <motion.div
-              key="grid"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
+        {/* Survey Grid - Pure CSS responsive */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredSurveys.map((survey) => (
+            <div
+              key={survey.id}
+              onClick={() => handleSurveyClick(survey.id)}
+              className="bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
             >
-              {filteredSurveys.map((survey, index) => (
-                <motion.div
-                  key={survey.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  onClick={() => handleSurveyClick(survey.id)}
-                  className="bg-white rounded-xl overflow-hidden cursor-pointer group hover:shadow-card-hover transition-all"
-                >
-                  {/* Card Header with gradient */}
-                  <div 
-                    className="relative h-24 sm:h-32 p-3 sm:p-4"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${survey.themeColor}20 0%, ${survey.themeColor}40 100%)` 
-                    }}
-                  >
-                    <span className={`absolute top-2 sm:top-3 left-2 sm:left-3 px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded ${STATUS_LABELS[survey.status].color}`}>
-                      {STATUS_LABELS[survey.status].label}
-                    </span>
-                    
-                    {/* Decorative lines (like the design image) */}
-                    <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 opacity-50">
-                      <div className="flex flex-col gap-1 sm:gap-1.5">
-                        {[1, 2, 3].map((i) => (
-                          <div 
-                            key={i} 
-                            className="h-0.5 sm:h-1 rounded-full"
-                            style={{ 
-                              width: `${50 - i * 12}px`,
-                              backgroundColor: survey.themeColor 
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
+              {/* Card Header */}
+              <div 
+                className="h-24 sm:h-28 p-3 relative"
+                style={{ 
+                  background: `linear-gradient(135deg, ${survey.themeColor}20 0%, ${survey.themeColor}50 100%)` 
+                }}
+              >
+                <span className={`inline-block px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded ${STATUS_STYLES[survey.status]}`}>
+                  {STATUS_LABELS[survey.status]}
+                </span>
+                
+                {/* Decorative lines */}
+                <div className="absolute bottom-3 right-3 opacity-40">
+                  <div className="flex flex-col gap-1">
+                    <div className="h-0.5 w-10 rounded-full" style={{ backgroundColor: survey.themeColor }} />
+                    <div className="h-0.5 w-7 rounded-full" style={{ backgroundColor: survey.themeColor }} />
+                    <div className="h-0.5 w-4 rounded-full" style={{ backgroundColor: survey.themeColor }} />
                   </div>
-                  
-                  {/* Card Content */}
-                  <div className="p-3 sm:p-4">
-                    <h3 className="font-semibold text-sm sm:text-base text-text-primary mb-1 line-clamp-1 group-hover:text-primary-600 transition-colors">
-                      {survey.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-text-tertiary mb-2 sm:mb-3 line-clamp-2">
-                      {survey.description}
-                    </p>
-                    
-                    {/* Author */}
-                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                      <div 
-                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-medium text-white"
-                        style={{ backgroundColor: survey.themeColor }}
-                      >
-                        {survey.authorName[0]}
-                      </div>
-                      <span className="text-xs sm:text-sm text-text-secondary">{survey.authorName}</span>
-                    </div>
-                    
-                    {/* Hashtags - Hidden on very small screens */}
-                    <div className="hidden xs:flex flex-wrap gap-1 mb-2 sm:mb-3">
-                      {survey.hashtags.slice(0, 2).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[10px] sm:text-xs text-primary-600 bg-primary-50 px-1.5 sm:px-2 py-0.5 rounded"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                    
-                    {/* Meta */}
-                    <div className="flex items-center justify-between text-[10px] sm:text-xs text-text-tertiary pt-2 sm:pt-3 border-t border-border-light">
-                      <span className="flex items-center gap-1">
-                        <UsersIcon />
-                        {survey.responseCount.toLocaleString()}명 참여
-                      </span>
-                      <button
-                        onClick={(e) => handlePreviewClick(e, survey)}
-                        className="flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                        <span className="hidden xs:inline">미리보기</span>
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="list"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-white rounded-xl overflow-hidden shadow-card"
-            >
-              {/* Table Header */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-secondary-50 text-sm font-medium text-text-secondary border-b border-border-light">
-                <div className="col-span-5">설문 제목</div>
-                <div className="col-span-2">작성자</div>
-                <div className="col-span-1">상태</div>
-                <div className="col-span-2">응답 수</div>
-                <div className="col-span-2">작성일</div>
+                </div>
               </div>
               
-              {/* Table Body */}
-              <div className="divide-y divide-border-light">
-                {filteredSurveys.map((survey, index) => (
-                  <motion.div
-                    key={survey.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.02 }}
-                    onClick={() => handleSurveyClick(survey.id)}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-4 hover:bg-secondary-50 cursor-pointer transition-colors"
+              {/* Card Content */}
+              <div className="p-3 sm:p-4">
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-1 mb-1">
+                  {survey.title}
+                </h3>
+                <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 mb-3">
+                  {survey.description}
+                </p>
+                
+                {/* Author */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div 
+                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-medium text-white"
+                    style={{ backgroundColor: survey.themeColor }}
                   >
-                    <div className="md:col-span-5">
-                      <div className="flex items-start gap-3">
-                        <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium shrink-0"
-                          style={{ backgroundColor: survey.themeColor }}
-                        >
-                          {survey.title[0]}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-medium text-text-primary truncate">{survey.title}</h4>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {survey.hashtags.slice(0, 2).map((tag) => (
-                              <span key={tag} className="text-xs text-primary-600">
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="md:col-span-2 flex items-center">
-                      <span className="text-sm text-text-secondary">{survey.authorName}</span>
-                    </div>
-                    
-                    <div className="md:col-span-1 flex items-center">
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${STATUS_LABELS[survey.status].color}`}>
-                        {STATUS_LABELS[survey.status].label}
-                      </span>
-                    </div>
-                    
-                    <div className="md:col-span-2 flex items-center">
-                      <span className="text-sm text-text-secondary">
-                        {survey.responseCount.toLocaleString()}
-                      </span>
-                    </div>
-                    
-                    <div className="md:col-span-2 flex items-center">
-                      <span className="text-sm text-text-tertiary">
-                        {formatDate(survey.createdAt)}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
+                    {survey.authorName[0]}
+                  </div>
+                  <span className="text-xs sm:text-sm text-gray-600">{survey.authorName}</span>
+                </div>
+                
+                {/* Tags - Show only on larger screens */}
+                <div className="hidden sm:flex flex-wrap gap-1 mb-3">
+                  {survey.hashtags.slice(0, 2).map((tag) => (
+                    <span key={tag} className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+                
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <span className="flex items-center gap-1 text-[10px] sm:text-xs text-gray-400">
+                    <UsersIcon />
+                    {survey.responseCount.toLocaleString()}명
+                  </span>
+                  <button
+                    onClick={(e) => handlePreview(e, survey)}
+                    className="flex items-center gap-1 text-[10px] sm:text-xs text-green-600 font-medium hover:text-green-700"
+                  >
+                    <EyeIcon />
+                    <span className="hidden sm:inline">미리보기</span>
+                  </button>
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          ))}
+        </div>
 
         {/* Empty State */}
         {filteredSurveys.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <SearchIcon />
             </div>
-            <h3 className="text-lg font-medium text-text-primary mb-2">검색 결과가 없습니다</h3>
-            <p className="text-text-tertiary">다른 검색어나 필터를 시도해보세요</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">검색 결과가 없습니다</h3>
+            <p className="text-gray-500">다른 검색어나 필터를 시도해보세요</p>
           </div>
         )}
       </div>
 
-      {/* Login Required Modal */}
+      {/* Login Modal */}
       {showLoginModal && (
         <Alert
           type="login"
           title="로그인이 필요합니다"
-          message="설문에 참여하려면 로그인이 필요합니다. 로그인 후 다시 시도해주세요."
+          message="설문에 참여하려면 로그인이 필요합니다."
           buttonText="로그인하기"
           buttonClick={() => navigate('/login')}
           secondaryButtonText="회원가입"
@@ -536,108 +279,108 @@ function SurveyDashboard() {
         />
       )}
 
-      {/* Survey Preview Modal */}
-      {showPreviewModal && previewSurvey && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowPreviewModal(false)}
-          />
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden"
-          >
-            {/* Header */}
-            <div 
-              className="h-32 p-6 relative"
-              style={{ 
-                background: `linear-gradient(135deg, ${previewSurvey.themeColor}30 0%, ${previewSurvey.themeColor}60 100%)` 
-              }}
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewSurvey && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setPreviewSurvey(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] overflow-auto"
             >
-              <button
-                onClick={() => setShowPreviewModal(false)}
-                className="absolute right-4 top-4 p-2 bg-white/80 hover:bg-white rounded-lg transition-colors"
+              {/* Header */}
+              <div 
+                className="h-28 p-4 relative"
+                style={{ 
+                  background: `linear-gradient(135deg, ${previewSurvey.themeColor}30 0%, ${previewSurvey.themeColor}60 100%)` 
+                }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-              <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${STATUS_LABELS[previewSurvey.status].color}`}>
-                {STATUS_LABELS[previewSurvey.status].label}
-              </span>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-text-primary mb-2">{previewSurvey.title}</h2>
-              <p className="text-text-secondary mb-4">{previewSurvey.description}</p>
-
-              {/* Author */}
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border-light">
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-                  style={{ backgroundColor: previewSurvey.themeColor }}
+                <button
+                  onClick={() => setPreviewSurvey(null)}
+                  className="absolute right-3 top-3 p-2 bg-white/80 hover:bg-white rounded-full transition-colors"
                 >
-                  {previewSurvey.authorName[0]}
-                </div>
-                <div>
-                  <p className="font-medium text-text-primary">{previewSurvey.authorName}</p>
-                  <p className="text-sm text-text-tertiary">{formatDate(previewSurvey.createdAt)}</p>
-                </div>
+                  <CloseIcon />
+                </button>
+                <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${STATUS_STYLES[previewSurvey.status]}`}>
+                  {STATUS_LABELS[previewSurvey.status]}
+                </span>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-secondary-50 rounded-xl p-4">
-                  <p className="text-2xl font-bold text-text-primary">{previewSurvey.questions.length}</p>
-                  <p className="text-sm text-text-tertiary">질문 수</p>
-                </div>
-                <div className="bg-secondary-50 rounded-xl p-4">
-                  <p className="text-2xl font-bold text-text-primary">{previewSurvey.responseCount.toLocaleString()}</p>
-                  <p className="text-sm text-text-tertiary">참여자 수</p>
-                </div>
-              </div>
+              {/* Content */}
+              <div className="p-5">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{previewSurvey.title}</h2>
+                <p className="text-gray-600 mb-4">{previewSurvey.description}</p>
 
-              {/* Hashtags */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {previewSurvey.hashtags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 text-sm bg-primary-50 text-primary-600 rounded-full"
+                {/* Author */}
+                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                    style={{ backgroundColor: previewSurvey.themeColor }}
                   >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+                    {previewSurvey.authorName[0]}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{previewSurvey.authorName}</p>
+                    <p className="text-sm text-gray-500">{formatDate(previewSurvey.createdAt)}</p>
+                  </div>
+                </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowPreviewModal(false);
-                    if (isLoggedIn) {
-                      navigate(`/responseform?id=${previewSurvey.id}`);
-                    } else {
-                      setShowLoginModal(true);
-                    }
-                  }}
-                  className="flex-1 py-3 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors"
-                >
-                  설문 참여하기
-                </button>
-                <button
-                  onClick={() => setShowPreviewModal(false)}
-                  className="px-6 py-3 bg-secondary-100 text-text-secondary font-medium rounded-xl hover:bg-secondary-200 transition-colors"
-                >
-                  닫기
-                </button>
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className="bg-gray-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-gray-900">{previewSurvey.questions.length}</p>
+                    <p className="text-sm text-gray-500">질문 수</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 text-center">
+                    <p className="text-2xl font-bold text-gray-900">{previewSurvey.responseCount.toLocaleString()}</p>
+                    <p className="text-sm text-gray-500">참여자</p>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {previewSurvey.hashtags.map((tag) => (
+                    <span key={tag} className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded-full">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setPreviewSurvey(null);
+                      if (isLoggedIn) {
+                        navigate(`/responseform?id=${previewSurvey.id}`);
+                      } else {
+                        setShowLoginModal(true);
+                      }
+                    }}
+                    className="flex-1 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
+                  >
+                    설문 참여하기
+                  </button>
+                  <button
+                    onClick={() => setPreviewSurvey(null)}
+                    className="px-5 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    닫기
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
