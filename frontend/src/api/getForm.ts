@@ -16,9 +16,11 @@ export const getAllSurveyAPI = async ({
   const params: any = { page: currentPage, limit: LIMIT };
   if (title) params.title = title;
   if (sort === 'attendCount') {
-    params.attendCount = true; // 참여자 순 정렬
+    params.attendCount = true;
   } else if (sort === 'deadline') {
-    params.deadline = true; // 마감일 순 정렬
+    params.deadline = true;
+  } else if (sort === 'oldest') {
+    params.oldest = true;
   }
   const response = await restFetcher({
     method: 'GET',
@@ -37,9 +39,11 @@ export const getMySurveyAPI = async ({
   const params: any = { page: currentPage, limit: LIMIT };
   if (title) params.title = title;
   if (sort === 'attendCount') {
-    params.attendCount = true; // 참여자 순 정렬
+    params.attendCount = true;
   } else if (sort === 'deadline') {
-    params.deadline = true; // 마감일 순 정렬
+    params.deadline = true;
+  } else if (sort === 'oldest') {
+    params.oldest = true;
   }
   const response = await restFetcher({
     method: 'GET',

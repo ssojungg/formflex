@@ -19,3 +19,15 @@ export const patchPasswordAPI = async (id: number, password: string) => {
   });
   return response;
 };
+
+export const patchProfileAPI = async (id: number, updates: { name?: string; password?: string }) => {
+  const response = await restFetcher({
+    method: 'PATCH',
+    path: `/users`,
+    body: {
+      userId: id,
+      ...updates,
+    },
+  });
+  return response;
+};

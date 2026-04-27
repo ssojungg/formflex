@@ -46,6 +46,7 @@ function ResponseForm() {
   } = useQuery<QuestionDataForm, AxiosError>({
     queryKey: ['surveyData', surveyId],
     queryFn: () => responseformAPI(surveyId),
+    enabled: !!surveyId && !isNaN(surveyId),
   });
 
   useEffect(() => {

@@ -29,7 +29,8 @@ function Signup() {
     },
     onError: (error: AxiosError) => {
       const err = error as AxiosError<ApiResponseError>;
-      setErrorMessage(err.response?.data?.message || '이메일 중복 확인을 실패했습니다.');
+      setIsCheckEmailErrorMessage(err.response?.data?.message || '이메일 중복 확인에 실패했습니다. 다시 시도해주세요.');
+      setIsCheckedEmail(false);
     },
   });
 
@@ -47,15 +48,17 @@ function Signup() {
     checkEmailMutation(signupInfo.email);
   };
 
+  const [showSignupError, setShowSignupError] = useState(false);
+
   const {
     mutate: signupMutation,
-    isError,
     isSuccess,
   } = useMutation({
     mutationFn: singupAPI,
     onError: (error: AxiosError) => {
       const err = error as AxiosError<ApiResponseError>;
       setErrorMessage(err.response?.data?.message || '회원가입에 실패했습니다.');
+      setShowSignupError(true);
     },
   });
 
@@ -183,7 +186,7 @@ function Signup() {
                   placeholder="name@example.com"
                   className={`w-full px-4 py-3 pr-24 bg-white border rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none transition-all ${
                     isCheckedEmail
-                      ? 'border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20'
+                      ? 'border-indigo-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
                       : isCheckEmailErrorMessage
                         ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
                         : 'border-secondary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'
@@ -195,7 +198,7 @@ function Signup() {
                   disabled={isCheckedEmail || signupInfo.email === ''}
                   className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                     isCheckedEmail
-                      ? 'bg-green-100 text-green-600 cursor-default'
+                      ? 'bg-indigo-100 text-indigo-600 cursor-default'
                       : signupInfo.email === ''
                         ? 'bg-secondary-100 text-secondary-400 cursor-not-allowed'
                         : 'bg-primary-100 text-primary-600 hover:bg-primary-200'
@@ -208,7 +211,7 @@ function Signup() {
                 <p className="mt-2 text-sm text-red-500">{isCheckEmailErrorMessage}</p>
               )}
               {isCheckedEmail && (
-                <p className="mt-2 text-sm text-green-500">사용 가능한 이메일입니다.</p>
+                <p className="mt-2 text-sm text-indigo-500">사용 가능한 이메일입니다.</p>
               )}
             </div>
 
@@ -309,7 +312,7 @@ function Signup() {
               buttonClick={() => navigate('/login')}
             />
           )}
-          {isError && <Alert type="error" message={errorMessage} buttonText="확인" />}
+          {showSignupError && <Alert type="error" message={errorMessage} buttonText="확인" onClose={() => setShowSignupError(false)} />}
         </div>
       </div>
     </div>

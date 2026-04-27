@@ -126,7 +126,7 @@ export function FormCard({ survey, index }: FormCardProps) {
 
           {/* Status Badge */}
           <div className={`absolute top-3 left-3 px-2.5 py-1 text-xs font-medium rounded-md
-            ${isActive ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+            ${isActive ? 'bg-indigo-500 text-white' : 'bg-red-500 text-white'}`}>
             {isActive ? 'Active' : 'Closed'}
           </div>
 

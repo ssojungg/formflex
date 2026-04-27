@@ -26,13 +26,8 @@ const cors = require('cors');
 
 app.use(
   cors({
-    origin: [
-      'http://formflex.site',
-      'http://localhost:8000/api',
-      'http://localhost:3001',
-    ], // 클라이언트의 URL을 정확하게 지정
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
     allowedHeaders: 'Content-Type, Accept, X-Requested-With, remember-me',
   }),
 );

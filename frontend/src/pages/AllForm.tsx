@@ -154,8 +154,8 @@ function AllForm() {
     ...(data?.surveys?.map((survey, index) => ({
       id: survey.surveyId,
       title: survey.title,
-      description: survey.description || '설문 템플릿입니다.',
-      author: survey.userName || '익명',
+      description: '설문 템플릿입니다.',
+      author: '익명',
       verified: Math.random() > 0.5,
       questions: Math.floor(Math.random() * 15) + 5,
       time: `${Math.floor(Math.random() * 6) + 2}분`,
@@ -342,9 +342,9 @@ function AllForm() {
               >
                 {/* Image */}
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-secondary-100 to-secondary-200 overflow-hidden">
-                  {template.image ? (
+                  {(template as any).image ? (
                     <img
-                      src={template.image}
+                      src={(template as any).image}
                       alt={template.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
