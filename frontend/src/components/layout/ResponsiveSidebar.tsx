@@ -80,8 +80,8 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { id: 'myforms', icon: DashboardIcon, text: '대시보드', path: '/myform' },
   { id: 'templates', icon: TemplateIcon, text: '템플릿 라이브러리', path: '/all' },
-  { id: 'analytics', icon: AnalyticsIcon, text: '분석', path: '/myresponses' },
-  { id: 'profile', icon: ProfileIcon, text: '내 정보', path: '/myanswer' },
+  { id: 'analytics', icon: AnalyticsIcon, text: '분석', path: '/result' },
+  { id: 'profile', icon: ProfileIcon, text: '내 정보', path: '/mypage' },
 ];
 
 interface ResponsiveSidebarProps {

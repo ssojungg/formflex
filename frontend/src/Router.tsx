@@ -10,6 +10,7 @@ import MyResponse from './pages/MyResponse';
 import Create from './pages/Create';
 import ResultPage from './pages/ResultPage';
 import MyAnswer from './pages/MyAnswer';
+import MyPage from './pages/MyPage';
 import ResponseForm from './pages/ResponseForm';
 import { useAuthStore } from './store/AuthStore';
 import Alert from './components/common/Alert';
@@ -36,6 +37,7 @@ const routerData: RouterElement[] = [
   { id: 10, path: '/myanswer', element: <MyAnswer />, withAuth: true, isNavbar: true },
   { id: 11, path: '/edit', element: <Create />, withAuth: true, isNavbar: true }, // 설문 편집
   { id: 12, path: '/view', element: <ResponseForm />, withAuth: true, isNavbar: true }, // 설문 보기
+  { id: 13, path: '/mypage', element: <MyPage />, withAuth: true, isNavbar: true }, // 마이페이지
 ];
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

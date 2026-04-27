@@ -1,294 +1,394 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import newIdea from '../assets/newIdea.svg';
-import teamWork from '../assets/teamWork.svg';
-import star1 from '../assets/star1.svg';
-import star2 from '../assets/star2.svg';
-import star3 from '../assets/star3.svg';
-import star4 from '../assets/star4.svg';
-import star5 from '../assets/star5.svg';
-import flexLine from '../assets/flexLine.svg';
-import editPencil from '../assets/editPencil.svg';
-import palette1 from '../assets/palette1.svg';
-import circleAnalytics from '../assets/circleAnalytics.svg';
-import roundShare from '../assets/roundShare.svg';
-import survey from '../assets/survey.svg';
-import CarouselDesOne from '../components/common/CarouselDesOne';
-import CarouselDesTwo from '../components/common/CarouselDesTwo';
-import macbookBackground from '../assets/macbookBackground.svg';
 import logo from '../assets/logo.svg';
+
+// Feature icons as simple SVG components
+const AIIcon = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+  </svg>
+);
+
+const ChartIcon = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M18 20V10M12 20V4M6 20v-6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </svg>
+);
+
+const TemplateIcon = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <line x1="3" y1="9" x2="21" y2="9" />
+    <line x1="9" y1="21" x2="9" y2="9" />
+  </svg>
+);
 
 function Start() {
   const navigate = useNavigate();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isOn, setIsOn] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // 새로고침하고 3초 후, toggle switch가 on으로 변경되는 useEffect
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsOn(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const toggleSwitch = () => {
-    setIsOn(!isOn);
-  };
 
   const features = [
     {
-      title: 'With our own brand colors',
-      description: '당신만의 브랜드 성격을 담은 하나의 특별한 폼을 만들어보세요!',
-      image: palette1,
+      icon: <AIIcon />,
+      title: 'AI 설문 자동 생성',
+      description: '프롬프트만 입력하면 AI가 질문 구조를 자동으로 생성해드립니다.',
     },
     {
-      title: 'Advanced Analytics',
-      description: '폼을 이용하여 당신의 브랜드의 관심과 성장을 위한 폼을 만들고 설문 결과도 분석해보세요!',
-      image: circleAnalytics,
+      icon: <ChartIcon />,
+      title: '실시간 분석 대시보드',
+      description: '응답 데이터를 다양한 차트와 그래프로 시각화하여 인사이트를 얻으세요.',
     },
     {
-      title: 'Share Form',
-      description: '자신만의 폼을 공유하고 참여자의 가치를 생각해 보세요.',
-      image: roundShare,
+      icon: <ShareIcon />,
+      title: '간편한 공유',
+      description: '링크 하나로 설문을 공유하고, 응답자 N명 달성 시 자동 리포트를 받아보세요.',
+    },
+    {
+      icon: <TemplateIcon />,
+      title: '템플릿 라이브러리',
+      description: '다른 사용자들이 공유한 템플릿을 검색하고 바로 사용해보세요.',
     },
   ];
 
-  // 10초마다 슬라이드를 변경하는 useEffect
-  useEffect(() => {
-    const slideTimer = setInterval(() => {
-      setActiveIndex((prevIndex) => (prevIndex + 1) % features.length);
-    }, 10000);
-
-    return () => clearInterval(slideTimer);
-  });
-
   return (
-    <div className="relative flex flex-col m-0 bg-white">
-      <div className="flex w-[100%] h-full  flex-col items-center justify-center bg-[#F9F8FC]">
-        {/* Line */}
-        <div className="absolute z-10 w-full h-[18rem] top-[11.5rem]">
-          <img src={flexLine} alt="flexLine1" className="w-full" />
-        </div>
-        <div className="absolute z-10 w-full h-[18rem] top-[28rem]">
-          <img src={flexLine} alt="flexLine2" className="w-full" />
-        </div>
-
-        <div className="relative w-[85.5rem] h-[59.5rem] rounded-[1.25rem] bg-[#F9F8FC]">
-          {/* star */}
-          <div className="absolute z-20 w-4 h-4 top-[40.5rem] left-[4.44rem]">
-            <img src={star1} alt="star1" />
-          </div>
-          <div className="absolute z-20 w-4 h-4 top-[23.38rem] left-[5.44rem]">
-            <img src={star2} alt="star2" />
-          </div>
-          <div className="absolute z-20 w-4 h-4 top-[5.25rem] left-[20.38rem]">
-            <img src={star3} alt="star3" />
-          </div>
-          <div className="absolute z-20 w-4 h-4 top-[9.12rem] right-[20rem]">
-            <img src={star4} alt="star4" />
-          </div>
-          <div className="absolute z-20 w-10 h-10 top-[20.25rem] right-[11.94rem]">
-            <img src={star5} alt="star5" />
-          </div>
-
-          {/* topBar */}
-          <div className="flex flex-row w-[74.25rem] h-[3rem] justify-between mx-[7.88rem] mt-9">
-            <div className="flex items-center justify-center w-[10.5rem] h-12 ">
-              <img src={logo} alt="logo" className="w-12 h-14 mr-[0.5rem]" />
-              <span className="text-4xl font-semibold text-black">Form:Flex</span>
-            </div>
-            <div
-              className="flex cursor-pointer items-center justify-center flex-shrink-0  w-[6.5rem] h-[2.875rem] rounded-2xl border-2 border-solid border-black bg-white transition-all duration-300 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
-              onClick={() => navigate('/login')}
-            >
-              <span className="text-base font-medium leading-4 text-center text-black">Login</span>
-            </div>
-          </div>
-
-          {/* title */}
-          <div className="flex relative z-10 flex-col mt-[4.12rem]">
-            {/* centerText */}
-            <div className="flex flex-row relative z-30  justify-center items-center w-[31.75rem] h-[4.625rem] mx-[25.5rem] ">
-              <span className="text-6xl font-semibold text-black ">Create</span>
-              <div className="flex items-center justify-center h-screen">
-                <label htmlFor="toggle" className="flex items-center mx-2 mt-2 cursor-pointer">
-                  <div className="relative">
-                    <input type="checkbox" id="toggle" className="sr-only " onChange={toggleSwitch} />
-                    <div className="block  w-16 h-10 rounded-full border-solid border-black border-[0.2rem] bg-[#F9F8FC]" />
-                    <div
-                      className={`dot absolute left-2 top-2 bg-black w-6 h-6 rounded-full transition-transform duration-500 ${isOn ? 'transform translate-x-6' : ''}`}
-                    />
-                  </div>
-                </label>
-              </div>
-              <span className="text-[3.65rem] font-semibold text-black">Share</span>
-            </div>
-            <div className="flex relative z-30 justify-center items-center w-[38rem] h-[5.125rem] mx-[23.75rem]">
-              <span className="text-[3.65rem] font-semibold text-black">Form, Analysis easily</span>
-            </div>
-            <div className="flex relative z-30 justify-center items-center w-[41.75rem] h-6 mt-1 mx-[21.88rem]">
-              <span className="text-[1.15rem] font-medium text-black">
-                There are forms you can decorate yourself and various analysis tools.
-              </span>
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 lg:h-20">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="FormFlex" className="w-8 h-8 lg:w-10 lg:h-10" />
+              <span className="text-xl lg:text-2xl font-bold text-secondary-900">FormFlex</span>
             </div>
 
-            {/* centerImage, centerButton */}
-            <div className="relative z-30 flex flex-row items-start justify-center gap-1 mt-7">
-              <img src={newIdea} alt="newIdea" className="w-[23.5rem] h-[20.25rem]" />
-              <a
-                href="/signup"
-                className="relative inline-flex items-center justify-center p-4 px-8 py-4 overflow-hidden font-medium text-black transition duration-300 ease-out bg-white border-2 border-black border-solid rounded-full shadow-md group"
-              >
-                <span className="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-black group-hover:translate-x-0 ease">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </span>
-                <span className="absolute flex font-medium text-[1.2rem] items-center justify-center w-full h-full text-purple-500 transition-all duration-300 transform group-hover:translate-x-full ease">
-                  Get Started
-                </span>
-                <span className="relative invisible">Get Started</span>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-secondary-600 hover:text-secondary-900 transition-colors">
+                기능
               </a>
-              <img src={teamWork} alt="teamWork" className="w-[23.5rem] h-[20.25rem] bg-[#918dCA]" />
+              <button
+                onClick={() => navigate('/all')}
+                className="text-secondary-600 hover:text-secondary-900 transition-colors"
+              >
+                템플릿
+              </button>
             </div>
+
+            {/* Desktop CTA Buttons */}
+            <div className="hidden md:flex items-center gap-3">
+              <button
+                onClick={() => navigate('/login')}
+                className="px-4 py-2 text-secondary-700 hover:text-secondary-900 font-medium transition-colors"
+              >
+                로그인
+              </button>
+              <button
+                onClick={() => navigate('/signup')}
+                className="px-5 py-2.5 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors"
+              >
+                무료로 시작하기
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2 text-secondary-600"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isMobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
-          <div className="flex justify-center">
-            {/* <div className="absolute z-20  w-[60rem] h-[30rem]   top-[40rem] left-[13.5rem] bg-gray"> */}
-            <div className="flex justify-center items-center z-20 w-[65rem] h-[28.25rem] ">
-              {/* <div className="w-[67.25rem] h-[25rem] "> */}
-              <img src={macbookBackground} alt="macbookBackground" className="" />
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden py-4 border-t border-secondary-100">
+              <div className="flex flex-col gap-4">
+                <a href="#features" className="text-secondary-600 hover:text-secondary-900 py-2">
+                  기능
+                </a>
+                <button
+                  onClick={() => navigate('/all')}
+                  className="text-secondary-600 hover:text-secondary-900 py-2 text-left"
+                >
+                  템플릿
+                </button>
+                <hr className="border-secondary-100" />
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-secondary-700 font-medium py-2 text-left"
+                >
+                  로그인
+                </button>
+                <button
+                  onClick={() => navigate('/signup')}
+                  className="w-full py-3 bg-primary-500 text-white font-medium rounded-xl"
+                >
+                  무료로 시작하기
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-24 lg:pt-32 pb-16 lg:pb-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-medium mb-6">
+              <span className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
+              AI 기반 설문 플랫폼
+            </div>
+
+            {/* Main Title */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-secondary-900 leading-tight mb-6">
+              설문을 만들고, 분석하고,
+              <br />
+              <span className="text-primary-500">공유하세요</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-lg lg:text-xl text-secondary-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+              FormFlex로 몇 분 만에 전문적인 설문을 만들고, 실시간으로 응답을 분석하세요. AI가 설문 작성을 도와드립니다.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={() => navigate('/signup')}
+                className="w-full sm:w-auto px-8 py-4 bg-primary-500 text-white font-semibold rounded-2xl hover:bg-primary-600 transition-all hover:shadow-lg hover:-translate-y-0.5"
+              >
+                무료로 시작하기
+              </button>
+              <button
+                onClick={() => navigate('/all')}
+                className="w-full sm:w-auto px-8 py-4 bg-white text-secondary-700 font-semibold rounded-2xl border border-secondary-200 hover:border-secondary-300 hover:bg-secondary-50 transition-all"
+              >
+                설문 둘러보기
+              </button>
+            </div>
+
+            {/* Trust Badge */}
+            <p className="mt-8 text-sm text-secondary-500">
+              신용카드 없이 시작 가능 · 무제한 설문 생성
+            </p>
+          </div>
+
+          {/* Hero Image / Preview */}
+          <div className="mt-16 lg:mt-20 relative">
+            <div className="bg-gradient-to-br from-primary-100 via-primary-50 to-white rounded-3xl lg:rounded-[2rem] p-4 lg:p-8 shadow-2xl shadow-primary-500/10">
+              <div className="bg-white rounded-2xl lg:rounded-3xl shadow-card overflow-hidden">
+                {/* Browser Chrome */}
+                <div className="flex items-center gap-2 px-4 py-3 bg-secondary-50 border-b border-secondary-100">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-400" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <div className="w-3 h-3 rounded-full bg-green-400" />
+                  </div>
+                  <div className="flex-1 ml-4">
+                    <div className="max-w-xs mx-auto bg-white rounded-lg px-4 py-1.5 text-sm text-secondary-400 border border-secondary-200">
+                      formflex.io/dashboard
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dashboard Preview */}
+                <div className="p-6 lg:p-8 bg-background-secondary min-h-[300px] lg:min-h-[400px]">
+                  <div className="flex gap-6">
+                    {/* Sidebar Preview */}
+                    <div className="hidden lg:block w-60 bg-secondary-900 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-6">
+                        <div className="w-8 h-8 bg-primary-500 rounded-lg" />
+                        <span className="text-white font-semibold">FormFlex</span>
+                      </div>
+                      <div className="space-y-2">
+                        {['대시보드', '템플릿 라이브러리', '분석', '내 정보'].map((item, i) => (
+                          <div
+                            key={item}
+                            className={`px-3 py-2 rounded-lg text-sm ${
+                              i === 0 ? 'bg-primary-500 text-white' : 'text-secondary-400'
+                            }`}
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Main Content Preview */}
+                    <div className="flex-1 space-y-4">
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                        {[
+                          { label: '전체 설문', value: '24', change: '+12.5%' },
+                          { label: '총 응답 수', value: '18,432', change: '+28.4%' },
+                          { label: '평균 완료율', value: '74.3%', change: '+3.2pp' },
+                          { label: '활성 설문', value: '8', change: '+2' },
+                        ].map((stat) => (
+                          <div key={stat.label} className="bg-white rounded-xl p-3 lg:p-4">
+                            <p className="text-xs lg:text-sm text-secondary-500">{stat.label}</p>
+                            <p className="text-lg lg:text-2xl font-bold text-secondary-900 mt-1">{stat.value}</p>
+                            <p className="text-xs text-primary-500 mt-1">{stat.change}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Form Cards Grid */}
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="bg-white rounded-xl overflow-hidden">
+                            <div className="h-20 lg:h-28 bg-gradient-to-br from-primary-200 to-primary-100" />
+                            <div className="p-3 lg:p-4">
+                              <div className="h-3 bg-secondary-200 rounded w-3/4 mb-2" />
+                              <div className="h-2 bg-secondary-100 rounded w-1/2" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="flex w-[100%] h-[40rem] justify-center bg-[#F9F8FC]">
-        <div className="flex flex-col justify-center items-center mt-[11.13rem] ">
-          <div className="flex flex-col w-[36rem] h-[5.125rem] justify-center items-center mx-[27rem] mb-16">
-            <span className="text-[2rem] font-semibold mb-[0.62rem] select-none">Form Design Flow</span>
-            <span className="text-[1.25rem] font-normal text-[#8E8E8E] select-none leading-normal">
-              단계에 따라 설문지 폼을 구성해보세요!
-            </span>
+      {/* Features Section */}
+      <section id="features" className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8 bg-background-secondary">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">
+              설문 조사의 모든 것을 한 곳에서
+            </h2>
+            <p className="text-lg text-secondary-600">
+              복잡한 설문 도구는 그만. FormFlex로 쉽고 빠르게 인사이트를 얻으세요.
+            </p>
           </div>
-          <div className="flex flex-row w-[61rem] h-[13.375rem] justify-center gap-8">
-            <div className="bg-white w-[13.75rem] h-[13.375rem] rounded-lg shadow-lg p-6 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300 ease-in-out">
-              <div className="flex w-20 h-20 justify-center items-center rounded-[1.25rem] mb-[1rem] bg-[#d9d9d9]">
-                <img src={editPencil} alt="editPencil" className="w-10 h-10 mx-5 my-5" />
-              </div>
-              <div className="flex w-[11rem] h-16 justify-center items-center">
-                <span className="text-[1.3rem] text-center font-semibold leading-normal select-none">
-                  Create
-                  <br />a Survey Form
-                </span>
-              </div>
-            </div>
-            <div className="bg-white w-[13.75rem] h-[13.375rem] rounded-lg shadow-lg p-6 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300 ease-in-out">
-              <div className="flex w-20 h-20 justify-center items-center rounded-[1.25rem] mb-[1rem] bg-[#d9d9d9]">
-                <img src={palette1} alt="palette1" className="w-10 h-10 mx-5 my-5" />
-              </div>
-              <div className="flex w-[10rem] h-16 justify-center items-center">
-                <span className="text-[1.3rem] text-center font-semibold leading-normal select-none">
-                  Survey Form
-                  <br />
-                  Style Settings
-                </span>
-              </div>
-            </div>
-            <div className="bg-white w-[13.75rem] h-[13.375rem] rounded-lg shadow-lg p-6 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300 ease-in-out">
-              <div className="flex w-20 h-20 justify-center items-center rounded-[1.25rem] mb-[1rem] bg-[#d9d9d9]">
-                <img src={survey} alt="survey" className="w-10 h-10 mx-5 my-5" />
-              </div>
-              <div className="flex w-[12rem] h-16 justify-center items-center">
-                <span className="text-[1.3rem] text-center font-semibold leading-normal select-none">
-                  Responding to
-                  <br />a different form
-                </span>
-              </div>
-            </div>
-            <div className="bg-white w-[13.75rem] h-[13.375rem] rounded-lg shadow-lg p-6 flex flex-col items-center justify-center hover:shadow-2xl transition-shadow duration-300 ease-in-out">
-              <div className="flex w-20 h-20 justify-center items-center rounded-[1.25rem] mb-[1rem] bg-[#d9d9d9]">
-                <img src={roundShare} alt="roundShare" className="w-10 h-10 mx-5 my-5" />
-              </div>
-              <div className="flex w-[12rem] h-16 justify-center items-center">
-                <span className="text-[1.3rem] text-center font-semibold leading-normal select-none">
-                  Share
-                  <br />a survey
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Description 1 */}
-      <div className="flex w-[100%] h-[40rem] justify-center bg-white">
-        <div className="flex flex-row items-center mx-16 my-[4.37rem]">
-          <div className="flex flex-col">
-            <div className="w-[40.875rem] h-[31.1875rem]">
-              <div className="w-[32.25rem] h-[3.125rem] pb-[0.75rem]">
-                <span className="font-semibold text-[2rem] text-start select-none">Features of easy form design</span>
-              </div>
-              <div className="w-[25.875rem] h-[5rem] pb-[2.12rem]">
-                <span className="font-normal text-[1rem] text-start leading-snug select-none">
-                  FormFlex를 사용하면 직접 폼을 만들고 설문조사 분석을 경험하고 해당 내용에 대하여 공유할 수 있습니다.
-                </span>
-              </div>
-              <CarouselDesOne setActiveIndex={setActiveIndex} />
-            </div>
-          </div>
-          <div className="flex flex-col w-[33.75rem] h-[31.25rem] ml-[7.37rem]">
-            {features.map((feature, index) => (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {features.map((feature) => (
               <div
                 key={feature.title}
-                className="flex flex-row w-[33.75rem] h-[9.375rem] bg-[#F9F8FC] rounded-[0.625rem] mt-6"
+                className="bg-white rounded-2xl p-6 lg:p-8 hover:shadow-card-hover transition-shadow"
               >
-                <div
-                  className={`transition-colors duration-300 ease-in-out flex w-[0.75rem] h-[9.375rem] ${index === activeIndex ? 'bg-[#918DCA]' : 'bg-[#D9D9D9]'}`}
-                />
-                <div className="flex flex-col w-[30.5rem] h-[5.625rem] justify-center mt-[1.87rem] pl-4">
-                  <div className="flex flex-row items-center gap-2">
-                    <img src={feature.image} alt={feature.title} className="w-7 h-7" />
-                    <span className="text-2xl font-semibold select-none">{feature.title}</span>
-                  </div>
-                  <p className="mt-2 text-lg select-none">{feature.description}</p>
+                <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-5">
+                  {feature.icon}
                 </div>
+                <h3 className="text-lg font-semibold text-secondary-900 mb-2">{feature.title}</h3>
+                <p className="text-secondary-600 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Description 2 */}
-      <div className="flex w-[100%] h-[40rem] justify-center bg-[#918dca]">
-        <div className="flex flex-row items-center mx-16 my-2">
-          <div className="flex flex-col">
-            <div className="w-[41.5rem] h-[6.5rem]">
-              <span className="font-bold leading-normal text-[2.3rem] text-white select-none">
-                Create your own design form for free. Share it with others, too!
-              </span>
-            </div>
-            <div className="flex w-[46.5rem] h-[4.375rem] mt-2 text-start">
-              <span className="text-[1.2rem] leading-normal font-normal text-white select-none">
-                비즈니스를 위한 강력한 도구와 함께 대시보드 내부에서
-                <br />
-                완벽한 커스터마이징을 경험할 수 있는 FormFlex
-              </span>
-            </div>
+      {/* How It Works Section */}
+      <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">3단계로 완성하는 설문</h2>
+            <p className="text-lg text-secondary-600">복잡한 과정 없이 간단하게 시작하세요.</p>
           </div>
-          <div className="w-[32.5rem] h-[23rem] bg-[#918dca]">
-            <CarouselDesTwo />
+
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            {[
+              {
+                step: '01',
+                title: '설문 작성',
+                description: '직접 작성하거나 AI에게 맡기세요. 다양한 질문 유형과 이미지 첨부를 지원합니다.',
+              },
+              {
+                step: '02',
+                title: '공유 & 수집',
+                description: '링크 하나로 간편하게 공유하고 응답을 실시간으로 수집하세요.',
+              },
+              {
+                step: '03',
+                title: '분석 & 리포트',
+                description: '자동 생성된 차트와 통계로 인사이트를 얻고 PDF로 내보내세요.',
+              },
+            ].map((item, index) => (
+              <div key={item.step} className="text-center">
+                <div className="relative inline-flex">
+                  <div className="w-16 h-16 bg-primary-500 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6">
+                    {item.step}
+                  </div>
+                  {index < 2 && (
+                    <div className="hidden md:block absolute top-8 left-full w-full">
+                      <div className="h-0.5 bg-primary-200 w-full" />
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-xl font-semibold text-secondary-900 mb-3">{item.title}</h3>
+                <p className="text-secondary-600 leading-relaxed">{item.description}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* End */}
+      {/* CTA Section */}
+      <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl p-8 lg:p-16 text-center text-white">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">지금 바로 시작하세요</h2>
+            <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
+              무료로 시작하고 필요할 때 업그레이드하세요. 복잡한 설정 없이 바로 설문을 만들 수 있습니다.
+            </p>
+            <button
+              onClick={() => navigate('/signup')}
+              className="px-8 py-4 bg-white text-primary-600 font-semibold rounded-2xl hover:bg-primary-50 transition-colors"
+            >
+              무료로 시작하기
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-secondary-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <img src={logo} alt="FormFlex" className="w-8 h-8" />
+              <span className="text-xl font-bold text-secondary-900">FormFlex</span>
+            </div>
+            <p className="text-secondary-500 text-sm">2024 FormFlex. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
