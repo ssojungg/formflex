@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+  @font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff'); }
+  body { margin: 0; font-family: 'Pretendard', system-ui, sans-serif; background: #f9fafb; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .logo-row { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 48px; height: 48px; }
+  .wordmark { font-size: 28px; font-weight: 700; color: #111827; }
+  .wordmark span { color: #6366f1; }
+  .on-dark { background: linear-gradient(135deg,#6366f1,#4f46e5); padding: 16px 28px; border-radius: 16px; display: flex; align-items: center; gap: 12px; }
+  .on-dark .wordmark { color: white; }
+  .sizes { display: flex; gap: 20px; align-items: center; }
+  .sizes .s { display: flex; align-items: center; gap: 6px; }
+</style></head>
+<body>
+<div class="logo-row">
+  <img src="../assets/logo.svg" class="logo-mark" alt="FormFlex logo">
+  <div class="wordmark">Form<span>Flex</span></div>
+</div>
+<div class="on-dark">
+  <img src="../assets/logo.svg" class="logo-mark" style="filter:brightness(0) invert(1)" alt="">
+  <div class="wordmark" style="color:white">FormFlex</div>
+</div>
+<div class="sizes">
+  <div class="s"><img src="../assets/logo.svg" style="width:16px;height:16px" alt=""><span style="font-size:11px;color:#6b7280">16px</span></div>
+  <div class="s"><img src="../assets/logo.svg" style="width:24px;height:24px" alt=""><span style="font-size:11px;color:#6b7280">24px</span></div>
+  <div class="s"><img src="../assets/logo.svg" style="width:32px;height:32px" alt=""><span style="font-size:11px;color:#6b7280">32px</span></div>
+  <div class="s"><img src="../assets/logo.svg" style="width:48px;height:48px" alt=""><span style="font-size:11px;color:#6b7280">48px</span></div>
+  <div class="s"><img src="../assets/logo.svg" style="width:64px;height:64px" alt=""><span style="font-size:11px;color:#6b7280">64px</span></div>
+</div>
+</body></html>

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FormFlex — Web App UI Kit</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  @font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff'); font-display: swap; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; }
+  body { font-family: 'Pretendard', system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; font-size: 14px; -webkit-font-smoothing: antialiased; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ─── Design Tokens ───────────────────────────────────────────
+const C = {
+  primary50: '#eef2ff', primary100: '#e0e7ff', primary200: '#c7d2fe',
+  primary300: '#a5b4fc', primary400: '#818cf8', primary500: '#6366f1',
+  primary600: '#4f46e5', primary700: '#4338ca',
+  neutral50: '#f9fafb', neutral100: '#f3f4f6', neutral200: '#e5e7eb',
+  neutral300: '#d1d5db', neutral400: '#9ca3af', neutral500: '#6b7280',
+  neutral600: '#4b5563', neutral700: '#374151', neutral800: '#1f2937', neutral900: '#111827',
+  success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6',
+  white: '#ffffff',
+};
+
+// ─── Icon Components ─────────────────────────────────────────
+const Icon = ({ d, size=20, ...p }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+    {Array.isArray(d) ? d.map((path,i) => <path key={i} d={path}/>) : <path d={d}/>}
+  </svg>
+);
+const DashboardIcon = () => <Icon d={["M3 3h7v7H3z","M14 3h7v7h-7z","M3 14h7v7H3z","M14 14h7v7h-7z"]}/>;
+const TemplateIcon = () => <Icon d={["M3 3h18v18H3z","M3 9h18","M9 21V9"]}/>;
+const AnalyticsIcon = () => <Icon d={["M3 3v18h18","M18 17V9","M13 17V5","M8 17v-3"]}/>;
+const MySurveyIcon = () => <Icon d={["M9 11l3 3L22 4","M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"]}/>;
+const ProfileIcon = () => <Icon d={["M12 8m-4 0a4 4 0 108 0a4 4 0 10-8 0","M4 20c0-4 4-6 8-6s8 2 8 6"]}/>;
+const LogoutIcon = () => <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></>;
+const PlusIcon = () => <><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></>;
+const SearchIcon = () => <><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/><path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></>;
+const DocIcon = () => <Icon d={["M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z","M14 2v6h6","M16 13H8","M16 17H8"]}/>;
+const UsersIcon = () => <Icon size={14} d={["M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2","M9 7m-4 0a4 4 0 108 0a4 4 0 10-8 0"]}/>;
+const ChartIcon = () => <><line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></>;
+const MoreIcon = () => <><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/></>;
+const EditIcon = () => <Icon size={14} d={["M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7","M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"]}/>;
+const TrashIcon = () => <Icon size={14} d={["M3 6h18","M8 6V4h8v2","M19 6l-1 14H6L5 6"]}/>;
+const EyeIcon = () => <Icon size={14} d={["M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8","M12 9m-3 0a3 3 0 106 0a3 3 0 10-6 0"]}/>;
+
+// ─── Sidebar ──────────────────────────────────────────────────
+const NAV = [
+  { id: 'dashboard', label: '대시보드', Icon: DashboardIcon },
+  { id: 'templates', label: '템플릿 라이브러리', Icon: TemplateIcon },
+  { id: 'analytics', label: '분석', Icon: AnalyticsIcon },
+  { id: 'myforms', label: '내 설문', Icon: MySurveyIcon },
+  { id: 'profile', label: '내 정보', Icon: ProfileIcon },
+];
+
+function Sidebar({ active, onNav, onLogout }) {
+  return (
+    <aside style={{
+      width: 200, minHeight: '100vh', background: C.neutral900,
+      display: 'flex', flexDirection: 'column', flexShrink: 0,
+      boxShadow: '4px 0 24px rgba(0,0,0,0.08)',
+    }}>
+      {/* Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 64, padding: '0 16px', borderBottom: `1px solid ${C.neutral800}` }}>
+        <img src="../../assets/logo.svg" alt="FormFlex" style={{ width: 28, height: 28, filter: 'brightness(0) invert(1)' }} />
+        <span style={{ color: C.white, fontWeight: 600, fontSize: 15 }}>FormFlex</span>
+      </div>
+
+      {/* Nav label */}
+      <div style={{ padding: '12px 16px 6px', fontSize: 10, fontWeight: 600, color: C.neutral500, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        Navigation
+      </div>
+
+      {/* Nav items */}
+      <nav style={{ flex: 1, padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {NAV.map(({ id, label, Icon: Ic }) => {
+          const isActive = active === id;
+          const [hovered, setHovered] = React.useState(false);
+          const bg = isActive ? C.primary500 : hovered ? C.neutral800 : 'transparent';
+          const fg = isActive || hovered ? C.white : C.neutral400;
+          return (
+            <button key={id} onClick={() => onNav(id)} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+              borderRadius: 8, border: 'none', cursor: 'pointer', textAlign: 'left',
+              background: bg, color: fg,
+              fontSize: 13, fontFamily: 'inherit', fontWeight: 500,
+              transition: 'all 150ms',
+            }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <Ic />
+              </svg>
+              {label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* User footer */}
+      <div style={{ padding: 12, borderTop: `1px solid ${C.neutral800}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 8 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: C.primary500, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.white, fontWeight: 600, fontSize: 14, flexShrink: 0 }}>J</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: C.white, fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Jin Soo Park</div>
+            <div style={{ color: C.neutral500, fontSize: 10 }}>Pro Plan</div>
+          </div>
+          <button onClick={onLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.neutral500, padding: 4, borderRadius: 6, display: 'flex' }}
+            onMouseEnter={e => { e.currentTarget.style.color = C.error; e.currentTarget.style.background = C.neutral800; }}
+            onMouseLeave={e => { e.currentTarget.style.color = C.neutral500; e.currentTarget.style.background = 'none'; }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><LogoutIcon/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// ─── Mock Data ───────────────────────────────────────────────
+const SURVEYS = [
+  { id: '1', title: '고객 만족도 설문조사', description: '제품 및 서비스에 대한 전반적인 만족도를 측정합니다.', status: 'active', themeColor: '#6366f1', responseCount: 342, completionRate: 78, questions: 8, author: 'Jin Soo Park', hashtags: ['고객만족', 'NPS'], updatedAt: '2024-12-10' },
+  { id: '2', title: '직원 업무 환경 조사', description: '사내 복지 및 근무 환경 개선을 위한 설문입니다.', status: 'active', themeColor: '#10b981', responseCount: 128, completionRate: 91, questions: 12, author: 'Jin Soo Park', hashtags: ['HR', '복지'], updatedAt: '2024-12-08' },
+  { id: '3', title: '신제품 시장 조사', description: '출시 예정 제품에 대한 소비자 반응을 확인합니다.', status: 'closed', themeColor: '#f59e0b', responseCount: 1204, completionRate: 65, questions: 15, author: 'Jin Soo Park', hashtags: ['시장조사', 'UX'], updatedAt: '2024-11-30' },
+  { id: '4', title: '이벤트 만족도 설문', description: '행사 참여자의 경험을 개선하기 위한 피드백을 수집합니다.', status: 'draft', themeColor: '#8b5cf6', responseCount: 0, completionRate: 0, questions: 6, author: 'Jin Soo Park', hashtags: ['이벤트'], updatedAt: '2024-12-12' },
+  { id: '5', title: 'UX 리서치 설문', description: '앱 사용성 개선을 위한 사용자 경험을 조사합니다.', status: 'active', themeColor: '#06b6d4', responseCount: 87, completionRate: 82, questions: 10, author: 'Jin Soo Park', hashtags: ['UX', '리서치'], updatedAt: '2024-12-11' },
+];
+
+const PUBLIC_SURVEYS = [
+  { id: 'p1', title: '2025 트렌드 설문', description: '내년 소비 트렌드를 예측하는 설문입니다.', status: 'active', themeColor: '#6366f1', responseCount: 2341, author: '김민준', hashtags: ['트렌드', '소비'] },
+  { id: 'p2', title: '카페 선호도 조사', description: '선호하는 카페 유형과 메뉴를 조사합니다.', status: 'active', themeColor: '#f59e0b', responseCount: 891, author: '이서연', hashtags: ['카페', 'F&B'] },
+  { id: 'p3', title: '독서 습관 설문', description: '월별 독서량과 장르 선호도를 파악합니다.', status: 'closed', themeColor: '#10b981', responseCount: 3102, author: '박지호', hashtags: ['독서', '라이프스타일'] },
+  { id: 'p4', title: '헬스케어 인식 조사', description: '건강 관리에 대한 인식과 행동 패턴을 조사합니다.', status: 'active', themeColor: '#ef4444', responseCount: 567, author: '최수아', hashtags: ['헬스케어', '건강'] },
+  { id: 'p5', title: '온라인 쇼핑 경험', description: '이커머스 구매 경험 및 불편 사항을 수집합니다.', status: 'active', themeColor: '#8b5cf6', responseCount: 1789, author: '정현우', hashtags: ['쇼핑', 'UX'] },
+  { id: 'p6', title: '교육 만족도 설문', description: '온라인 강의 수강 경험에 대한 의견을 모읍니다.', status: 'active', themeColor: '#06b6d4', responseCount: 445, author: '한소희', hashtags: ['교육', 'EdTech'] },
+];
+
+const STATUS_STYLE = {
+  active: { bg: '#d1fae5', color: '#065f46', label: 'Active' },
+  closed: { bg: '#fee2e2', color: '#991b1b', label: 'Closed' },
+  draft: { bg: '#f3f4f6', color: '#374151', label: 'Draft' },
+};
+
+// ─── Stats Card ───────────────────────────────────────────────
+function StatsCard({ icon, value, label, iconBg, iconColor }) {
+  return (
+    <div style={{ background: C.white, borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 10, background: iconBg, color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+      </div>
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: C.neutral900, lineHeight: 1.2 }}>{value}</div>
+        <div style={{ fontSize: 11, color: C.neutral400, marginTop: 2 }}>{label}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Survey Card (My Forms) ───────────────────────────────────
+function SurveyCard({ survey, onEdit, onDelete, onAnalytics }) {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const st = STATUS_STYLE[survey.status];
+  return (
+    <div style={{ background: C.white, borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', transition: 'all 200ms', position: 'relative' }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'scale(1.015)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'scale(1)'; }}>
+      {/* Header */}
+      <div style={{ height: 90, padding: 12, background: `linear-gradient(135deg, ${survey.themeColor}22, ${survey.themeColor}55)`, position: 'relative' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 600, background: st.bg, color: st.color }}>
+          {survey.status === 'active' && <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.success, display: 'inline-block' }}></span>}
+          {st.label}
+        </span>
+        {/* Decorative lines */}
+        <div style={{ position: 'absolute', bottom: 10, right: 12, opacity: 0.5, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {[44, 30, 16].map((w,i) => <div key={i} style={{ height: 3, width: w, borderRadius: 9999, background: survey.themeColor }}></div>)}
+        </div>
+        {/* Menu */}
+        <div style={{ position: 'absolute', top: 10, right: 10 }}>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: 'rgba(255,255,255,0.85)', border: 'none', borderRadius: 7, padding: '4px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.neutral600 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><MoreIcon/></svg>
+          </button>
+          {menuOpen && (
+            <div style={{ position: 'absolute', right: 0, top: '110%', background: C.white, borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: `1px solid ${C.neutral200}`, padding: '4px', minWidth: 130, zIndex: 10 }}>
+              {[
+                { label: '편집', fn: onEdit, icon: <EditIcon/>, color: C.neutral700 },
+                { label: '분석', fn: onAnalytics, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><ChartIcon/></svg>, color: C.neutral700 },
+                { label: '삭제', fn: onDelete, icon: <TrashIcon/>, color: C.error },
+              ].map(({ label, fn, icon, color }) => (
+                <button key={label} onClick={() => { fn && fn(); setMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', width: '100%', border: 'none', background: 'none', cursor: 'pointer', borderRadius: 7, fontSize: 12, fontFamily: 'inherit', color, textAlign: 'left' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.neutral50}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                  {icon} {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Body */}
+      <div style={{ padding: '12px 14px' }}>
+        <div style={{ fontWeight: 600, fontSize: 13, color: C.neutral900, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{survey.title}</div>
+        <div style={{ display: 'flex', gap: 12, fontSize: 11, color: C.neutral400 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><DocIcon/></svg>
+            {survey.questions}문항
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><UsersIcon/></svg>
+            {survey.responseCount.toLocaleString()}
+          </span>
+          {survey.completionRate > 0 && <span>{survey.completionRate}%</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Public Survey Card (Dashboard) ──────────────────────────
+function PublicSurveyCard({ survey }) {
+  const st = STATUS_STYLE[survey.status];
+  return (
+    <div style={{ background: C.white, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 200ms' }}
+      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.10)'}
+      onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
+      <div style={{ height: 80, padding: 10, background: `linear-gradient(135deg,${survey.themeColor}22,${survey.themeColor}55)`, position: 'relative' }}>
+        <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 9999, fontSize: 10, fontWeight: 600, background: st.bg, color: st.color }}>{st.label}</span>
+        <div style={{ position: 'absolute', bottom: 8, right: 10, opacity: 0.4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {[36,24,14].map((w,i) => <div key={i} style={{ height: 2, width: w, borderRadius: 9999, background: survey.themeColor }}></div>)}
+        </div>
+      </div>
+      <div style={{ padding: '10px 12px' }}>
+        <div style={{ fontWeight: 600, fontSize: 13, color: C.neutral900, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{survey.title}</div>
+        <div style={{ fontSize: 11, color: C.neutral500, marginBottom: 8, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{survey.description}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+          <div style={{ width: 20, height: 20, borderRadius: '50%', background: survey.themeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 9, fontWeight: 600 }}>{survey.author[0]}</div>
+          <span style={{ fontSize: 11, color: C.neutral600 }}>{survey.author}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {survey.hashtags.map(t => <span key={t} style={{ fontSize: 10, color: C.primary600, background: C.primary50, padding: '2px 7px', borderRadius: 9999 }}>#{t}</span>)}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.neutral100}` }}>
+          <span style={{ fontSize: 10, color: C.neutral400, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><UsersIcon/></svg>
+            {survey.responseCount.toLocaleString()}명
+          </span>
+          <span style={{ fontSize: 10, color: C.primary600, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><EyeIcon/></svg>
+            미리보기
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page: My Forms ───────────────────────────────────────────
+function MyFormsPage() {
+  const stats = [
+    { icon: <DocIcon/>, value: '5', label: '전체 설문', iconBg: C.primary100, iconColor: C.primary600 },
+    { icon: <UsersIcon/>, value: '1,761', label: '총 응답 수', iconBg: '#dbeafe', iconColor: C.info },
+    { icon: <ChartIcon/>, value: '79%', label: '평균 완료율', iconBg: '#fef3c7', iconColor: C.warning },
+    { icon: <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />, value: '3', label: '활성 설문', iconBg: '#d1fae5', iconColor: C.success },
+  ];
+  return (
+    <div style={{ padding: '24px 28px', overflowY: 'auto', height: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: C.neutral900 }}>My Forms</h1>
+        <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: C.primary500, color: C.white, border: 'none', borderRadius: 11, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', fontWeight: 500 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><PlusIcon/></svg>
+          추가
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        {stats.map((s, i) => <StatsCard key={i} {...s}/>)}
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {['전체 (5)', 'Active (3)', 'Closed (1)', 'Draft (1)'].map((t, i) => (
+          <button key={t} style={{ padding: '6px 14px', borderRadius: 8, border: i === 0 ? 'none' : `1px solid ${C.neutral200}`, background: i === 0 ? C.primary500 : C.white, color: i === 0 ? C.white : C.neutral600, fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500 }}>{t}</button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        {/* Create card */}
+        <div style={{ background: C.white, borderRadius: 14, border: `2px dashed ${C.primary300}`, cursor: 'pointer', minHeight: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 200ms', color: C.primary600 }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = C.primary500; e.currentTarget.style.background = C.primary50; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = C.primary300; e.currentTarget.style.background = C.white; }}>
+          <div style={{ width: 42, height: 42, borderRadius: 11, background: C.primary100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.primary600} strokeWidth="2"><PlusIcon/></svg>
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 500 }}>새 설문 만들기</span>
+        </div>
+        {SURVEYS.map(s => <SurveyCard key={s.id} survey={s} />)}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page: Dashboard ──────────────────────────────────────────
+function DashboardPage() {
+  const [search, setSearch] = React.useState('');
+  const [filter, setFilter] = React.useState('all');
+  return (
+    <div style={{ padding: '20px 24px', overflowY: 'auto', height: '100%' }}>
+      {/* Search bar */}
+      <div style={{ background: C.white, borderRadius: 16, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.neutral400 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><SearchIcon/></svg>
+            </div>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="설문 검색..." style={{ width: '100%', padding: '9px 14px 9px 36px', background: C.neutral100, border: 'none', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', color: C.neutral900 }} />
+          </div>
+          <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: C.primary500, color: C.white, border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', fontWeight: 500, flexShrink: 0 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><PlusIcon/></svg>
+            새 설문
+          </button>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {['전체', 'Active', 'Closed'].map((t, i) => (
+            <button key={t} onClick={() => setFilter(['all','active','closed'][i])} style={{ padding: '5px 12px', borderRadius: 8, border: 'none', background: filter === ['all','active','closed'][i] ? C.primary500 : C.neutral100, color: filter === ['all','active','closed'][i] ? C.white : C.neutral600, fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500 }}>{t}</button>
+          ))}
+          <div style={{ width: 1, background: C.neutral200, margin: '0 2px' }}></div>
+          {['#고객만족','#시장조사','#HR','#이벤트','#NPS','#UX'].map(tag => (
+            <button key={tag} style={{ padding: '4px 10px', borderRadius: 9999, border: 'none', background: C.neutral100, color: C.neutral600, fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' }}>{tag}</button>
+          ))}
+        </div>
+      </div>
+
+      <p style={{ fontSize: 12, color: C.neutral500, marginBottom: 10, paddingLeft: 2 }}>{PUBLIC_SURVEYS.length}개의 설문</p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        {PUBLIC_SURVEYS.map(s => <PublicSurveyCard key={s.id} survey={s}/>)}
+      </div>
+    </div>
+  );
+}
+
+// ─── Analytics Charts ─────────────────────────────────────────
+
+function CardBox({ title, subtitle, children, style = {} }) {
+  return (
+    <div style={{ background: C.white, borderRadius: 12, padding: 18, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', ...style }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: C.neutral800, marginBottom: 2 }}>{title}</div>
+      {subtitle && <div style={{ fontSize: 10, color: C.neutral400, marginBottom: 14 }}>{subtitle}</div>}
+      {!subtitle && <div style={{ marginBottom: 14 }}></div>}
+      {children}
+    </div>
+  );
+}
+
+// Line chart (SVG-based sparkline)
+function LineChart({ data, color = C.primary500 }) {
+  const W = 280, H = 80, pad = 8;
+  const max = Math.max(...data), min = Math.min(...data);
+  const xs = data.map((_, i) => pad + (i / (data.length - 1)) * (W - pad * 2));
+  const ys = data.map(v => H - pad - ((v - min) / (max - min || 1)) * (H - pad * 2));
+  const line = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ');
+  const area = `${line} L${xs[xs.length-1]},${H} L${xs[0]},${H} Z`;
+  const days = ['월','화','수','목','금','토','일'];
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H + 16}`} style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#lg)"/>
+      <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {xs.map((x, i) => (
+        <circle key={i} cx={x} cy={ys[i]} r="3" fill={C.white} stroke={color} strokeWidth="2"/>
+      ))}
+      {days.map((d, i) => (
+        <text key={i} x={xs[i]} y={H + 14} textAnchor="middle" fontSize="9" fill={C.neutral400}>{d}</text>
+      ))}
+    </svg>
+  );
+}
+
+// Horizontal bar chart for question responses
+function HBarChart({ items }) {
+  const max = Math.max(...items.map(i => i.value));
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {items.map((item, i) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: C.neutral700, fontWeight: 500 }}>{item.label}</span>
+            <span style={{ fontSize: 11, color: C.neutral500 }}>{item.value}명 ({Math.round(item.value/max*100)}%)</span>
+          </div>
+          <div style={{ height: 8, background: C.neutral100, borderRadius: 9999, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${item.value/max*100}%`, background: item.color || C.primary400, borderRadius: 9999, transition: 'width 600ms ease' }}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Donut chart
+function DonutChart({ segments, size = 100 }) {
+  const total = segments.reduce((s, seg) => s + seg.value, 0);
+  const cx = size / 2, cy = size / 2, r = size * 0.38, stroke = size * 0.16;
+  let cumulative = 0;
+  const arcs = segments.map(seg => {
+    const pct = seg.value / total;
+    const startAngle = cumulative * 2 * Math.PI - Math.PI / 2;
+    cumulative += pct;
+    const endAngle = cumulative * 2 * Math.PI - Math.PI / 2;
+    const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle), y2 = cy + r * Math.sin(endAngle);
+    const largeArc = pct > 0.5 ? 1 : 0;
+    return { ...seg, d: `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`, pct };
+  });
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <svg width={size} height={size} style={{ flexShrink: 0 }}>
+        {arcs.map((arc, i) => (
+          <path key={i} d={arc.d} fill="none" stroke={arc.color} strokeWidth={stroke} strokeLinecap="butt"/>
+        ))}
+        <text x={cx} y={cy + 4} textAnchor="middle" fontSize={size * 0.14} fontWeight="700" fill={C.neutral900}>{total.toLocaleString()}</text>
+        <text x={cx} y={cy + size * 0.18} textAnchor="middle" fontSize={size * 0.1} fill={C.neutral400}>응답</text>
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {segments.map((seg, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: seg.color, flexShrink: 0 }}></div>
+            <span style={{ fontSize: 11, color: C.neutral600 }}>{seg.label}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.neutral800, marginLeft: 'auto' }}>{Math.round(seg.value / total * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Stat summary row
+function StatRow({ icon, label, value, sub, color }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ width: 36, height: 36, borderRadius: 9, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 10, color: C.neutral400 }}>{label}</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: C.neutral900, lineHeight: 1.2 }}>{value}</div>
+      </div>
+      {sub && <div style={{ fontSize: 10, color: C.success, fontWeight: 600 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function AnalyticsContent({ selected }) {
+  const trendData = [28, 45, 38, 62, 55, 71, 60, 88, 75, 91, 83, 72, 95, selected.responseCount % 80 + 30];
+  const questionData = [
+    { label: '매우 만족', value: Math.round(selected.responseCount * 0.38), color: C.success },
+    { label: '만족',      value: Math.round(selected.responseCount * 0.29), color: C.primary400 },
+    { label: '보통',      value: Math.round(selected.responseCount * 0.18), color: C.warning },
+    { label: '불만족',    value: Math.round(selected.responseCount * 0.10), color: '#fb923c' },
+    { label: '매우 불만족',value: Math.round(selected.responseCount * 0.05), color: C.error },
+  ];
+  const deviceData = [
+    { label: '모바일', value: Math.round(selected.responseCount * 0.61), color: C.primary500 },
+    { label: 'PC',    value: Math.round(selected.responseCount * 0.31), color: C.primary300 },
+    { label: '태블릿', value: Math.round(selected.responseCount * 0.08), color: C.primary100 },
+  ];
+  const ageData = [
+    { label: '10대', value: 8,  color: C.primary300 },
+    { label: '20대', value: 34, color: C.primary500 },
+    { label: '30대', value: 27, color: '#818cf8' },
+    { label: '40대', value: 19, color: C.warning },
+    { label: '50대+', value: 12, color: '#fb923c' },
+  ];
+  const weeklyBars = [42, 58, 37, 71, 65, 83, 55];
+  const days = ['월','화','수','목','금','토','일'];
+
+  return (
+    <div>
+      {/* Title + summary stats */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.neutral900 }}>{selected.title}</div>
+          <div style={{ fontSize: 11, color: C.neutral400, marginTop: 2 }}>최근 30일 분석 데이터</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {['7일','30일','전체'].map((t, i) => (
+            <button key={t} style={{ padding: '4px 10px', borderRadius: 7, border: `1px solid ${i===1 ? C.primary500 : C.neutral200}`, background: i===1 ? C.primary50 : C.white, color: i===1 ? C.primary600 : C.neutral500, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', fontWeight: i===1 ? 600 : 400 }}>{t}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Top KPI row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
+        {[
+          { icon: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></>, label: '총 응답', value: selected.responseCount.toLocaleString(), sub: '+12.4%', color: C.primary500 },
+          { icon: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>, label: '완료율', value: `${selected.completionRate}%`, sub: '+3.2pp', color: C.success },
+          { icon: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>, label: '평균 응답 시간', value: '2분 34초', sub: '-18초', color: C.warning },
+          { icon: <><path d="M18 20V10M12 20V4M6 20v-6"/></>, label: '문항 수', value: `${selected.questions}개`, color: C.info },
+        ].map((s, i) => (
+          <div key={i} style={{ background: C.white, borderRadius: 11, padding: '12px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+            <StatRow {...s} />
+          </div>
+        ))}
+      </div>
+
+      {/* Row 1: Line trend + Weekly bar */}
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 12, marginBottom: 12 }}>
+        <CardBox title="응답 추이" subtitle="최근 2주">
+          <LineChart data={trendData} color={C.primary500} />
+        </CardBox>
+        <CardBox title="요일별 응답 수" subtitle="이번 주">
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 80 }}>
+            {weeklyBars.map((h, i) => (
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <div style={{ width: '100%', borderRadius: '4px 4px 0 0', background: i === 4 ? C.primary500 : C.primary200, height: `${h * 0.85}%`, minHeight: 4 }}></div>
+                <span style={{ fontSize: 9, color: C.neutral400 }}>{days[i]}</span>
+              </div>
+            ))}
+          </div>
+        </CardBox>
+      </div>
+
+      {/* Row 2: Satisfaction hbar + Donut devices */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <CardBox title="만족도 분포" subtitle="전체 응답자 기준">
+          <HBarChart items={questionData} />
+        </CardBox>
+        <CardBox title="기기별 응답" subtitle="접속 환경 분석">
+          <DonutChart segments={deviceData} size={110} />
+        </CardBox>
+      </div>
+
+      {/* Row 3: Age donut + NPS score */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+        <CardBox title="연령대 분포" subtitle="응답자 구성">
+          <HBarChart items={ageData.map(a => ({ ...a, value: a.value }))} />
+        </CardBox>
+        <CardBox title="NPS 점수" subtitle="순 추천 지수 (Net Promoter Score)">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* NPS gauge */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 36, fontWeight: 800, color: C.primary500, lineHeight: 1 }}>+42</div>
+              <div style={{ fontSize: 10, color: C.neutral400, marginTop: 4 }}>업계 평균 +31 대비 우수</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginTop: 4 }}>
+              {[
+                { label: '추천 의향', pct: 61, color: C.success },
+                { label: '중립',      pct: 20, color: C.neutral300 },
+                { label: '비추천',    pct: 19, color: C.error },
+              ].map(({ label, pct, color }) => (
+                <div key={label} style={{ textAlign: 'center', padding: '8px 6px', borderRadius: 8, background: color + '14' }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color }}>{pct}%</div>
+                  <div style={{ fontSize: 9, color: C.neutral500, marginTop: 2 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardBox>
+      </div>
+
+      {/* Row 4: Response table */}
+      <div style={{ background: C.white, borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', marginBottom: 4 }}>
+        <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.neutral100}`, fontSize: 12, fontWeight: 600, color: C.neutral800 }}>문항별 응답 현황</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 2fr', padding: '8px 18px', background: C.neutral50, fontSize: 11, fontWeight: 600, color: C.neutral500, alignItems: 'center' }}>
+          <div>문항</div><div>응답 수</div><div>완료율</div><div>평균 점수</div>
+        </div>
+        {Array.from({ length: selected.questions }, (_, i) => {
+          const resp = Math.round(selected.responseCount * (0.7 + Math.random() * 0.28));
+          const rate = Math.round(65 + Math.random() * 30);
+          const score = (3.2 + Math.random() * 1.6).toFixed(1);
+          return (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 2fr', padding: '10px 18px', borderTop: `1px solid ${C.neutral100}`, fontSize: 12, alignItems: 'center' }}>
+              <div style={{ color: C.neutral800, fontWeight: 500 }}>Q{i+1}. {['전반적인 만족도는 어떠셨나요?','서비스를 추천하실 의향이 있나요?','개선이 필요한 부분은 무엇인가요?','다음에도 이용하실 건가요?','가격 대비 만족도는?','직원 응대 만족도는?','배송 속도 만족도는?','제품 품질 만족도는?','포장 상태는 어떠셨나요?','재구매 의향은?','브랜드 신뢰도는?','전체 경험 점수는?'][i % 12]}</div>
+              <div style={{ color: C.neutral600 }}>{resp.toLocaleString()}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 36, height: 4, background: C.neutral100, borderRadius: 9999, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${rate}%`, background: rate > 80 ? C.success : rate > 60 ? C.primary400 : C.warning, borderRadius: 9999 }}></div>
+                </div>
+                <span style={{ color: C.neutral600 }}>{rate}%</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {[1,2,3,4,5].map(star => (
+                  <svg key={star} width="12" height="12" viewBox="0 0 24 24" fill={star <= Math.round(score) ? C.warning : C.neutral200} stroke="none">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                ))}
+                <span style={{ fontSize: 11, color: C.neutral500, marginLeft: 3 }}>{score}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page: Analytics (split panel layout) ────────────────────
+function AnalyticsPage() {
+  const [selectedId, setSelectedId] = React.useState(null);
+  const selected = SURVEYS.find(s => s.id === selectedId);
+  const HEADER_H = 52;
+
+  return (
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+      {/* Left panel — survey list */}
+      <div style={{ width: 220, borderRight: `1px solid ${C.neutral200}`, display: 'flex', flexDirection: 'column', flexShrink: 0, background: C.white }}>
+        {/* Left header */}
+        <div style={{ height: HEADER_H, display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: `1px solid ${C.neutral200}`, fontSize: 13, fontWeight: 600, color: C.neutral800, flexShrink: 0 }}>
+          내 설문
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
+          {SURVEYS.map(s => {
+            const st = STATUS_STYLE[s.status];
+            const isSelected = s.id === selectedId;
+            return (
+              <button key={s.id} onClick={() => setSelectedId(s.id)} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                background: isSelected ? C.primary50 : 'transparent', textAlign: 'left',
+                display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 2, fontFamily: 'inherit',
+              }}
+              onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = C.neutral50; }}
+              onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: isSelected ? C.primary700 : C.neutral800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.title}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ padding: '1px 6px', borderRadius: 9999, fontSize: 10, fontWeight: 600, background: st.bg, color: st.color }}>{st.label}</span>
+                  <span style={{ fontSize: 10, color: C.neutral400 }}>{s.responseCount}명</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Right panel — analysis content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Right header — same height as left */}
+        <div style={{ height: HEADER_H, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', borderBottom: `1px solid ${C.neutral200}`, flexShrink: 0, background: C.white }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.neutral500} strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            <span style={{ fontSize: 15, fontWeight: 700, color: C.neutral900 }}>분석</span>
+          </div>
+          {selected && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: `1px solid ${C.neutral200}`, background: C.white, fontSize: 12, color: C.neutral700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                이메일
+              </button>
+              <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: 'none', background: C.primary500, fontSize: 12, color: C.white, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                내보내기
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', background: C.neutral50 }}>
+          {!selected ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12, color: C.neutral400 }}>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', background: C.primary100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.primary400} strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <span style={{ fontSize: 13 }}>왼쪽에서 분석할 설문을 선택하세요</span>
+            </div>
+          ) : (
+            <AnalyticsContent selected={selected} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page: Profile ────────────────────────────────────────────
+function ProfilePage() {
+  return (
+    <div style={{ padding: '24px 28px', overflowY: 'auto', height: '100%' }}>
+      <h1 style={{ fontSize: 20, fontWeight: 700, color: C.neutral900, marginBottom: 20 }}>내 정보</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, maxWidth: 700 }}>
+        <div style={{ background: C.white, borderRadius: 14, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: C.primary500, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.white, fontSize: 24, fontWeight: 700 }}>J</div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.neutral900 }}>Jin Soo Park</div>
+              <div style={{ fontSize: 12, color: C.neutral500 }}>jinsooPark@email.com</div>
+              <span style={{ display: 'inline-block', marginTop: 6, padding: '2px 10px', borderRadius: 9999, fontSize: 11, fontWeight: 600, background: C.primary100, color: C.primary700 }}>Pro Plan</span>
+            </div>
+          </div>
+          {[['이름', 'Jin Soo Park'], ['이메일', 'jinsooPark@email.com'], ['가입일', '2024년 3월 15일'], ['설문 수', '5개']].map(([l, v]) => (
+            <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderTop: `1px solid ${C.neutral100}`, fontSize: 12 }}>
+              <span style={{ color: C.neutral500 }}>{l}</span>
+              <span style={{ color: C.neutral800, fontWeight: 500 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[{ label: '알림 설정', desc: '응답 도착 시 이메일 알림' }, { label: '보안', desc: '비밀번호 변경 및 2FA 설정' }, { label: '데이터 내보내기', desc: 'CSV, PDF 형식으로 내보내기' }].map(({ label, desc }) => (
+            <div key={label} style={{ background: C.white, borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.background = C.neutral50}
+              onMouseLeave={e => e.currentTarget.style.background = C.white}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.neutral800 }}>{label}</div>
+                <div style={{ fontSize: 11, color: C.neutral500, marginTop: 2 }}>{desc}</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.neutral400} strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── App Shell ────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = React.useState('myforms');
+
+  const pages = {
+    dashboard: <DashboardPage />,
+    myforms: <MyFormsPage />,
+    analytics: <AnalyticsPage />,
+    profile: <ProfilePage />,
+    templates: (
+      <div style={{ padding: 28, color: C.neutral500, display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 14 }}>
+        Template Library — see Dashboard for survey discovery
+      </div>
+    ),
+  };
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      <Sidebar active={screen} onNav={setScreen} onLogout={() => setScreen('myforms')} />
+      <main style={{ flex: 1, overflowY: 'auto', background: C.neutral50 }}>
+        {pages[screen] || pages.myforms}
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

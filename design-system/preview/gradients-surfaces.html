@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+  @font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff'); }
+  body { margin: 0; font-family: 'Pretendard', system-ui, sans-serif; background: #f9fafb; padding: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .grad { border-radius: 14px; padding: 14px 16px; width: 180px; }
+  .grad-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .grad-sub { font-size: 10px; opacity: 0.7; font-family: monospace; }
+  .sidebar-preview { width: 120px; background: linear-gradient(180deg,#111827,#1f2937); border-radius: 12px; padding: 12px; }
+  .sidebar-item { padding: 6px 8px; border-radius: 8px; font-size: 11px; color: #9ca3af; margin-bottom: 3px; }
+  .sidebar-item.active { background: #6366f1; color: white; }
+</style></head>
+<body>
+<div class="grad" style="background:linear-gradient(135deg,#f9fafb,#eef2ff,#e0e7ff)">
+  <div class="grad-title" style="color:#374151">Hero BG</div>
+  <div class="grad-sub" style="color:#6b7280">f9fafb → eef2ff → e0e7ff</div>
+</div>
+<div class="grad" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+  <div class="grad-title" style="color:white">CTA Banner</div>
+  <div class="grad-sub" style="color:#e0e7ff">primary-500 → violet</div>
+</div>
+<div class="grad" style="background:linear-gradient(135deg,#6366f130,#6366f160)">
+  <div class="grad-title" style="color:#374151">Card Header</div>
+  <div class="grad-sub" style="color:#6b7280">theme-color tints</div>
+</div>
+<div class="sidebar-preview">
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+    <img src="../assets/logo.svg" style="width:20px;height:20px;filter:brightness(0) invert(1)">
+    <span style="color:white;font-size:12px;font-weight:600">FormFlex</span>
+  </div>
+  <div class="sidebar-item active">대시보드</div>
+  <div class="sidebar-item">템플릿</div>
+  <div class="sidebar-item">분석</div>
+  <div class="sidebar-item">내 설문</div>
+</div>
+</body></html>

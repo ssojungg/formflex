@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+  @font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff'); }
+  body { margin: 0; font-family: 'Pretendard', system-ui, sans-serif; background: #e5e7eb; padding: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+  .card { background: white; border-radius: 16px; overflow: hidden; width: 180px; box-shadow: 0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.06); }
+  .card-header { height: 80px; padding: 10px; position: relative; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; background: #d1fae5; color: #065f46; }
+  .decos { position: absolute; bottom: 8px; right: 8px; display: flex; flex-direction: column; gap: 3px; opacity: 0.5; }
+  .deco-line { height: 3px; border-radius: 9999px; }
+  .card-body { padding: 10px 12px; }
+  .card-title { font-size: 13px; font-weight: 600; color: #111827; margin-bottom: 8px; }
+  .card-meta { display: flex; gap: 10px; font-size: 10px; color: #9ca3af; }
+  .stat-card { background: white; border-radius: 12px; padding: 12px 14px; width: 130px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stat-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .stat-num { font-size: 20px; font-weight: 700; color: #111827; }
+  .stat-lbl { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+</style></head>
+<body>
+<!-- Survey Card -->
+<div class="card">
+  <div class="card-header" style="background:linear-gradient(135deg,#6366f120,#6366f150)">
+    <div class="badge">Active</div>
+    <div class="decos">
+      <div class="deco-line" style="width:40px;background:#6366f1"></div>
+      <div class="deco-line" style="width:28px;background:#6366f1"></div>
+      <div class="deco-line" style="width:16px;background:#6366f1"></div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="card-title">고객 만족도 설문</div>
+    <div class="card-meta">
+      <span>📋 8문항</span>
+      <span>👥 342명</span>
+    </div>
+  </div>
+</div>
+<!-- Theme-color card -->
+<div class="card">
+  <div class="card-header" style="background:linear-gradient(135deg,#10b98120,#10b98150)">
+    <div class="badge" style="background:#fee2e2;color:#991b1b">Closed</div>
+    <div class="decos">
+      <div class="deco-line" style="width:40px;background:#10b981"></div>
+      <div class="deco-line" style="width:28px;background:#10b981"></div>
+      <div class="deco-line" style="width:16px;background:#10b981"></div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="card-title">시장 조사 설문</div>
+    <div class="card-meta">
+      <span>📋 12문항</span>
+      <span>👥 1,204명</span>
+    </div>
+  </div>
+</div>
+<!-- Stat Card -->
+<div class="stat-card">
+  <div class="stat-icon" style="background:#eef2ff">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+  </div>
+  <div class="stat-num">24</div>
+  <div class="stat-lbl">전체 설문</div>
+</div>
+<div class="stat-card">
+  <div class="stat-icon" style="background:#d1fae5">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+  </div>
+  <div class="stat-num">18,432</div>
+  <div class="stat-lbl">총 응답 수</div>
+</div>
+</body></html>

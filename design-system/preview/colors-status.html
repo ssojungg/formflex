@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f9fafb; padding: 16px; }
+  .row { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .sub { font-size: 9px; color: #9ca3af; text-align: center; }
+  .title { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 10px; letter-spacing: .04em; text-transform: uppercase; }
+  .accent-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .accent { width: 36px; height: 36px; border-radius: 10px; }
+  .accent-label { font-size: 9px; color: #6b7280; text-align: center; margin-top: 3px; }
+</style></head>
+<body>
+<div class="title">Status + Accent Colors</div>
+<div class="row">
+  <div class="item">
+    <div class="badge" style="background:#d1fae5;color:#065f46"><div class="dot" style="background:#10b981"></div>Active</div>
+    <div class="sub">#10b981</div>
+  </div>
+  <div class="item">
+    <div class="badge" style="background:#fee2e2;color:#991b1b"><div class="dot" style="background:#ef4444"></div>Closed</div>
+    <div class="sub">#ef4444</div>
+  </div>
+  <div class="item">
+    <div class="badge" style="background:#f3f4f6;color:#374151"><div class="dot" style="background:#9ca3af"></div>Draft</div>
+    <div class="sub">#9ca3af</div>
+  </div>
+</div>
+<div class="accent-row">
+  <div><div class="accent" style="background:#8b5cf6"></div><div class="accent-label">Violet</div></div>
+  <div><div class="accent" style="background:#06b6d4"></div><div class="accent-label">Cyan</div></div>
+  <div><div class="accent" style="background:#f43f5e"></div><div class="accent-label">Rose</div></div>
+  <div><div class="accent" style="background:#f59e0b"></div><div class="accent-label">Amber</div></div>
+</div>
+</body></html>

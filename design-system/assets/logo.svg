@@ -1,0 +1,24 @@
+<svg width="76" height="80" viewBox="0 0 76 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#filter0_d_1583_1345)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M2 16C2 8.26801 8.26801 2 16 2H56C63.732 2 70 8.26801 70 16C70 23.732 63.732 30 56 30H51.4906C53.0724 32.2677 54 35.0255 54 38C54 45.732 47.732 52 40 52H27.4906C29.0724 54.2677 30 57.0255 30 60C30 67.732 23.732 74 16 74C8.26801 74 2 67.732 2 60C2 55.5381 4.08734 51.5637 7.3388 49C4.08734 46.4363 2 42.4619 2 38C2 33.5381 4.08734 29.5637 7.3388 27C4.08734 24.4363 2 20.4619 2 16Z" fill="white"></path>
+</g>
+<rect x="15.8594" y="8" width="40.0001" height="16" fill="#66629F"></rect>
+<rect x="16" y="30" width="24.0001" height="16" fill="#918DCA"></rect>
+<ellipse cx="16" cy="16" rx="8.00002" ry="8.00002" fill="#66629F"></ellipse>
+<ellipse cx="16" cy="38" rx="8.00002" ry="8.00002" fill="#918DCA"></ellipse>
+<ellipse cx="40" cy="38" rx="8.00002" ry="8.00002" fill="#918DCA"></ellipse>
+<ellipse cx="16" cy="60" rx="8.00002" ry="8.00002" fill="#A3C9F0"></ellipse>
+<ellipse cx="56" cy="16" rx="8.00002" ry="8.00002" fill="#66629F"></ellipse>
+<defs>
+<filter id="filter0_d_1583_1345" x="0" y="0" width="76" height="80" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"></feFlood>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"></feColorMatrix>
+<feOffset dx="2" dy="2"></feOffset>
+<feGaussianBlur stdDeviation="2"></feGaussianBlur>
+<feComposite in2="hardAlpha" operator="out"></feComposite>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"></feColorMatrix>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1583_1345"></feBlend>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1583_1345" result="shape"></feBlend>
+</filter>
+</defs>
+</svg>

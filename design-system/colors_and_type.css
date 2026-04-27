@@ -1,0 +1,274 @@
+/* ============================================================
+   FormFlex Design System — Colors & Typography
+   Source: ssojungg/formflex (Tailwind config + global.css)
+   ============================================================ */
+
+/* ─── Font Imports ─────────────────────────────────────────── */
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TmoneyRoundWind';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/TmoneyRoundWindExtraBold.woff') format('woff');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NPSfontBold';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2310@1.0/NPSfontBold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NPSfont';
+  src: url('../fonts/NPSfont_regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'omyu_pretty';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-01@1.0/omyu_pretty.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'seolleimcool';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2312-1@1.1/seolleimcool-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+/* ─── Color Tokens ──────────────────────────────────────────── */
+:root {
+  /* Primary — Indigo */
+  --color-primary-50:  #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;  /* main */
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+
+  /* Neutral — Cool Gray */
+  --color-neutral-50:  #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+
+  /* Accent */
+  --color-accent-violet: #8b5cf6;
+  --color-accent-cyan:   #06b6d4;
+  --color-accent-rose:   #f43f5e;
+  --color-accent-amber:  #f59e0b;
+
+  /* Semantic */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error:   #ef4444;
+  --color-info:    #3b82f6;
+
+  /* Status (survey states) */
+  --color-status-active: #10b981;
+  --color-status-closed: #ef4444;
+  --color-status-draft:  #9ca3af;
+
+  /* ─── Semantic Aliases ─── */
+  --bg-page:        var(--color-neutral-50);
+  --bg-surface:     #ffffff;
+  --bg-secondary:   var(--color-neutral-100);
+  --bg-sidebar:     var(--color-neutral-900);
+
+  --text-primary:   var(--color-neutral-900);
+  --text-secondary: var(--color-neutral-600);
+  --text-tertiary:  var(--color-neutral-500);
+  --text-muted:     var(--color-neutral-400);
+  --text-inverse:   #ffffff;
+
+  --border-light:   var(--color-neutral-200);
+  --border-default: var(--color-neutral-300);
+  --border-dark:    var(--color-neutral-400);
+
+  /* Gradients */
+  --gradient-hero: linear-gradient(135deg, #f9fafb 0%, #eef2ff 50%, #e0e7ff 100%);
+  --gradient-cta:  linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-sidebar: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+
+  /* ─── Typography ─── */
+  --font-sans:    'Pretendard', system-ui, -apple-system, sans-serif;
+  --font-tmoney:  'TmoneyRoundWind', sans-serif;
+  --font-nps-bold:'NPSfontBold', sans-serif;
+  --font-nps:     'NPSfont', sans-serif;
+  --font-omyu:    'omyu_pretty', cursive;
+  --font-seolleim:'seolleimcool', sans-serif;
+
+  /* Type scale */
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.875rem;   /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg:   1.125rem;   /* 18px */
+  --text-xl:   1.25rem;    /* 20px */
+  --text-2xl:  1.5rem;     /* 24px */
+  --text-3xl:  1.875rem;   /* 30px */
+  --text-4xl:  2.25rem;    /* 36px */
+  --text-5xl:  3rem;       /* 48px */
+  --text-6xl:  3.75rem;    /* 60px */
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.625;
+
+  /* ─── Spacing ─── */
+  --space-1:  0.25rem;   /* 4px */
+  --space-2:  0.5rem;    /* 8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-sidebar: 200px;
+  --space-header:  64px;
+
+  /* ─── Border Radius ─── */
+  --radius-sm:   0.375rem;  /* 6px  — sm */
+  --radius-md:   0.5rem;    /* 8px  — md/lg */
+  --radius-lg:   0.75rem;   /* 12px — xl (buttons, inputs) */
+  --radius-xl:   1rem;      /* 16px — 2xl (cards) */
+  --radius-2xl:  1.5rem;    /* 24px — 3xl (large cards) */
+  --radius-3xl:  2rem;      /* 32px — 4xl (hero sections) */
+  --radius-full: 9999px;    /* pill (badges, avatars) */
+
+  /* ─── Shadows ─── */
+  --shadow-card:       0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-card-hover: 0 10px 40px rgba(0,0,0,0.08);
+  --shadow-sidebar:    4px 0 24px rgba(0,0,0,0.08);
+  --shadow-dropdown:   0 4px 20px rgba(0,0,0,0.12);
+  --shadow-modal:      0 20px 60px rgba(0,0,0,0.15);
+
+  /* ─── Transitions ─── */
+  --transition-fast:   150ms ease-out;
+  --transition-base:   200ms ease-out;
+  --transition-slow:   300ms ease-out;
+}
+
+/* ─── Base Styles ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-page);
+}
+
+/* ─── Semantic Type Styles ─────────────────────────────────── */
+.ff-h1 {
+  font-family: var(--font-sans);
+  font-size: var(--text-5xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+.ff-h2 {
+  font-family: var(--font-sans);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+.ff-h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+}
+
+.ff-h4 {
+  font-family: var(--font-sans);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+}
+
+.ff-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+.ff-body-sm {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+}
+
+.ff-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.ff-caption {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.ff-display-tmoney {
+  font-family: var(--font-tmoney);
+  font-size: var(--text-4xl);
+  font-weight: 800;
+}
+
+.ff-display-omyu {
+  font-family: var(--font-omyu);
+  font-size: var(--text-3xl);
+  font-weight: 400;
+}
+
+.ff-display-seolleim {
+  font-family: var(--font-seolleim);
+  font-size: var(--text-3xl);
+  font-weight: 600;
+}
