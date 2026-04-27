@@ -295,7 +295,7 @@ function ResultPage() {
                       cx="50"
                       cy="50"
                       r="40"
-                      stroke="#6B8E6B"
+                      stroke="#6366f1"
                       strokeWidth="12"
                       fill="none"
                       strokeDasharray="251.2"

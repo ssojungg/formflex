@@ -225,13 +225,15 @@ function SurveyDashboard() {
                   <span className="text-xs sm:text-sm text-gray-600">{survey.authorName}</span>
                 </div>
                 
-                {/* Tags - Show only on larger screens */}
-                <div className="hidden sm:flex flex-wrap gap-1 mb-3">
-                  {survey.hashtags.slice(0, 2).map((tag) => (
-                    <span key={tag} className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                      #{tag}
-                    </span>
-                  ))}
+                {/* Tags - Fixed height area for consistent layout */}
+                <div className="hidden sm:block h-6 mb-3">
+                  <div className="flex flex-wrap gap-1">
+                    {survey.hashtags.slice(0, 2).map((tag) => (
+                      <span key={tag} className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 
                 {/* Footer */}
