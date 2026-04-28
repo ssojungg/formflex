@@ -34,7 +34,6 @@ function AnalyticsDashboard() {
     enabled: !!surveyId,
   });
 
-  // Mock data for stats
   const stats = {
     avgTime: '3분 42초',
     dropoutRate: '22%',
@@ -47,7 +46,8 @@ function AnalyticsDashboard() {
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
-      {/* ── Full-width Header (aligns with main sidebar logo area h-16) ── */}
+
+      {/* ── Full-width Header — h-16 matches main nav logo height ── */}
       <AnalyticsHeader
         title={questionData?.title || '새 설문조사'}
         stats={stats}
@@ -61,7 +61,7 @@ function AnalyticsDashboard() {
         {/* Survey Selector Sidebar */}
         {showSidebar && (
           <div className="w-64 border-r border-border bg-card flex-shrink-0 flex flex-col">
-            <div className="px-4 py-3 border-b border-border">
+            <div className="px-4 py-3 border-b border-border flex-shrink-0">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 설문 선택
               </p>
@@ -78,7 +78,7 @@ function AnalyticsDashboard() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tabs */}
-          <div className="border-b border-border bg-card px-4 md:px-6">
+          <div className="border-b border-border bg-card px-4 md:px-6 flex-shrink-0">
             <div className="flex gap-6">
               {(['question', 'response', 'trend'] as const).map((tab) => (
                 <button
