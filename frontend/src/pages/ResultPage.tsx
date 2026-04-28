@@ -297,7 +297,7 @@ function ResultPage() {
       {/* Sidebar */}
       {showSidebar && !isMobile && (
         <div className="w-64 border-r border-gray-100 bg-white flex-shrink-0 flex flex-col">
-          <div className="p-4 border-b border-gray-100">
+          <div className="h-16 flex items-center px-4 border-b border-gray-100 flex-shrink-0">
             <h2 className="text-sm font-semibold text-gray-800">내 설문</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
