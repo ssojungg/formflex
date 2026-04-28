@@ -336,7 +336,7 @@ function ResultPage() {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 md:px-6 py-4 bg-white border-b border-gray-100">
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg">
               <MenuIcon />
