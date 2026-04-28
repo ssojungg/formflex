@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation } from '@tanstack/react-query';
 import usePaginationSurveyList from '../hooks/usePaginationSurveyList';
 import { useAuthStore } from '../store/AuthStore';
 import { useResponsive } from '../hooks/useResponsive';
+import { getIdAPI, patchProfileAPI } from '../api/myprofile';
 import noImage from '../assets/noImage.png';
 
 // Icons
@@ -35,13 +37,6 @@ const EditIcon = () => (
   </svg>
 );
 
-const TrashIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-  </svg>
-);
-
 const ChartIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <line x1="18" y1="20" x2="18" y2="10" />
@@ -50,29 +45,117 @@ const ChartIcon = () => (
   </svg>
 );
 
-const BellIcon = () => (
+const CloseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-    <path d="M13.73 21a2 2 0 01-3.46 0" />
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+    <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
 type Tab = 'created' | 'participated' | 'settings';
 
+function surveyIsActive(deadline: string, open?: boolean): boolean {
+  if (open === false) return false;
+  if (deadline && new Date(deadline) < new Date()) return false;
+  return true;
+}
+
 function MyPage() {
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
-  const { userId, setUserId, setLoginStatus } = useAuthStore();
+  const { userId, setUserId, setLoginStatus, userName, userEmail, setUserName } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('created');
 
-  const { data: myFormsData } = usePaginationSurveyList('myForm');
+  // Profile edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editPasswordConfirm, setEditPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState(false);
+
+  // Fetched profile
+  const [profileName, setProfileName] = useState(userName || '');
+  const [profileEmail, setProfileEmail] = useState(userEmail || '');
+
+  const { data: myFormsData, isPending: formsLoading } = usePaginationSurveyList('myForm');
   const { data: myResponsesData } = usePaginationSurveyList('myResponse');
 
-  const tabs = [
-    { id: 'created' as Tab, label: '내가 만든 설문', icon: DocumentIcon, count: myFormsData?.surveys?.length || 0 },
-    { id: 'participated' as Tab, label: '내가 참여한 설문', icon: CheckCircleIcon, count: myResponsesData?.surveys?.length || 0 },
-    { id: 'settings' as Tab, label: '계정 설정', icon: SettingsIcon },
-  ];
+  // Fetch real user profile on mount
+  useEffect(() => {
+    if (userId) {
+      getIdAPI(userId).then((data) => {
+        if (data?.name) { setProfileName(data.name); setUserName(data.name); }
+        if (data?.email) setProfileEmail(data.email);
+      }).catch(() => {});
+    }
+  }, [userId]);
+
+  // Sync from authStore
+  useEffect(() => {
+    if (userName && !profileName) setProfileName(userName);
+    if (userEmail && !profileEmail) setProfileEmail(userEmail);
+  }, [userName, userEmail]);
+
+  const patchMutation = useMutation({
+    mutationFn: (updates: { name?: string; password?: string }) =>
+      patchProfileAPI(userId as number, updates),
+    onSuccess: (_data, variables) => {
+      if (variables.name) { setProfileName(variables.name); setUserName(variables.name); }
+      setEditSuccess(true);
+      setEditError('');
+      setTimeout(() => { setShowEditModal(false); setEditSuccess(false); }, 1200);
+    },
+    onError: () => setEditError('저장에 실패했습니다. 다시 시도해주세요.'),
+  });
+
+  const handleOpenEdit = () => {
+    setEditName(profileName);
+    setEditPassword('');
+    setEditPasswordConfirm('');
+    setEditError('');
+    setEditSuccess(false);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = () => {
+    const updates: { name?: string; password?: string } = {};
+    if (editName.trim() && editName.trim() !== profileName) {
+      updates.name = editName.trim();
+    }
+    if (editPassword) {
+      if (editPassword !== editPasswordConfirm) {
+        setEditError('비밀번호가 일치하지 않습니다.');
+        return;
+      }
+      if (editPassword.length < 6) {
+        setEditError('비밀번호는 6자 이상이어야 합니다.');
+        return;
+      }
+      updates.password = editPassword;
+    }
+    if (Object.keys(updates).length === 0) {
+      setEditError('변경된 내용이 없습니다.');
+      return;
+    }
+    patchMutation.mutate(updates);
+  };
 
   const handleLogout = () => {
     setUserId(null);
@@ -80,26 +163,43 @@ function MyPage() {
     navigate('/', { replace: true });
   };
 
+  const tabs = [
+    { id: 'created' as Tab, label: '내가 만든 설문', icon: DocumentIcon, count: myFormsData?.surveys?.length || 0 },
+    { id: 'participated' as Tab, label: '내가 참여한 설문', icon: CheckCircleIcon, count: myResponsesData?.surveys?.length || 0 },
+    { id: 'settings' as Tab, label: '계정 설정', icon: SettingsIcon },
+  ];
+
+  const displayInitial = profileName
+    ? profileName.charAt(0).toUpperCase()
+    : profileEmail
+    ? profileEmail.charAt(0).toUpperCase()
+    : 'U';
+
   return (
     <div className="min-h-full bg-background-secondary">
       <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
         {/* Profile Header */}
-        <div className="bg-white rounded-2xl p-6 mb-6">
+        <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl font-bold">
-              J
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+              {displayInitial}
             </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-text-primary">Jin Soo Park</h1>
-              <p className="text-text-tertiary">jinsoo@example.com</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-text-primary truncate">
+                {profileName || profileEmail || '사용자'}
+              </h1>
+              <p className="text-text-tertiary truncate">{profileEmail}</p>
               <div className="flex items-center gap-4 mt-2">
-                <span className="px-3 py-1 text-xs font-medium bg-primary-100 text-primary-600 rounded-full">
-                  Pro Plan
+                <span className="text-sm text-text-tertiary">
+                  가입 ID: {userId}
                 </span>
-                <span className="text-sm text-text-tertiary">가입일: 2024년 1월</span>
               </div>
             </div>
-            <button className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary-50">
+            <button
+              onClick={handleOpenEdit}
+              className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary-50 flex items-center gap-2 flex-shrink-0"
+            >
+              <EditIcon />
               프로필 편집
             </button>
           </div>
@@ -124,7 +224,7 @@ function MyPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl overflow-hidden">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
           <div className="flex border-b border-border-light">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -139,7 +239,7 @@ function MyPage() {
                   }`}
                 >
                   <Icon />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className={isMobile ? 'hidden' : ''}>{tab.label}</span>
                   {tab.count !== undefined && (
                     <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
                       activeTab === tab.id ? 'bg-primary-100 text-primary-600' : 'bg-secondary-100 text-secondary-600'
@@ -163,9 +263,13 @@ function MyPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-4"
                 >
-                  {myFormsData?.surveys?.length ? (
+                  {formsLoading ? (
+                    <div className="flex justify-center py-12">
+                      <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : myFormsData?.surveys?.length ? (
                     myFormsData.surveys.map((survey) => {
-                      const isActive = new Date(survey.deadline) > new Date();
+                      const isActive = surveyIsActive(survey.deadline, survey.open);
                       return (
                         <div
                           key={survey.surveyId}
@@ -179,19 +283,23 @@ function MyPage() {
                                 className="w-full h-full object-cover"
                                 onError={(e) => { (e.target as HTMLImageElement).src = noImage; }}
                               />
-                            ) : null}
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-primary-400">
+                                <DocumentIcon />
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-medium text-text-primary truncate">{survey.title}</h3>
-                              <span className={`px-2 py-0.5 text-xs rounded ${
-                                isActive ? 'bg-green-100 text-green-700' : 'bg-secondary-100 text-secondary-600'
+                              <span className={`shrink-0 px-2 py-0.5 text-xs rounded ${
+                                isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-secondary-100 text-secondary-600'
                               }`}>
                                 {isActive ? '진행중' : '종료'}
                               </span>
                             </div>
                             <p className="text-sm text-text-tertiary">
-                              응답 {survey.attendCount || 0}명 · 마감일 {new Date(survey.deadline).toLocaleDateString()}
+                              응답 {survey.attendCount || 0}명 · 마감일 {survey.deadline ? new Date(survey.deadline).toLocaleDateString('ko-KR') : '없음'}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -203,17 +311,11 @@ function MyPage() {
                               <ChartIcon />
                             </button>
                             <button
-                              onClick={() => navigate(`/edit?id=${survey.surveyId}`)}
+                              onClick={() => navigate(`/responseform?id=${survey.surveyId}`)}
                               className="p-2 text-secondary-500 hover:text-primary-500 hover:bg-primary-50 rounded-lg"
-                              title="수정"
+                              title="설문 보기"
                             >
-                              <EditIcon />
-                            </button>
-                            <button
-                              className="p-2 text-secondary-500 hover:text-error hover:bg-red-50 rounded-lg"
-                              title="삭제"
-                            >
-                              <TrashIcon />
+                              <EyeIcon />
                             </button>
                           </div>
                         </div>
@@ -221,7 +323,7 @@ function MyPage() {
                     })
                   ) : (
                     <div className="text-center py-12">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-secondary-100 rounded-full flex items-center justify-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-secondary-100 rounded-full flex items-center justify-center text-secondary-400">
                         <DocumentIcon />
                       </div>
                       <p className="text-text-secondary mb-4">아직 생성한 설문이 없습니다</p>
@@ -259,27 +361,31 @@ function MyPage() {
                               className="w-full h-full object-cover"
                               onError={(e) => { (e.target as HTMLImageElement).src = noImage; }}
                             />
-                          ) : null}
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-secondary-400">
+                              <CheckCircleIcon />
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-text-primary truncate mb-1">{survey.title}</h3>
                           <p className="text-sm text-text-tertiary">
-                            {survey.userName || '익명'} · 참여일 {new Date().toLocaleDateString()}
+                            응답 {survey.attendCount || 0}명
                           </p>
                         </div>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-secondary-400">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-secondary-400 flex-shrink-0">
                           <path d="m9 18 6-6-6-6" />
                         </svg>
                       </div>
                     ))
                   ) : (
                     <div className="text-center py-12">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-secondary-100 rounded-full flex items-center justify-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-secondary-100 rounded-full flex items-center justify-center text-secondary-400">
                         <CheckCircleIcon />
                       </div>
                       <p className="text-text-secondary mb-4">아직 참여한 설문이 없습니다</p>
                       <button
-                        onClick={() => navigate('/all')}
+                        onClick={() => navigate('/surveys')}
                         className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
                       >
                         설문 둘러보기
@@ -297,30 +403,6 @@ function MyPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="max-w-2xl"
                 >
-                  {/* Profile Settings */}
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-text-primary mb-4">프로필 설정</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-2">이름</label>
-                        <input
-                          type="text"
-                          defaultValue="Jin Soo Park"
-                          className="w-full px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:border-primary-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-2">이메일</label>
-                        <input
-                          type="email"
-                          defaultValue="jinsoo@example.com"
-                          disabled
-                          className="w-full px-4 py-2.5 border border-border rounded-lg bg-secondary-50 text-text-tertiary"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Notification Settings */}
                   <div className="mb-8">
                     <h3 className="text-lg font-semibold text-text-primary mb-4">알림 설정</h3>
@@ -344,7 +426,7 @@ function MyPage() {
                     </div>
                   </div>
 
-                  {/* Danger Zone */}
+                  {/* Account */}
                   <div>
                     <h3 className="text-lg font-semibold text-text-primary mb-4">계정</h3>
                     <div className="space-y-3">
@@ -354,9 +436,6 @@ function MyPage() {
                       >
                         로그아웃
                       </button>
-                      <button className="w-full py-3 text-sm font-medium text-error border border-error/30 rounded-lg hover:bg-error/5">
-                        계정 삭제
-                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -365,6 +444,135 @@ function MyPage() {
           </div>
         </div>
       </div>
+
+      {/* Profile Edit Modal */}
+      <AnimatePresence>
+        {showEditModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50"
+              onClick={() => setShowEditModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div
+                className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-text-primary">프로필 편집</h2>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="p-2 text-text-tertiary hover:text-text-primary hover:bg-secondary-50 rounded-lg"
+                  >
+                    <CloseIcon />
+                  </button>
+                </div>
+
+                {/* Avatar */}
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-3xl font-bold">
+                    {editName ? editName.charAt(0).toUpperCase() : displayInitial}
+                  </div>
+                </div>
+
+                {/* Fields */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1.5">이름</label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="이름을 입력하세요"
+                      className="w-full px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1.5">이메일</label>
+                    <input
+                      type="email"
+                      value={profileEmail}
+                      disabled
+                      className="w-full px-4 py-2.5 border border-border rounded-lg bg-secondary-50 text-text-tertiary text-sm"
+                    />
+                    <p className="text-xs text-text-tertiary mt-1">이메일은 변경할 수 없습니다</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-1.5">
+                      새 비밀번호 <span className="text-text-tertiary font-normal">(변경 시에만 입력)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={editPassword}
+                        onChange={(e) => setEditPassword(e.target.value)}
+                        placeholder="새 비밀번호 (6자 이상)"
+                        className="w-full px-4 py-2.5 pr-10 border border-border rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary"
+                      >
+                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {editPassword && (
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1.5">비밀번호 확인</label>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={editPasswordConfirm}
+                        onChange={(e) => setEditPasswordConfirm(e.target.value)}
+                        placeholder="비밀번호를 다시 입력하세요"
+                        className="w-full px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Error / Success */}
+                {editError && (
+                  <p className="mt-3 text-sm text-red-500">{editError}</p>
+                )}
+                {editSuccess && (
+                  <p className="mt-3 text-sm text-green-600 font-medium">저장되었습니다!</p>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 py-2.5 text-sm font-medium border border-border rounded-lg hover:bg-secondary-50"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={patchMutation.isPending}
+                    className="flex-1 py-2.5 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50"
+                  >
+                    {patchMutation.isPending ? '저장 중...' : '저장'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

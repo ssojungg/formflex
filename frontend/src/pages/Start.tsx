@@ -255,7 +255,7 @@ function Start() {
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-400" />
                     <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                    <div className="w-3 h-3 rounded-full bg-green-400" />
+                    <div className="w-3 h-3 rounded-full bg-indigo-400" />
                   </div>
                   <div className="flex-1 ml-4">
                     <div className="max-w-xs mx-auto bg-white rounded-lg px-4 py-1.5 text-sm text-secondary-400 border border-secondary-200">

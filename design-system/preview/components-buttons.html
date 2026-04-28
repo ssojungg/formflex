@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+  @font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff'); }
+  body { margin: 0; font-family: 'Pretendard', system-ui, sans-serif; background: #f9fafb; padding: 16px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .title { font-size: 10px; font-weight: 600; color: #374151; margin-bottom: 8px; letter-spacing: .04em; text-transform: uppercase; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; font-family: inherit; font-size: 14px; font-weight: 500; border-radius: 12px; border: none; cursor: pointer; transition: all 200ms; }
+  .btn-primary { background: #6366f1; color: white; }
+  .btn-secondary { background: #f3f4f6; color: #374151; }
+  .btn-outline { background: transparent; color: #374151; border: 1px solid #d1d5db; }
+  .btn-danger { background: #fef2f2; color: #ef4444; }
+  .btn-success { background: #d1fae5; color: #065f46; }
+  .btn-disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+  .btn-lg { padding: 14px 28px; font-size: 16px; font-weight: 600; border-radius: 16px; }
+</style></head>
+<body>
+<div class="title">Button Variants</div>
+<div class="row">
+  <button class="btn btn-primary">무료로 시작하기</button>
+  <button class="btn btn-secondary">설문 둘러보기</button>
+  <button class="btn btn-outline">취소</button>
+  <button class="btn btn-danger">삭제</button>
+  <button class="btn btn-success">배포하기</button>
+  <button class="btn btn-disabled" disabled>비활성</button>
+</div>
+<div class="title">Button Sizes</div>
+<div class="row">
+  <button class="btn btn-primary btn-sm">작게 (sm)</button>
+  <button class="btn btn-primary">기본 (base)</button>
+  <button class="btn btn-primary btn-lg">크게 (lg)</button>
+</div>
+</body></html>

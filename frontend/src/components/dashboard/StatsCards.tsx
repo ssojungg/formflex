@@ -61,8 +61,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: stats.totalResponses.toLocaleString(),
       change: '+28.4%',
       changeType: 'positive' as const,
-      iconBg: 'bg-green-50',
-      iconColor: 'text-green-500',
+      iconBg: 'bg-indigo-50',
+      iconColor: 'text-indigo-500',
     },
     {
       icon: ChartIcon,
@@ -109,7 +109,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
                   {item.label}
                 </p>
                 <span className={`text-xs font-medium hidden sm:inline
-                  ${item.changeType === 'positive' ? 'text-green-500' : 'text-red-500'}`}>
+                  ${item.changeType === 'positive' ? 'text-indigo-500' : 'text-red-500'}`}>
                   {item.change}
                 </span>
               </div>

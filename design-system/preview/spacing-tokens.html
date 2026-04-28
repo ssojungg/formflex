@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f9fafb; padding: 16px; }
+  .section { margin-bottom: 14px; }
+  .title { font-size: 10px; font-weight: 600; color: #374151; margin-bottom: 8px; letter-spacing: .04em; text-transform: uppercase; }
+  .tokens { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end; }
+  .token { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bar { background: #6366f1; border-radius: 4px; width: 28px; }
+  .lbl { font-size: 9px; color: #9ca3af; font-family: monospace; }
+  .val { font-size: 9px; color: #6b7280; }
+  .radius-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .r-box { width: 40px; height: 40px; background: #6366f1; opacity: 0.7; }
+  .r-lbl { font-size: 9px; color: #374151; text-align: center; margin-top: 3px; font-family: monospace; }
+</style></head>
+<body>
+<div class="section">
+  <div class="title">Spacing Scale</div>
+  <div class="tokens">
+    <div class="token"><div class="bar" style="height:4px"></div><div class="lbl">1</div><div class="val">4px</div></div>
+    <div class="token"><div class="bar" style="height:8px"></div><div class="lbl">2</div><div class="val">8px</div></div>
+    <div class="token"><div class="bar" style="height:12px"></div><div class="lbl">3</div><div class="val">12px</div></div>
+    <div class="token"><div class="bar" style="height:16px"></div><div class="lbl">4</div><div class="val">16px</div></div>
+    <div class="token"><div class="bar" style="height:20px"></div><div class="lbl">5</div><div class="val">20px</div></div>
+    <div class="token"><div class="bar" style="height:24px"></div><div class="lbl">6</div><div class="val">24px</div></div>
+    <div class="token"><div class="bar" style="height:32px"></div><div class="lbl">8</div><div class="val">32px</div></div>
+    <div class="token"><div class="bar" style="height:40px"></div><div class="lbl">10</div><div class="val">40px</div></div>
+    <div class="token"><div class="bar" style="height:48px"></div><div class="lbl">12</div><div class="val">48px</div></div>
+    <div class="token"><div class="bar" style="height:64px"></div><div class="lbl">16</div><div class="val">64px</div></div>
+  </div>
+</div>
+<div class="section">
+  <div class="title">Border Radius</div>
+  <div class="radius-row">
+    <div><div class="r-box" style="border-radius:6px"></div><div class="r-lbl">sm<br>6px</div></div>
+    <div><div class="r-box" style="border-radius:8px"></div><div class="r-lbl">md<br>8px</div></div>
+    <div><div class="r-box" style="border-radius:12px"></div><div class="r-lbl">xl<br>12px</div></div>
+    <div><div class="r-box" style="border-radius:16px"></div><div class="r-lbl">2xl<br>16px</div></div>
+    <div><div class="r-box" style="border-radius:24px"></div><div class="r-lbl">3xl<br>24px</div></div>
+    <div><div class="r-box" style="border-radius:32px"></div><div class="r-lbl">4xl<br>32px</div></div>
+    <div><div class="r-box" style="border-radius:9999px"></div><div class="r-lbl">full<br>pill</div></div>
+  </div>
+</div>
+</body></html>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { myFormAPI } from '../../api/survey';
+import { getMySurveyAPI } from '../../api/getForm';
 import { useAuthStore } from '../../store/AuthStore';
 
 interface SurveySelectorProps {
@@ -13,7 +13,7 @@ function SurveySelector({ selectedId, onSelect }: SurveySelectorProps) {
 
   const { data } = useQuery({
     queryKey: ['myForm', userId],
-    queryFn: () => myFormAPI(userId as number, { page: 0, size: 50 }),
+    queryFn: () => getMySurveyAPI({ userId: userId as number, currentPage: 1 }),
     enabled: !!userId,
   });
 
