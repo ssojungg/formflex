@@ -36,8 +36,8 @@ const usePaginationSurveyList = (path: PathType) => {
   const queryFn = QUERY_FN_MAP[path];
 
   const { data, isError, isPending, refetch } = useQuery<SurveyCoverType, AxiosError>({
-    queryKey: [path, currentPage, userId, searchTerm, sort], // 검색어를 쿼리 키에 추가
-    queryFn: () => queryFn({ userId: userId as number, currentPage, title: searchTerm, sort }), // API 호출 시 검색어 전달
+    queryKey: [path, currentPage, userId, searchTerm, sort],
+    queryFn: () => queryFn({ userId: userId as number, currentPage, title: searchTerm, sort }),
     select: (responseData) => {
       return {
         surveys: responseData.sortedList ?? responseData.surveys,
@@ -45,6 +45,9 @@ const usePaginationSurveyList = (path: PathType) => {
       };
     },
     placeholderData: keepPreviousData,
+    // Auto-refresh: allForm every 30s (shows others' new responses), myForm/myResponse every 60s
+    refetchInterval: path === 'allForm' ? 30_000 : 60_000,
+    refetchIntervalInBackground: false, // only poll when tab is focused
     meta: { errorMessage: '설문지 목록을 불러오는 중 오류가 발생했습니다.' },
   });
   return {

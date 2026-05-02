@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import typeIcon from '../../assets/type.svg';
-import checkIcon from '../../assets/check.svg';
 import { QuestionData } from '../../types/questionData';
-import { getRoundedClass } from '../../utils/getRoundedClass';
 
 interface ResponseCheckBoxProps {
   question: QuestionData;
@@ -14,112 +11,94 @@ interface ResponseCheckBoxProps {
   isViewPage?: boolean;
 }
 
-function ResponseCheckBox({ question, color, buttonStyle, index, onOptionSelect, isViewPage }: ResponseCheckBoxProps) {
-  const [selectedOptions, setSelectedOptions] = useState<number[]>([]); // 선택된 옵션을 배열로 관리
+function ResponseCheckBox({ question, color, index, onOptionSelect, isViewPage }: ResponseCheckBoxProps) {
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
 
   const handleOptionSelect = (choiceId: number) => {
-    // 선택한 옵션이 이미 선택되었는지 확인
-    if (selectedOptions.includes(choiceId)) {
-      // 이미 선택되었으면 선택 해제
-      setSelectedOptions((prevSelectedOptions) => prevSelectedOptions.filter((id) => id !== choiceId));
-    } else {
-      // 선택되지 않았으면 선택 추가
-      setSelectedOptions((prevSelectedOptions) => [...prevSelectedOptions, choiceId]);
-    }
-
-    const newSelectedOptions = selectedOptions.includes(choiceId)
+    if (isViewPage) return;
+    const newSelected = selectedOptions.includes(choiceId)
       ? selectedOptions.filter((id) => id !== choiceId)
       : [...selectedOptions, choiceId];
-
-    // 상태 업데이트
-    setSelectedOptions(newSelectedOptions);
-
-    // 콜백 함수에 새로운 선택된 옵션 배열 전달
-    onOptionSelect(newSelectedOptions);
+    setSelectedOptions(newSelected);
+    onOptionSelect(newSelected);
   };
 
   return (
-    <div
-      className="flex flex-col items-center justify-center rounded-[1.25rem] bg-white"
-      style={{
-        boxShadow: `0 0 0.25rem 0.25rem ${color}40`,
-      }}
-    >
-      <div className="flex justify-start w-full mt-4">
-        <div className="flex items-center ml-4">
-          <img src={typeIcon} alt="Type" className="w-5 h-5" />
-          <span className="ml-2 font-medium text-left text-darkGray">체크박스</span>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Question Header */}
+      <div className="flex items-center gap-3 px-6 pt-6 pb-4">
+        <span
+          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold text-white"
+          style={{ backgroundColor: color }}
+        >
+          {index}
+        </span>
+        <div className="flex-1">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">체크박스 (복수선택)</span>
+          <p className="text-base font-semibold text-gray-900 mt-0.5 leading-snug">{question.content}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-center w-full">
-        <span className="text-[2rem] font-semibold text-center text-black -translate-y-4">Q{index}.</span>
-      </div>
-
-      <span className="max-w-[37.5rem] text-[1rem] my-2 text-base text-center text-black break-words">
-        {question.content}
-      </span>
-
       {question.imageUrl && (
-        <img
-          src={question.imageUrl}
-          alt="Question"
-          className="rounded-[0.625rem] max-w-[30rem] max-h-[36rem]"
-          style={{ border: `0.125rem solid ${color}` }}
-        />
+        <div className="px-6 pb-4">
+          <img
+            src={question.imageUrl}
+            alt="질문 이미지"
+            className="rounded-xl max-w-full max-h-64 object-contain"
+          />
+        </div>
       )}
 
-      <div className="flex flex-col my-4 space-y-2">
-        {question.choices?.map((choice) =>
-          isViewPage ? (
-            <Tooltip key={choice.choiceId} title="이 페이지에서는 선택할 수 없습니다." arrow>
-              <div className="flex items-center justify-center w-[37.5rem]">
-                <div
-                  className={`relative flex items-center justify-center cursor-pointer w-full h-full px-10 py-2 ${getRoundedClass(buttonStyle)}`}
-                  style={{
-                    backgroundColor: `${color}`,
-                  }}
-                >
-                  <label
-                    htmlFor={`checkbox-${choice.choiceId}`}
-                    className="absolute top-[0.625rem] left-[0.625rem] w-5 h-5 flex justify-center items-center rounded-md bg-white
-                    border border-gray-300"
-                  />
-                  <span className="text-center text-base break-words">{choice.option}</span>
-                </div>
+      {/* Options */}
+      <div className="px-6 pb-6 space-y-2">
+        {question.choices?.map((choice) => {
+          const isSelected = selectedOptions.includes(choice.choiceId);
+          const content = (
+            <button
+              type="button"
+              key={choice.choiceId}
+              onClick={() => handleOptionSelect(choice.choiceId)}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 text-left
+                         transition-all duration-150"
+              style={
+                isSelected
+                  ? { borderColor: color, backgroundColor: `${color}12` }
+                  : { borderColor: '#E5E7EB', backgroundColor: 'white' }
+              }
+              disabled={isViewPage}
+            >
+              {/* Custom checkbox */}
+              <div
+                className="w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-all"
+                style={
+                  isSelected
+                    ? { borderColor: color, backgroundColor: color }
+                    : { borderColor: '#D1D5DB' }
+                }
+              >
+                {isSelected && (
+                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                    <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
               </div>
+              <span
+                className="text-sm font-medium"
+                style={{ color: isSelected ? color : '#374151' }}
+              >
+                {choice.option}
+              </span>
+            </button>
+          );
+
+          return isViewPage ? (
+            <Tooltip key={choice.choiceId} title="미리보기 모드에서는 선택할 수 없습니다." arrow>
+              <div>{content}</div>
             </Tooltip>
           ) : (
-            <div key={choice.choiceId} className="flex items-center justify-center w-[37.5rem]">
-              <div
-                className={`relative flex items-center justify-center cursor-pointer w-full h-full px-10 py-2 ${getRoundedClass(buttonStyle)}`}
-                style={{
-                  backgroundColor: selectedOptions.includes(choice.choiceId) ? `gray` : `${color}`,
-                }}
-                onClick={() => handleOptionSelect(choice.choiceId)}
-              >
-                <label
-                  htmlFor={`checkbox-${choice.choiceId}`}
-                  className={`absolute top-40% left-[0.625rem] w-5 h-5 flex justify-center items-center rounded-md ${
-                    selectedOptions.includes(choice.choiceId) ? 'bg-blue-500' : 'bg-white'
-                  } border border-gray-300`}
-                >
-                  <input
-                    type="checkbox"
-                    id={`checkbox-${choice.choiceId}`}
-                    className="absolute opacity-0"
-                    checked={selectedOptions.includes(choice.choiceId)}
-                    onChange={() => handleOptionSelect(choice.choiceId)}
-                  />
-                  {selectedOptions.includes(choice.choiceId) && (
-                    <img src={checkIcon} alt="Checked" className="w-4 h-4" />
-                  )}
-                </label>
-                <span className="text-center text-base break-words">{choice.option}</span>
-              </div>
-            </div>
-          ),
-        )}
+            <div key={choice.choiceId}>{content}</div>
+          );
+        })}
       </div>
     </div>
   );

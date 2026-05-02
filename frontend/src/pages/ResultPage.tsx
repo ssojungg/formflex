@@ -292,11 +292,15 @@ function ResultPage() {
   const isLoading = qLoading || aLoading;
   const hasData = !!surveyId && (!!questionData || !!answerData);
 
+  const handleExport = () => {
+    window.print();
+  };
+
   return (
-    <div className="flex h-full bg-gray-50 overflow-hidden">
+    <div className="flex h-full bg-gray-50 overflow-hidden print:overflow-visible print:block print:h-auto">
       {/* Sidebar */}
       {showSidebar && !isMobile && (
-        <div className="w-64 border-r border-gray-100 bg-white flex-shrink-0 flex flex-col">
+        <div className="w-64 border-r border-gray-100 bg-white flex-shrink-0 flex flex-col print:hidden">
           <div className="h-16 flex items-center px-4 border-b border-gray-100 flex-shrink-0">
             <h2 className="text-sm font-semibold text-gray-800">내 설문</h2>
           </div>
@@ -334,9 +338,9 @@ function ResultPage() {
       )}
 
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible print:block">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100 flex-shrink-0">
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100 flex-shrink-0 print:hidden">
           <div className="flex items-center gap-3">
             <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg">
               <MenuIcon />
@@ -355,7 +359,10 @@ function ResultPage() {
               <MailIcon />
               <span className="hidden sm:inline">이메일</span>
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-indigo-500 text-white text-sm rounded-xl hover:bg-indigo-600">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-3 py-2 bg-indigo-500 text-white text-sm rounded-xl hover:bg-indigo-600"
+            >
               <DownloadIcon />
               <span className="hidden sm:inline">내보내기</span>
             </button>
@@ -425,7 +432,7 @@ function ResultPage() {
             </div>
 
             {/* Tabs */}
-            <div className="bg-white border-b border-gray-100 px-4 md:px-6">
+            <div className="bg-white border-b border-gray-100 px-4 md:px-6 print:hidden">
               <div className="flex gap-6">
                 {[
                   { id: 'question' as const, label: '질문별 분석' },
@@ -447,8 +454,14 @@ function ResultPage() {
               </div>
             </div>
 
+            {/* Print-only header */}
+            <div className="hidden print:block px-6 py-4 mb-2">
+              <h1 className="text-xl font-bold text-gray-900">{questionData?.title || '설문 분석 결과'}</h1>
+              <p className="text-xs text-gray-500 mt-1">생성일: {questionData?.createdAt ? formatDate(questionData.createdAt) : ''}</p>
+            </div>
+
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 print:overflow-visible print:p-0">
 
               {/* ── 질문별 탭 ── */}
               {activeTab === 'question' && (

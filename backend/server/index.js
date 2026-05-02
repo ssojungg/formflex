@@ -47,7 +47,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 sequelize
-  .sync({ force: false })
+  .sync({ alter: true })
+
   .then(() => {
     console.log('데이터베이스 테이블 생성 완료');
 

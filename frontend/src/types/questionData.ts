@@ -27,6 +27,7 @@ export type Questions = QuestionData[] | ExtendedQuestionData[];
 
 export type QuestionDataForm = {
   surveyId: number;
+  userId?: number;
   userName?: string;
   title: string;
   description: string;

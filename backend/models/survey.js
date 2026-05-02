@@ -64,7 +64,30 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      emailReportEnabled: {
+        //몇명이상 되면 이메일 보내는 기능 켰는지 켰는지 확인
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      emailReportThreshold: {
+        //몇 명 이상일 때 발송할 지
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      reportEmail: {
+        //어느 이메일로 보낼지
+        type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      emailReportSent: {
+        //이미 발송했는지 (중복 발송 방지용)
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
+
     {
       tableName: 'Survey',
       timestamps: true,

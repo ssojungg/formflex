@@ -5,7 +5,7 @@ const createSurveyWithQuestionsAndChoices = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
-    const surveyData = JSON.parse(req.body.survey);
+    const surveyData = req.body.survey ? JSON.parse(req.body.survey) : req.body;
     const {
       userId,
       title,
@@ -17,6 +17,9 @@ const createSurveyWithQuestionsAndChoices = async (req, res) => {
       mainImageUrl,
       deadline,
       questions,
+      emailReportEnabled,
+      emailReportThreshold,
+      reportEmail,
     } = surveyData;
 
     // surveyUrl을 미리 정의
@@ -34,6 +37,10 @@ const createSurveyWithQuestionsAndChoices = async (req, res) => {
         buttonStyle,
         mainImageUrl,
         deadline,
+        emailReportEnabled: emailReportEnabled || false,
+        emailReportThreshold: emailReportEnabled ? emailReportThreshold : null,
+        reportEmail: emailReportEnabled ? reportEmail : null, // 기능을 끈 상태면 임계값이랑 이메일 null 이 될 수 있도록
+        emailReportSent: false,
       },
       { transaction: t },
     );

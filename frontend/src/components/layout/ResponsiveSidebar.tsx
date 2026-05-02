@@ -154,10 +154,10 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
   const displayName = userName || userEmail || '사용자';
 
   return (
-    <div className="flex min-h-screen bg-background-secondary">
+    <div className="flex min-h-screen bg-background-secondary print:block print:min-h-0">
       {/* Mobile Header */}
       {showMobileView && (
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-background-sidebar border-b border-secondary-800">
+        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-background-sidebar border-b border-secondary-800 print:hidden">
           <button
             onClick={() => setMobileSidebarOpen(true)}
             className="p-2 text-text-inverse rounded-lg hover:bg-secondary-800 transition-colors"
@@ -194,7 +194,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
                ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
             : 'fixed inset-y-0 left-0 w-[200px]'
           }
-          flex flex-col bg-background-sidebar
+          flex flex-col bg-background-sidebar print:hidden
         `}
       >
         {/* Sidebar Header */}
@@ -290,7 +290,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
       {/* Main Content */}
       <main
         className={`
-          flex-1 min-h-screen
+          flex-1 min-h-screen print:ml-0 print:pt-0 print:min-h-0
           ${showMobileView ? 'pt-16' : 'ml-[200px]'}
         `}
       >

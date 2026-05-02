@@ -2,8 +2,6 @@
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.997.0",
     "@aws-sdk/client-s3": "^3.490.0",
-    "@img/sharp-libvips-linux-arm64": "^1.2.4",
-    "@img/sharp-linux-arm64": "^0.34.5",
     "amqplib": "^0.10.3",
     "aws-sdk": "^2.1535.0",
     "axios": "^1.6.5",
@@ -17,13 +15,14 @@
     "multer-s3": "^3.0.1",
     "nodemailer": "^6.9.8",
     "openai": "^4.25.0",
+    "pdfkit": "^0.18.0",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
     "pg-promise": "^11.5.4",
     "pq": "^0.0.3",
     "sequelize": "^6.35.2",
     "sequelize-replace-enum-postgres": "^1.6.0",
-    "sharp": "^0.33.2"
+    "sharp": "^0.33.5"
   },
   "name": "backend",
   "description": "backend",

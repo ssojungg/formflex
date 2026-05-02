@@ -1,76 +1,84 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/AuthStore';
 import Alert from '../components/common/Alert';
 import usePaginationSurveyList from '../hooks/usePaginationSurveyList';
 import { Survey } from '../types/survey';
 
-// Icons
+// ==================== ICONS ====================
 const SearchIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
   </svg>
 );
-const UsersIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
-  </svg>
-);
 const PlusIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 const GridIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
     <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
   </svg>
 );
 const ListIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
     <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
   </svg>
 );
-const ChevronLeft = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="m15 18-6-6 6-6" />
-  </svg>
-);
-const ChevronRight = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="m9 18 6-6-6-6" />
-  </svg>
-);
 const ChevronDownIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <path d="m6 9 6 6 6-6" />
   </svg>
 );
-const TrendUpIcon = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+const UsersIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
   </svg>
 );
 const DocumentIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><path d="M14 2v6h6" />
+    <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" />
   </svg>
 );
 const ActivityIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 );
 const CheckCircleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
   </svg>
 );
+const TrendUpIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+  </svg>
+);
+const DotsIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+  </svg>
+);
 
-const INDIGO = '#6366f1';
+// ==================== CONSTANTS ====================
+const CARD_GRADIENTS = [
+  'linear-gradient(135deg, #EEF2FF 0%, #C7D2FE 100%)',
+  'linear-gradient(135deg, #E0E7FF 0%, #A5B4FC 100%)',
+  'linear-gradient(135deg, #F5F3FF 0%, #DDD6FE 100%)',
+  'linear-gradient(135deg, #EDE9FE 0%, #C4B5FD 100%)',
+  'linear-gradient(135deg, #E0E7FF 0%, #818CF8 100%)',
+  'linear-gradient(135deg, #EEF2FF 0%, #A5B4FC 100%)',
+  'linear-gradient(135deg, #F5F3FF 0%, #C4B5FD 100%)',
+  'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)',
+  'linear-gradient(135deg, #EDE9FE 0%, #A5B4FC 100%)',
+];
 
 const SORT_OPTIONS = [
   { value: '', label: '최신순' },
@@ -91,6 +99,197 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
 }
 
+// ==================== SKELETON CARD ====================
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-[#E8E6F0] animate-pulse">
+      <div className="h-36 bg-gradient-to-r from-[#F0EEF8] to-[#E8E6F0]" />
+      <div className="p-4">
+        <div className="h-4 bg-[#F0EEF8] rounded-full w-3/4 mb-2" />
+        <div className="h-3 bg-[#F0EEF8] rounded-full w-1/2 mb-4" />
+        <div className="flex justify-between pt-3 border-t border-[#F0EEF8]">
+          <div className="h-3 bg-[#F0EEF8] rounded-full w-16" />
+          <div className="h-3 bg-[#F0EEF8] rounded-full w-12" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== STAT CARD ====================
+interface StatCardProps {
+  label: string;
+  value: string | number | null;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  accentColor: string;
+  trend?: string;
+  isLoading: boolean;
+}
+
+function StatCard({ label, value, icon, iconBg, iconColor, accentColor, trend, isLoading }: StatCardProps) {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-[#E8E6F0] shadow-sm flex">
+      <div className="w-1 shrink-0 rounded-l-2xl" style={{ backgroundColor: accentColor }} />
+      <div className="flex-1 p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-medium text-[#6B6880] mb-1">{label}</p>
+            {isLoading ? (
+              <div className="h-7 w-16 bg-[#F0EEF8] rounded-lg animate-pulse" />
+            ) : (
+              <p className="text-2xl font-bold text-[#1A1A2A]">
+                {value !== null ? value : '—'}
+              </p>
+            )}
+          </div>
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: iconBg, color: iconColor }}
+          >
+            {icon}
+          </div>
+        </div>
+        <div className="mt-2 h-4">
+          {!isLoading && trend && (
+            <span className="flex items-center gap-1 text-xs font-medium" style={{ color: accentColor }}>
+              <TrendUpIcon />
+              {trend}
+            </span>
+          )}
+          {!isLoading && !trend && (
+            <span className="text-xs text-[#C4C0D0]">데이터 없음</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== SURVEY CARD ====================
+interface SurveyCardProps {
+  survey: Survey;
+  index: number;
+  onClick: () => void;
+}
+
+function SurveyCard({ survey, index, onClick }: SurveyCardProps) {
+  const status = surveyStatus(survey);
+  const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.04 }}
+      onClick={onClick}
+      className="group bg-white rounded-2xl overflow-hidden border border-[#E8E6F0] cursor-pointer
+                 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
+    >
+      {/* Thumbnail */}
+      <div className="h-36 relative overflow-hidden">
+        {survey.mainImageUrl ? (
+          <img src={survey.mainImageUrl} alt={survey.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full" style={{ background: gradient }}>
+            <div className="absolute inset-0 flex items-center justify-center opacity-20">
+              <DocumentIcon />
+            </div>
+          </div>
+        )}
+
+        {/* Status badge */}
+        <span
+          className="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full"
+          style={
+            status === 'active'
+              ? { backgroundColor: '#D1FAE5', color: '#059669' }
+              : { backgroundColor: '#F1F5F9', color: '#64748B' }
+          }
+        >
+          {status === 'active' ? '● 진행중' : '■ 종료'}
+        </span>
+
+        {/* 3-dot menu */}
+        <button
+          type="button"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-white/80 backdrop-blur-sm
+                     flex items-center justify-center text-[#6B6880]
+                     opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+        >
+          <DotsIcon />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="p-4">
+        <h3 className="font-semibold text-[#1A1A2A] text-sm leading-snug line-clamp-2 mb-3">
+          {survey.title}
+        </h3>
+        <div className="flex items-center justify-between pt-3 border-t border-[#F4F2FA]">
+          <span
+            className="flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full"
+            style={{ backgroundColor: '#F0EEFF', color: '#5B4CF5' }}
+          >
+            <UsersIcon />
+            {(survey.attendCount ?? 0).toLocaleString()}명
+          </span>
+          <span className="text-xs text-[#9B97A8]">{formatDate(survey.createdAt)}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ==================== EMPTY STATE ====================
+function EmptyState({ hasSearch, hasFilter, onCreateClick, isLoggedIn }: {
+  hasSearch: boolean;
+  hasFilter: boolean;
+  onCreateClick: () => void;
+  isLoggedIn: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-24 text-center"
+    >
+      <div
+        className="w-24 h-24 rounded-3xl flex items-center justify-center mb-6 text-4xl"
+        style={{ background: 'linear-gradient(135deg, #EEE9FF 0%, #E0D9FF 100%)' }}
+      >
+        {hasSearch ? '🔍' : hasFilter ? '🗂️' : '📋'}
+      </div>
+      <h3 className="text-xl font-bold text-[#1A1A2A] mb-2">
+        {hasSearch ? '검색 결과가 없어요' : hasFilter ? '해당 설문이 없어요' : '아직 설문이 없어요'}
+      </h3>
+      <p className="text-sm text-[#6B6880] mb-8 max-w-xs leading-relaxed">
+        {hasSearch
+          ? '다른 키워드로 검색해보세요'
+          : hasFilter
+          ? '다른 필터를 선택해보세요'
+          : '첫 번째 설문을 만들어서 응답을 모아보세요'}
+      </p>
+      {!hasSearch && !hasFilter && isLoggedIn && (
+        <button
+          type="button"
+          onClick={onCreateClick}
+          className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold text-white
+                     transition-all hover:brightness-110 hover:scale-105 active:scale-95"
+          style={{ background: 'linear-gradient(135deg, #5B4CF5 0%, #7B6FF5 100%)' }}
+        >
+          <PlusIcon />
+          첫 설문 만들기
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
+// ==================== MAIN COMPONENT ====================
 function SurveyDashboard() {
   const navigate = useNavigate();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -100,6 +299,29 @@ function SurveyDashboard() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortValue, setSortValue] = useState('');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(9);
+
+  // Calculate how many cards fit in the viewport without scrolling
+  useEffect(() => {
+    const calculate = () => {
+      const SIDEBAR_W = window.innerWidth > 768 ? 200 : 0;
+      const H_PADDING = 32;
+      const HEADER_H = 310; // title + stats cards + control row + count label
+      const CARD_H = 260;   // thumbnail(144) + body(~100) + gap(16)
+      const CARD_W = 280;
+      const GAP = 16;
+
+      const availW = Math.min(window.innerWidth - SIDEBAR_W - H_PADDING * 2, 1200);
+      const cols = Math.max(1, Math.floor((availW + GAP) / (CARD_W + GAP)));
+      const availH = window.innerHeight - HEADER_H;
+      const rows = Math.max(1, Math.floor((availH + GAP) / (CARD_H + GAP)));
+      setVisibleCount(cols * rows);
+    };
+    calculate();
+    window.addEventListener('resize', calculate);
+    return () => window.removeEventListener('resize', calculate);
+  }, []);
 
   const {
     data,
@@ -115,22 +337,23 @@ function SurveyDashboard() {
   const allSurveys: Survey[] = data?.surveys ?? [];
   const totalPages = data?.totalPages ?? 1;
 
-  // Client-side status filter
   const surveys = useMemo(() => {
     if (statusFilter === 'all') return allSurveys;
     return allSurveys.filter((s) => surveyStatus(s) === statusFilter);
   }, [allSurveys, statusFilter]);
 
-  // Stats
+  const activeCount = useMemo(
+    () => allSurveys.filter((s) => surveyStatus(s) === 'active').length,
+    [allSurveys],
+  );
+  const closedCount = allSurveys.length - activeCount;
+
   const stats = useMemo(() => {
-    const totalApprox = (data?.totalPages ?? 1) * 9;
+    if (allSurveys.length === 0) return null;
     const totalResponses = allSurveys.reduce((acc, s) => acc + (s.attendCount || 0), 0);
-    const activeCount = allSurveys.filter((s) => surveyStatus(s) === 'active').length;
-    const activeRate = allSurveys.length > 0
-      ? Math.round((activeCount / allSurveys.length) * 100)
-      : 0;
-    return { totalApprox, totalResponses, activeCount, activeRate };
-  }, [allSurveys, data]);
+    const activeRate = Math.round((activeCount / allSurveys.length) * 100);
+    return { total: allSurveys.length, totalResponses, activeCount, activeRate };
+  }, [allSurveys, activeCount]);
 
   const handleSurveyClick = (surveyId: number) => {
     if (!isLoggedIn) { setShowLoginModal(true); return; }
@@ -145,16 +368,77 @@ function SurveyDashboard() {
 
   const currentSortLabel = SORT_OPTIONS.find((o) => o.value === sortValue)?.label ?? '최신순';
 
+  const STATUS_TABS = [
+    { value: 'all' as StatusFilter, label: '전체', count: allSurveys.length },
+    { value: 'active' as StatusFilter, label: '진행중', count: activeCount },
+    { value: 'closed' as StatusFilter, label: '종료', count: closedCount },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50" onClick={() => showSortDropdown && setShowSortDropdown(false)}>
-      <div className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: '#F8F7FF' }}
+      onClick={() => showSortDropdown && setShowSortDropdown(false)}
+    >
+      <div className="max-w-[1200px] mx-auto px-4 py-6 sm:px-6 lg:px-8">
+
+        {/* ── Page Title ── */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[#1A1A2A]">설문 탐색</h1>
+          <p className="text-sm text-[#6B6880] mt-1">모든 공개 설문을 확인하세요</p>
+        </div>
+
+        {/* ── Stats Cards ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <StatCard
+            label="전체 설문"
+            value={stats ? stats.total : null}
+            icon={<DocumentIcon />}
+            iconBg="#EEE9FF"
+            iconColor="#5B4CF5"
+            accentColor="#5B4CF5"
+            trend={stats ? `총 ${stats.total}개` : undefined}
+            isLoading={isPending}
+          />
+          <StatCard
+            label="총 응답수"
+            value={stats ? stats.totalResponses.toLocaleString() : null}
+            icon={<UsersIcon />}
+            iconBg="#E0F2FE"
+            iconColor="#0284C7"
+            accentColor="#0284C7"
+            trend={stats && stats.totalResponses > 0 ? `${stats.totalResponses.toLocaleString()}명` : undefined}
+            isLoading={isPending}
+          />
+          <StatCard
+            label="활성률"
+            value={stats ? `${stats.activeRate}%` : null}
+            icon={<ActivityIcon />}
+            iconBg="#FEF3C7"
+            iconColor="#D97706"
+            accentColor="#D97706"
+            trend={stats && stats.activeRate > 50 ? '절반 이상 활성' : undefined}
+            isLoading={isPending}
+          />
+          <StatCard
+            label="활성 설문"
+            value={stats ? stats.activeCount : null}
+            icon={<CheckCircleIcon />}
+            iconBg="#D1FAE5"
+            iconColor="#059669"
+            accentColor="#10B981"
+            trend={stats && stats.activeCount > 0 ? `${stats.activeCount}개 진행중` : undefined}
+            isLoading={isPending}
+          />
+        </div>
 
         {/* ── Control Row ── */}
-        <div className="bg-white rounded-2xl px-4 py-3 shadow-sm mb-4 flex flex-wrap items-center gap-2">
+        <div className="bg-white rounded-2xl border border-[#E8E6F0] shadow-sm px-4 py-3 mb-5
+                        flex flex-wrap items-center gap-3">
 
           {/* Search */}
-          <div className="relative flex-1 min-w-[140px]">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+          <div className="relative flex-1 min-w-[160px]">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[#9B97A8]">
               <SearchIcon />
             </div>
             <input
@@ -165,76 +449,127 @@ function SurveyDashboard() {
                 setSearchTerm(e.target.value);
                 handleSearchChange(e.target.value);
               }}
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-300 transition-all"
+              className="w-full pl-9 pr-4 py-2 rounded-xl text-sm bg-[#F8F7FF] border border-[#E8E6F0]
+                         text-[#1A1A2A] placeholder-[#C4C0D0]
+                         focus:outline-none focus:ring-2 focus:border-[#5B4CF5] transition-all"
             />
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="relative" onClick={(e) => e.stopPropagation()}>
+          {/* Sort */}
+          <div className="relative" ref={sortRef} onClick={(e) => e.stopPropagation()}>
             <button
+              type="button"
               onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm border border-[#E8E6F0]
+                         bg-white text-[#6B6880] hover:bg-[#F8F7FF] transition-colors whitespace-nowrap"
             >
-              <span className="text-gray-600 text-xs">정렬: {currentSortLabel}</span>
+              <span>정렬: {currentSortLabel}</span>
               <ChevronDownIcon />
             </button>
-            {showSortDropdown && (
-              <div className="absolute top-full mt-1 left-0 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20 min-w-[140px]">
-                {SORT_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => handleSortSelect(opt.value)}
-                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 transition-colors ${
-                      sortValue === opt.value ? 'text-indigo-600 font-semibold' : 'text-gray-700'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <AnimatePresence>
+              {showSortDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-full mt-2 left-0 bg-white rounded-xl shadow-xl
+                             border border-[#E8E6F0] py-1.5 z-20 min-w-[150px]"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      type="button"
+                      key={opt.value}
+                      onClick={() => handleSortSelect(opt.value)}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors
+                        ${sortValue === opt.value
+                          ? 'text-[#5B4CF5] font-semibold bg-[#F0EEFF]'
+                          : 'text-[#1A1A2A] hover:bg-[#F8F7FF]'
+                        }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
-            {(['all', 'active', 'closed'] as StatusFilter[]).map((s) => (
+          {/* Pill Filter Tabs */}
+          <div className="relative flex items-center bg-[#F0EEF8] rounded-full p-1">
+            {STATUS_TABS.map((tab, i) =>
+              statusFilter === tab.value ? (
+                <motion.div
+                  key="indicator"
+                  layoutId="pill-indicator"
+                  className="absolute rounded-full"
+                  style={{
+                    backgroundColor: '#5B4CF5',
+                    height: 'calc(100% - 8px)',
+                    width: `calc(${100 / STATUS_TABS.length}% - 4px)`,
+                    left: `${i * (100 / STATUS_TABS.length)}%`,
+                  }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              ) : null,
+            )}
+            {STATUS_TABS.map((tab) => (
               <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                  statusFilter === s
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                type="button"
+                key={tab.value}
+                onClick={() => setStatusFilter(tab.value)}
+                className={`relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
+                            transition-colors duration-300 whitespace-nowrap
+                            ${statusFilter === tab.value ? 'text-white' : 'text-[#6B6880] hover:text-[#1A1A2A]'}`}
               >
-                {s === 'all' ? '전체' : s === 'active' ? 'Active' : 'Closed'}
+                {tab.label}
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold
+                    ${statusFilter === tab.value
+                      ? 'bg-white/25 text-white'
+                      : 'bg-[#E0DCF0] text-[#6B6880]'
+                    }`}
+                >
+                  {tab.count}
+                </span>
               </button>
             ))}
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-[#F0EEF8] rounded-xl p-1">
             <button
+              type="button"
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-              title="카드 보기"
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-white text-[#5B4CF5] shadow-sm'
+                  : 'text-[#9B97A8] hover:text-[#6B6880]'
+              }`}
             >
               <GridIcon />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
-              title="목록 보기"
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'list'
+                  ? 'bg-white text-[#5B4CF5] shadow-sm'
+                  : 'text-[#9B97A8] hover:text-[#6B6880]'
+              }`}
             >
               <ListIcon />
             </button>
           </div>
 
-          {/* Create Button */}
+          {/* Create */}
           {isLoggedIn && (
             <button
+              type="button"
               onClick={() => navigate('/create')}
-              className="flex items-center gap-1.5 px-3 py-2 bg-indigo-500 text-white text-xs font-medium rounded-xl hover:bg-indigo-600 transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white
+                         transition-all hover:brightness-110 hover:scale-105 active:scale-95 whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, #5B4CF5 0%, #7B6FF5 100%)' }}
             >
               <PlusIcon />
               <span className="hidden sm:inline">새 설문</span>
@@ -242,167 +577,85 @@ function SurveyDashboard() {
           )}
         </div>
 
-        {/* ── Stats Row ── */}
-        {!isPending && allSurveys.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">전체 설문</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.totalApprox}</p>
-                </div>
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
-                  <DocumentIcon />
-                </div>
-              </div>
-              <div className="flex items-center gap-1 mt-2 text-xs text-indigo-500 font-medium">
-                <TrendUpIcon />
-                <span>+{Math.min(stats.totalApprox, 12)}%</span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">총 응답수</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.totalResponses.toLocaleString()}</p>
-                </div>
-                <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500">
-                  <UsersIcon />
-                </div>
-              </div>
-              {stats.totalResponses > 0 && (
-                <div className="flex items-center gap-1 mt-2 text-xs text-indigo-500 font-medium">
-                  <TrendUpIcon />
-                  <span>+{Math.min(Math.round(stats.totalResponses / 50), 28)}%</span>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">활성률</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.activeRate}%</p>
-                </div>
-                <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
-                  <ActivityIcon />
-                </div>
-              </div>
-              {stats.activeRate > 50 && (
-                <div className="flex items-center gap-1 mt-2 text-xs text-indigo-500 font-medium">
-                  <TrendUpIcon />
-                  <span>+{stats.activeRate - 50}pp</span>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">활성 설문</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.activeCount}</p>
-                </div>
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
-                  <CheckCircleIcon />
-                </div>
-              </div>
-              {stats.activeCount > 0 && (
-                <div className="flex items-center gap-1 mt-2 text-xs text-indigo-500 font-medium">
-                  <TrendUpIcon />
-                  <span>+{stats.activeCount}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Count */}
-        <p className="text-sm text-gray-500 mb-3 px-1">
+        {/* ── Count ── */}
+        <p className="text-xs text-[#9B97A8] mb-4 px-1">
           {isPending ? '불러오는 중...' : `${surveys.length}개의 설문`}
         </p>
 
-        {/* Loading */}
+        {/* ── Loading Skeleton ── */}
         {isPending && (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div
+            className="grid gap-4"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <SkeletonCard key={i} />
+            ))}
           </div>
         )}
 
-        {/* Grid View */}
-        {!isPending && viewMode === 'grid' && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {surveys.map((survey) => {
-              const status = surveyStatus(survey);
-              return (
-                <motion.div
-                  key={survey.surveyId}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  onClick={() => handleSurveyClick(survey.surveyId)}
-                  className="bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                >
-                  <div className="h-28 relative overflow-hidden">
-                    {survey.mainImageUrl ? (
-                      <img src={survey.mainImageUrl} alt={survey.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${INDIGO}18 0%, ${INDIGO}40 100%)` }}>
-                        <div className="absolute bottom-3 right-3 opacity-30 flex flex-col gap-1">
-                          <div className="h-0.5 w-10 rounded-full bg-indigo-500" />
-                          <div className="h-0.5 w-7 rounded-full bg-indigo-500" />
-                          <div className="h-0.5 w-4 rounded-full bg-indigo-500" />
-                        </div>
-                      </div>
-                    )}
-                    <span className={`absolute top-3 left-3 px-2 py-0.5 text-xs font-medium rounded ${
-                      status === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {status === 'active' ? 'Active' : 'Closed'}
-                    </span>
-                  </div>
-                  <div className="p-3 sm:p-4">
-                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-1 mb-1">{survey.title}</h3>
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-3">
-                      <span className="flex items-center gap-1 text-xs text-gray-400">
-                        <UsersIcon />
-                        {survey.attendCount.toLocaleString()}명
-                      </span>
-                      <span className="text-xs text-gray-400">{formatDate(survey.createdAt)}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+        {/* ── Grid View ── */}
+        {!isPending && viewMode === 'grid' && surveys.length > 0 && (
+          <div
+            className="grid gap-4"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
+          >
+            {surveys.slice(0, visibleCount).map((survey, index) => (
+              <SurveyCard
+                key={survey.surveyId}
+                survey={survey}
+                index={index}
+                onClick={() => handleSurveyClick(survey.surveyId)}
+              />
+            ))}
           </div>
         )}
 
-        {/* List View */}
-        {!isPending && viewMode === 'list' && (
+        {/* ── List View ── */}
+        {!isPending && viewMode === 'list' && surveys.length > 0 && (
           <div className="flex flex-col gap-2">
-            {surveys.map((survey) => {
+            {surveys.slice(0, visibleCount).map((survey, index) => {
               const status = surveyStatus(survey);
               return (
                 <motion.div
                   key={survey.surveyId}
-                  layout
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.03 }}
                   onClick={() => handleSurveyClick(survey.surveyId)}
-                  className="bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex"
+                  className="bg-white rounded-2xl border border-[#E8E6F0] overflow-hidden
+                             cursor-pointer hover:shadow-md transition-all flex group"
                 >
-                  <div className="w-1.5 shrink-0" style={{ backgroundColor: INDIGO }} />
-                  <div className="flex flex-1 items-center gap-4 px-4 py-3 min-w-0">
-                    <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded ${
-                      status === 'active' ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {status === 'active' ? 'Active' : 'Closed'}
+                  <div
+                    className="w-1 shrink-0"
+                    style={{ background: CARD_GRADIENTS[index % CARD_GRADIENTS.length] }}
+                  />
+                  <div className="flex flex-1 items-center gap-4 px-4 py-3.5 min-w-0">
+                    <span
+                      className="shrink-0 px-2.5 py-1 text-xs font-semibold rounded-full"
+                      style={
+                        status === 'active'
+                          ? { backgroundColor: '#D1FAE5', color: '#059669' }
+                          : { backgroundColor: '#F1F5F9', color: '#64748B' }
+                      }
+                    >
+                      {status === 'active' ? '진행중' : '종료'}
                     </span>
-                    <h3 className="flex-1 font-semibold text-gray-900 text-sm truncate">{survey.title}</h3>
-                    <span className="hidden sm:flex items-center gap-1 text-xs text-gray-400 shrink-0">
-                      <UsersIcon />{survey.attendCount.toLocaleString()}명
+                    <h3 className="flex-1 font-semibold text-[#1A1A2A] text-sm truncate">
+                      {survey.title}
+                    </h3>
+                    <span
+                      className="hidden sm:flex items-center gap-1.5 text-xs font-medium shrink-0
+                                 px-2 py-1 rounded-full"
+                      style={{ backgroundColor: '#F0EEFF', color: '#5B4CF5' }}
+                    >
+                      <UsersIcon />
+                      {(survey.attendCount ?? 0).toLocaleString()}명
                     </span>
-                    <span className="hidden md:block text-xs text-gray-400 shrink-0">{formatDate(survey.createdAt)}</span>
+                    <span className="hidden md:block text-xs text-[#9B97A8] shrink-0">
+                      {formatDate(survey.createdAt)}
+                    </span>
                   </div>
                 </motion.div>
               );
@@ -410,48 +663,57 @@ function SurveyDashboard() {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* ── Empty State ── */}
         {!isPending && surveys.length === 0 && (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-              <SearchIcon />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">설문이 없습니다</h3>
-            <p className="text-gray-500 text-sm">
-              {searchTerm ? '다른 검색어를 시도해보세요' : statusFilter !== 'all' ? '다른 필터를 선택해보세요' : '아직 공개된 설문이 없습니다'}
-            </p>
-          </div>
+          <EmptyState
+            hasSearch={!!searchTerm}
+            hasFilter={statusFilter !== 'all'}
+            onCreateClick={() => navigate('/create')}
+            isLoggedIn={isLoggedIn}
+          />
         )}
 
-        {/* Pagination */}
+        {/* ── Pagination ── */}
         {!isPending && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
+          <div className="flex justify-center items-center gap-2 mt-10">
             <button
+              type="button"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-xl text-sm border border-[#E8E6F0] bg-white
+                         text-[#6B6880] hover:bg-[#F8F7FF] disabled:opacity-30
+                         disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronLeft />
+              이전
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
+                type="button"
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${
+                className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
                   page === currentPage
-                    ? 'bg-indigo-500 text-white'
-                    : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? 'text-white shadow-md'
+                    : 'border border-[#E8E6F0] bg-white text-[#6B6880] hover:bg-[#F8F7FF]'
                 }`}
+                style={
+                  page === currentPage
+                    ? { background: 'linear-gradient(135deg, #5B4CF5, #7B6FF5)' }
+                    : {}
+                }
               >
                 {page}
               </button>
             ))}
             <button
+              type="button"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-xl text-sm border border-[#E8E6F0] bg-white
+                         text-[#6B6880] hover:bg-[#F8F7FF] disabled:opacity-30
+                         disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronRight />
+              다음
             </button>
           </div>
         )}

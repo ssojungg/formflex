@@ -1,20 +1,43 @@
-import { useQuery, useMutation, UseMutationOptions } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { AxiosError } from 'axios';
-import { Scrollbars } from 'react-custom-scrollbars-2';
 import Alert from '../components/common/Alert';
 import ResponseMultipleChoice from '../components/responsetype/ResponseMultipleChoice';
 import ResponseSubjective from '../components/responsetype/ResponseSubjective';
 import ResponseCheckBox from '../components/responsetype/ResponseCheckBox';
 import ResponseDropDown from '../components/responsetype/ResponseDropDown';
-import { TextButton } from '../components/common/Button';
 import { QuestionDataForm, ResponseSubmit } from '../types/questionData';
 import { responseformAPI, responseSubmitAPI } from '../api/responseform';
 import { useAuthStore } from '../store/AuthStore';
 import Loading from '../components/common/Loading';
 import { formatDeadlineDate } from '../utils/formatDeadlineDate';
 import { useNavbarStore } from '../store/NavbarStore';
+
+const fontClasses: { [key: string]: string } = {
+  pretendard: 'font-pretendardFont',
+  tmoney: 'font-tMoney',
+  nps: 'font-npsFont',
+  omyu: 'font-omyuFont',
+  seolleim: 'font-seolleimFont',
+};
+
+function CalendarIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
 
 function ResponseForm() {
   const navigate = useNavigate();
@@ -23,21 +46,12 @@ function ResponseForm() {
   const [searchParams] = useSearchParams();
   const surveyId = Number(searchParams.get('id'));
   const myId = useAuthStore((state) => state.userId);
+  const myName = useAuthStore((state) => state.userName);
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const activeItem = useNavbarStore((state) => state.activeItem);
-  const [responseSubmit, setResponseSubmit] = useState<ResponseSubmit>({
-    userId: 0,
-    questions: [],
-  });
-
-  const fontClasses: { [key: string]: string } = {
-    pretendard: 'font-pretendardFont',
-    tmoney: 'font-tMoney',
-    nps: 'font-npsFont',
-    omyu: 'font-omyuFont',
-    seolleim: 'font-seolleimFont',
-  };
+  const [responseSubmit, setResponseSubmit] = useState<ResponseSubmit>({ userId: 0, questions: [] });
+  const queryClient = useQueryClient();
 
   const {
     data: surveyData,
@@ -51,48 +65,83 @@ function ResponseForm() {
 
   useEffect(() => {
     if (surveyData) {
-      const initialQuestions = surveyData.questions.map((question) => ({
-        questionId: question.questionId,
-        objContent: [],
-        subContent: '',
-      }));
-      setResponseSubmit((prevState) => ({
-        ...prevState,
-        questions: initialQuestions,
-      }));
+      setResponseSubmit({
+        userId: myId ?? 0,
+        questions: surveyData.questions.map((q) => ({
+          questionId: q.questionId,
+          objContent: [],
+          subContent: '',
+        })),
+      });
     }
-  }, [surveyData]);
+  }, [surveyData, myId]);
 
   const mutationOptions: UseMutationOptions<ResponseSubmit, Error, ResponseSubmit> = {
-    mutationFn: (newResponseSubmit) => responseSubmitAPI(surveyId, newResponseSubmit),
-    onSuccess: () => setShowSuccess(true),
-    onError: () => {
-      setShowError(true);
+    mutationFn: (data) => responseSubmitAPI(surveyId, data),
+    onSuccess: () => {
+      // Invalidate queries so dashboard & my-responses update immediately without refresh
+      queryClient.invalidateQueries({ queryKey: ['allForm'] });
+      queryClient.invalidateQueries({ queryKey: ['myResponse'] });
+      queryClient.invalidateQueries({ queryKey: ['surveyData', surveyId] });
+      setShowSuccess(true);
     },
+    onError: () => setShowError(true),
   };
 
-  // useMutation을 사용하여 mutation 함수 생성
   const mutation = useMutation(mutationOptions);
 
-  const handleSubmit = async () => {
-    const isEveryQuestionAnswered = responseSubmit.questions.every((question) => {
-      const hasObjContent = Array.isArray(question.objContent) && question.objContent.length > 0;
-      const hasSubContent = question.subContent && question.subContent.trim() !== '';
-      return hasObjContent || hasSubContent;
-    });
+  // Check ownership by userId (after backend fix) OR by userName as fallback
+  const isSurveyOwner =
+    (!!myId && !!surveyData?.userId && myId === surveyData.userId) ||
+    (!!myName && !!surveyData?.userName && myName === surveyData.userName);
 
-    if (isEveryQuestionAnswered) {
-      // 모든 질문이 적절히 답변되었을 경우
+  const answeredCount = responseSubmit.questions.filter(
+    (q) => (Array.isArray(q.objContent) && q.objContent.length > 0) || (q.subContent && q.subContent.trim() !== ''),
+  ).length;
+  const totalCount = responseSubmit.questions.length;
+  const progress = totalCount > 0 ? Math.round((answeredCount / totalCount) * 100) : 0;
+
+  const handleSubmit = async () => {
+    const allAnswered = responseSubmit.questions.every(
+      (q) =>
+        (Array.isArray(q.objContent) && q.objContent.length > 0) ||
+        (q.subContent && q.subContent.trim() !== ''),
+    );
+    if (allAnswered) {
       await mutation.mutateAsync(responseSubmit);
     } else {
-      // 하나라도 답변되지 않은 질문이 있을 경우
       setShowError(true);
     }
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  const handleOptionSelect = (choiceId: number, questionId: number) => {
+    setResponseSubmit((prev) => ({
+      userId: myId ?? 0,
+      questions: prev.questions.map((q) =>
+        q.questionId === questionId ? { ...q, objContent: [choiceId] } : q,
+      ),
+    }));
+  };
+
+  const handleCheckBoxSelect = (newSelectedOptions: number[], questionId: number) => {
+    setResponseSubmit((prev) => ({
+      userId: myId ?? 0,
+      questions: prev.questions.map((q) =>
+        q.questionId === questionId ? { ...q, objContent: newSelectedOptions } : q,
+      ),
+    }));
+  };
+
+  const handleSubChange = (userResponse: string, questionId: number) => {
+    setResponseSubmit((prev) => ({
+      userId: myId ?? 0,
+      questions: prev.questions.map((q) =>
+        q.questionId === questionId ? { ...q, subContent: userResponse } : q,
+      ),
+    }));
+  };
+
+  if (isLoading) return <Loading />;
 
   if (isError || !surveyData) {
     return (
@@ -105,13 +154,19 @@ function ResponseForm() {
     );
   }
 
+  // Determine where to return after completing/exiting the survey
+  const returnPath = (() => {
+    if (activeItem === 'myforms') return '/myform';
+    return '/surveys'; // covers 'surveys', old 'all', and all other cases → always return to survey dashboard
+  })();
+
   if (showSuccess) {
     return (
       <Alert
         type="success"
         message="제출에 성공하였습니다."
         buttonText="확인"
-        buttonClick={() => window.location.replace('/myresponses')}
+        buttonClick={() => navigate(returnPath)}
       />
     );
   }
@@ -120,153 +175,162 @@ function ResponseForm() {
     return (
       <Alert
         type="error"
-        message="제출에 실패하였습니다. 다시 시도해주세요."
+        message="모든 질문에 답변해주세요."
         buttonText="확인"
-        buttonClick={() => window.location.reload()}
+        buttonClick={() => setShowError(false)}
       />
     );
   }
 
-  // 객관식, 드롭다운 응답 시 데이터 저장
-  const handleOptionSelect = (choiceId: number, questionId: number) => {
-    const updatedQuestions = responseSubmit.questions.map((question) => {
-      if (question.questionId === questionId) {
-        return { ...question, objContent: [choiceId] };
-      }
-      return question;
-    });
-    setResponseSubmit({
-      userId: myId ?? 0,
-      questions: updatedQuestions,
-    });
-  };
-
-  // CheckBox 응답 시 데이터 저장
-  const handleCheckBoxSelect = (newSelectedOptions: number[], questionId: number) => {
-    const updatedQuestions = responseSubmit.questions.map((question) => {
-      if (question.questionId === questionId) {
-        return { ...question, objContent: newSelectedOptions };
-      }
-      return question;
-    });
-    setResponseSubmit({
-      userId: myId ?? 0,
-      questions: updatedQuestions,
-    });
-  };
-
-  // 주관식 응답 시 데이터 저장
-  const handleSubChange = (userResponse: string, questionId: number) => {
-    const updatedQuestions = responseSubmit.questions.map((question) => {
-      if (question.questionId === questionId) {
-        return { ...question, subContent: userResponse }; // subContent를 업데이트
-      }
-      return question;
-    });
-    setResponseSubmit({
-      userId: myId ?? 0,
-      questions: updatedQuestions,
-    });
-  };
+  const accentColor = surveyData.color || '#6366f1';
 
   return (
-    <div className={`${fontClasses[surveyData.font] || fontClasses.pretendard} relative flex mt-[2.25rem]`}>
-      <Scrollbars style={{ position: 'absolute', right: '0.1rem', width: 1200, height: 820 }}>
-        <div className="flex flex-col px-[12.5rem]">
-          {surveyData.mainImageUrl && (
+    <div
+      className={`${fontClasses[surveyData.font] || fontClasses.pretendard} min-h-screen`}
+      style={{ backgroundColor: `${accentColor}08` }}
+    >
+      {/* Progress Bar (sticky top) */}
+      {!isViewPage && (
+        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center gap-3">
+            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${progress}%`, backgroundColor: accentColor }}
+              />
+            </div>
+            <span className="text-xs font-medium text-gray-400 whitespace-nowrap">
+              {answeredCount} / {totalCount}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-2xl mx-auto px-4 py-8">
+
+        {/* Cover Image */}
+        {surveyData.mainImageUrl && (
+          <div className="mb-6 rounded-2xl overflow-hidden shadow-sm">
             <img
               src={surveyData.mainImageUrl}
-              alt="Preview"
-              className="rounded-[1.25rem] max-w-[50rem] my-6"
-              style={{
-                boxShadow: `0 0 0.25rem 0.25rem ${surveyData.color}40`,
-              }}
+              alt="설문 커버"
+              className="w-full h-48 object-cover"
             />
-          )}
-          <div
-            className="flex flex-col mb-6 rounded-[1.25rem] bg-white"
-            style={{ boxShadow: `0 0 0.25rem 0.25rem ${surveyData.color}40` }}
-          >
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-[50rem] h-4 rounded-t-[1.25rem]" style={{ background: `${surveyData.color}` }} />
-              <h1 className="text-[2rem] font-semibold text-center text-black mt-4">{surveyData.title}</h1>
-            </div>
-            <div className="flex flex-col mb-6">
-              <h2 className="text-[1rem] test-start text-black ml-8 mb-6 mt-6">{surveyData.description}</h2>
-              <div className="text-[1rem] test-start text-darkGray ml-8 whitespace-pre-line">
-                생성자 : {surveyData.userName}
-                <br />
-                생성일 : {formatDeadlineDate(surveyData.createdAt)}
-                <br />
-                마감일 : {formatDeadlineDate(surveyData.deadline)}
+          </div>
+        )}
+
+        {/* Header Card */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-5 border border-gray-100">
+          {/* Color accent bar */}
+          <div className="h-2 w-full" style={{ backgroundColor: accentColor }} />
+
+          <div className="px-7 py-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-3 leading-tight">
+              {surveyData.title}
+            </h1>
+            {surveyData.description && (
+              <p className="text-sm text-gray-500 mb-5 leading-relaxed">{surveyData.description}</p>
+            )}
+
+            <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-50">
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <UserIcon />
+                <span>{surveyData.userName}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <CalendarIcon />
+                <span>생성일 {formatDeadlineDate(surveyData.createdAt)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                <CalendarIcon />
+                <span>마감일 {formatDeadlineDate(surveyData.deadline)}</span>
               </div>
             </div>
           </div>
+        </div>
 
+        {/* Questions */}
+        <div className="space-y-4">
           {surveyData.questions.map((question, index) => {
+            const props = {
+              index: index + 1,
+              question,
+              color: accentColor,
+              buttonStyle: surveyData.buttonStyle,
+              isViewPage,
+            };
+
             switch (question.type) {
               case 'MULTIPLE_CHOICE':
                 return (
-                  <div className="mb-6" key={question.questionId}>
-                    <ResponseMultipleChoice
-                      index={index + 1}
-                      question={question} // Question 객체 전체를 question prop으로 전달
-                      color={surveyData.color}
-                      buttonStyle={surveyData.buttonStyle}
-                      onOptionSelect={(choiceId) => handleOptionSelect(choiceId, question.questionId)}
-                      isViewPage={isViewPage}
-                    />
-                  </div>
+                  <ResponseMultipleChoice
+                    key={question.questionId}
+                    {...props}
+                    onOptionSelect={(id) => handleOptionSelect(id, question.questionId)}
+                  />
                 );
               case 'SUBJECTIVE_QUESTION':
                 return (
-                  <div className="mb-6" key={question.questionId}>
-                    <ResponseSubjective
-                      index={index + 1}
-                      question={question}
-                      color={surveyData.color}
-                      onSubChange={(response) => handleSubChange(response, question.questionId)}
-                      isViewPage={isViewPage}
-                    />
-                  </div>
+                  <ResponseSubjective
+                    key={question.questionId}
+                    {...props}
+                    onSubChange={(res) => handleSubChange(res, question.questionId)}
+                  />
                 );
               case 'CHECKBOX':
                 return (
-                  <div className="mb-6" key={question.questionId}>
-                    <ResponseCheckBox
-                      index={index + 1}
-                      question={question}
-                      color={surveyData.color}
-                      buttonStyle={surveyData.buttonStyle}
-                      onOptionSelect={(newSelectedOptions) =>
-                        handleCheckBoxSelect(newSelectedOptions, question.questionId)
-                      }
-                      isViewPage={isViewPage}
-                    />
-                  </div>
+                  <ResponseCheckBox
+                    key={question.questionId}
+                    {...props}
+                    onOptionSelect={(opts) => handleCheckBoxSelect(opts, question.questionId)}
+                  />
                 );
               case 'DROPDOWN':
                 return (
-                  <div className="mb-6" key={question.questionId}>
-                    <ResponseDropDown
-                      index={index + 1}
-                      question={question}
-                      color={surveyData.color}
-                      onOptionSelect={(choiceId) => handleOptionSelect(choiceId, question.questionId)}
-                      isViewPage={isViewPage}
-                    />
-                  </div>
+                  <ResponseDropDown
+                    key={question.questionId}
+                    {...props}
+                    onOptionSelect={(id) => handleOptionSelect(id, question.questionId)}
+                  />
                 );
               default:
                 return null;
             }
           })}
-          <div className="flex items-center justify-center font-npsFont gap-3 mt-3 mb-9">
-            {!isViewPage && <TextButton text="제출하기" onClick={handleSubmit} />}
-            <TextButton text="나가기" onClick={() => navigate(activeItem === 'all' ? '/all' : '/myform')} />
-          </div>
         </div>
-      </Scrollbars>
+
+        {/* Bottom Actions */}
+        <div className="mt-8 flex items-center gap-3">
+          {!isViewPage && (
+            isSurveyOwner ? (
+              <div className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-center bg-gray-100 text-gray-400 border border-gray-200">
+                본인이 만든 설문에는 응답할 수 없습니다
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-white
+                           transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+                style={{ backgroundColor: accentColor }}
+              >
+                제출하기
+              </button>
+            )
+          )}
+          <button
+            type="button"
+            onClick={() => navigate(returnPath)}
+            className="py-3.5 rounded-xl text-sm font-medium text-gray-500 border border-gray-200
+                       hover:bg-gray-50 transition-colors"
+            style={{ width: isViewPage ? '100%' : '30%' }}
+          >
+            나가기
+          </button>
+        </div>
+
+        <p className="text-center text-xs text-gray-300 mt-6 mb-4">Powered by FormFlex</p>
+      </div>
     </div>
   );
 }

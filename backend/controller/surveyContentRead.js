@@ -44,6 +44,7 @@ const getSurveyById = async (req, res) => {
     // 최종 결과 구성
     const result = {
       surveyId: survey.id,
+      userId: survey.userId,
       userName: survey.User.name,
       title: survey.title,
       description: survey.description,

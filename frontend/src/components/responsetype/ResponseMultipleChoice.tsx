@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import typeIcon from '../../assets/type.svg';
 import { QuestionData } from '../../types/questionData';
-import { getRoundedClass } from '../../utils/getRoundedClass';
 
 interface ResponseMultipleChoiceProps {
-  question: QuestionData; // 수정된 QuestionData 타입 사용
+  question: QuestionData;
   color: string;
   buttonStyle: 'angled' | 'smooth' | 'round';
   index: number;
@@ -16,7 +14,6 @@ interface ResponseMultipleChoiceProps {
 function ResponseMultipleChoice({
   question,
   color,
-  buttonStyle,
   index,
   onOptionSelect,
   isViewPage,
@@ -24,66 +21,81 @@ function ResponseMultipleChoice({
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
   const handleOptionSelect = (choiceId: number) => {
+    if (isViewPage) return;
     setSelectedOption(choiceId);
-    onOptionSelect(choiceId); // 선택한 옵션을 콜백으로 전달
+    onOptionSelect(choiceId);
   };
 
   return (
-    <div
-      className="flex flex-col items-center justify-center rounded-[1.25rem] bg-white"
-      style={{
-        boxShadow: `0 0 0.25rem 0.25rem ${color}40`,
-      }}
-    >
-      <div className="flex justify-start w-full mt-4">
-        <div className="flex items-center ml-4">
-          <img src={typeIcon} alt="Type" className="w-5 h-5" />
-          <span className="ml-2 font-medium text-left text-darkGray">객관식</span>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Question Header */}
+      <div className="flex items-center gap-3 px-6 pt-6 pb-4">
+        <span
+          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold text-white"
+          style={{ backgroundColor: color }}
+        >
+          {index}
+        </span>
+        <div className="flex-1">
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">객관식</span>
+          <p className="text-base font-semibold text-gray-900 mt-0.5 leading-snug">{question.content}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-center w-full">
-        <span className="text-[2rem] font-semibold text-center text-black -translate-y-4">Q{index}.</span>
-      </div>
-
-      <span className="max-w-[37.5rem] text-[1rem] my-2 text-base text-center text-black break-words">
-        {question.content}
-      </span>
-
       {question.imageUrl && (
-        <img
-          src={question.imageUrl}
-          alt="Question"
-          className="rounded-[0.625rem] max-w-[30rem] max-h-[36rem]"
-          style={{ border: `0.125rem solid ${color}` }}
-        />
+        <div className="px-6 pb-4">
+          <img
+            src={question.imageUrl}
+            alt="질문 이미지"
+            className="rounded-xl max-w-full max-h-64 object-contain"
+          />
+        </div>
       )}
 
-      <div className="flex flex-col my-4 space-y-2 choices-container">
+      {/* Options */}
+      <div className="px-6 pb-6 space-y-2">
         {question.choices?.map((choice) =>
           isViewPage ? (
-            <Tooltip key={choice.choiceId} title="이 페이지에서는 선택할 수 없습니다." arrow>
-              <button
-                type="button"
-                className={`w-[37.5rem] choice-item px-10 py-2 ${getRoundedClass(buttonStyle)} cursor-not-allowed`}
-                style={{
-                  backgroundColor: `${color}`,
-                }}
+            <Tooltip key={choice.choiceId} title="미리보기 모드에서는 선택할 수 없습니다." arrow>
+              <div
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 border-gray-100
+                           cursor-not-allowed opacity-70"
               >
-                <span className="text-base break-words">{choice.option}</span>
-              </button>
+                <div className="w-5 h-5 rounded-full border-2 border-gray-300 flex-shrink-0" />
+                <span className="text-sm text-gray-700">{choice.option}</span>
+              </div>
             </Tooltip>
           ) : (
             <button
               type="button"
               key={choice.choiceId}
-              className={`w-[37.5rem] choice-item px-10 py-2 ${getRoundedClass(buttonStyle)}`}
-              style={{
-                backgroundColor: selectedOption === choice.choiceId ? `gray` : `${color}`,
-              }}
               onClick={() => handleOptionSelect(choice.choiceId)}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 text-left
+                         transition-all duration-150 hover:border-opacity-60"
+              style={
+                selectedOption === choice.choiceId
+                  ? { borderColor: color, backgroundColor: `${color}12` }
+                  : { borderColor: '#E5E7EB', backgroundColor: 'white' }
+              }
             >
-              <span className="text-base break-words">{choice.option}</span>
+              <div
+                className="w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all"
+                style={
+                  selectedOption === choice.choiceId
+                    ? { borderColor: color, backgroundColor: color }
+                    : { borderColor: '#D1D5DB' }
+                }
+              >
+                {selectedOption === choice.choiceId && (
+                  <div className="w-2 h-2 rounded-full bg-white" />
+                )}
+              </div>
+              <span
+                className="text-sm font-medium"
+                style={{ color: selectedOption === choice.choiceId ? color : '#374151' }}
+              >
+                {choice.option}
+              </span>
             </button>
           ),
         )}
