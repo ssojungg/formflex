@@ -95,52 +95,80 @@ function ResultPage() {
 
   return (
     <div className="flex h-full bg-background-secondary overflow-hidden">
-      {/* Left Sidebar - Survey List */}
-      {showSidebar && !isMobile && (
-        <div className="w-72 border-r border-border bg-white flex-shrink-0 flex flex-col">
-          <div className="p-4 border-b border-border-light">
+      {/* Mobile Sidebar Overlay */}
+      {(isMobile || isTablet) && showSidebar && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
+      {/* Left Sidebar - Survey List (Desktop: static, Mobile: drawer) */}
+      <div className={`
+        ${(isMobile || isTablet) 
+          ? `fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-out ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`
+          : showSidebar ? 'w-72 flex-shrink-0' : 'w-0'
+        }
+        border-r border-border bg-white flex flex-col
+      `}>
+        <div className="p-4 border-b border-border-light flex items-center justify-between">
+          <div>
             <h2 className="text-sm font-semibold text-text-primary">설문 목록</h2>
-            <p className="text-xs text-text-tertiary mt-1">드래그하여 분석할 설문 선택</p>
+            <p className="text-xs text-text-tertiary mt-1">분석할 설문 선택</p>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            {mySurveys?.data?.surveys?.map((survey) => {
-              const isSelected = survey.surveyId === surveyId;
-              const isActive = new Date(survey.deadline) > new Date();
-              
-              return (
-                <button
-                  key={survey.surveyId}
-                  onClick={() => navigate(`/result?id=${survey.surveyId}`)}
-                  className={`w-full text-left p-4 border-b border-border-light transition-colors ${
-                    isSelected ? 'bg-primary-50' : 'hover:bg-secondary-50'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <ChevronRightIcon />
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`text-sm font-medium truncate ${
-                        isSelected ? 'text-primary-600' : 'text-text-primary'
+          {(isMobile || isTablet) && (
+            <button 
+              onClick={() => setShowSidebar(false)}
+              className="p-2 hover:bg-secondary-100 rounded-lg"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {mySurveys?.data?.surveys?.map((survey) => {
+            const isSelected = survey.surveyId === surveyId;
+            const isActive = new Date(survey.deadline) > new Date();
+            
+            return (
+              <button
+                key={survey.surveyId}
+                onClick={() => {
+                  navigate(`/result?id=${survey.surveyId}`);
+                  if (isMobile || isTablet) setShowSidebar(false);
+                }}
+                className={`w-full text-left p-4 border-b border-border-light transition-colors ${
+                  isSelected ? 'bg-primary-50' : 'hover:bg-secondary-50'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <ChevronRightIcon />
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-sm font-medium truncate ${
+                      isSelected ? 'text-primary-600' : 'text-text-primary'
+                    }`}>
+                      {survey.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        isActive ? 'bg-green-100 text-green-700' : 'bg-secondary-100 text-secondary-600'
                       }`}>
-                        {survey.title}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${
-                          isActive ? 'bg-green-100 text-green-700' : 'bg-secondary-100 text-secondary-600'
-                        }`}>
-                          {isActive ? '실시간' : '종료'}
-                        </span>
-                        <span className="text-xs text-text-tertiary">
-                          {survey.attendCount || 0}명 응답
-                        </span>
-                      </div>
+                        {isActive ? '실시간' : '종료'}
+                      </span>
+                      <span className="text-xs text-text-tertiary">
+                        {survey.attendCount || 0}명 응답
+                      </span>
                     </div>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">

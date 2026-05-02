@@ -169,7 +169,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src="/logo.jpg" alt="FormFlex" className="w-8 h-8 rounded-lg object-cover" />
+            <img src="/logo.png" alt="FormFlex" className="w-8 h-8 object-contain" />
             <span className="text-text-inverse font-semibold text-lg">FormFlex</span>
           </button>
           
@@ -202,7 +202,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src="/logo.jpg" alt="FormFlex" className="w-8 h-8 rounded-lg object-cover" />
+            <img src="/logo.png" alt="FormFlex" className="w-8 h-8 object-contain" />
             <span className="text-text-inverse font-semibold">FormFlex</span>
           </button>
           

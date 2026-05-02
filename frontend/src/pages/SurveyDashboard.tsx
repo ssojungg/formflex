@@ -104,9 +104,80 @@ function SurveyDashboard() {
     });
   };
 
+  // Stats calculation
+  const stats = useMemo(() => {
+    const total = publicSurveys.length;
+    const totalResponses = publicSurveys.reduce((sum, s) => sum + s.responseCount, 0);
+    const avgCompletion = publicSurveys.length > 0
+      ? Math.round(publicSurveys.reduce((sum, s) => sum + (s.completionRate || 75), 0) / publicSurveys.length)
+      : 0;
+    const active = publicSurveys.filter((s) => s.status === 'active').length;
+    return { total, totalResponses, avgCompletion, active };
+  }, [publicSurveys]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        {/* Stats Header - MyForm Style */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <path d="M14 2v6h6" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              <p className="text-sm text-gray-500">전체 설문</p>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                <path d="M16 3.13a4 4 0 010 7.75" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalResponses.toLocaleString()}</p>
+              <p className="text-sm text-gray-500">총 응답 수</p>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.avgCompletion}%</p>
+              <p className="text-sm text-gray-500">평균 완료율</p>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
+              <p className="text-sm text-gray-500">활성 설문</p>
+            </div>
+          </div>
+        </div>
+
         {/* Search Bar */}
         <div className="bg-white rounded-2xl p-4 shadow-sm mb-4">
           {/* Search + Create Button Row */}
