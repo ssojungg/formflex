@@ -30,4 +30,8 @@ export type EditableSurvey = {
   mainImageUrl?: string;
   deadline: string;
   questions: EditableQuestions[];
+  // pdf 기능 마지막에 넣는 이유는 기능을 끄면 안 보내도 되어서 optional
+  emailReportEnabled?: boolean;
+  emailReportThreshold?: number;
+  reportEmail?: string;
 };

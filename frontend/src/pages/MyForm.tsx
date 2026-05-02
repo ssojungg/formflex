@@ -71,8 +71,8 @@ function surveyStatus(survey: Survey): 'active' | 'closed' {
 }
 
 function isEditable(survey: Survey): boolean {
-  // Only editable when: no responses AND not public (open is falsy)
-  return (survey.attendCount === 0) && (!survey.open);
+  // Editable when no responses, regardless of open/close status
+  return survey.attendCount === 0;
 }
 
 function formatDate(dateStr: string) {
@@ -452,7 +452,7 @@ function MyForm() {
         <Alert
           type="error"
           title="수정 불가"
-          message="이미 응답이 있거나 공개된 설문은 수정할 수 없습니다. 응답이 없고 비공개 상태일 때만 수정 가능합니다."
+          message="이미 응답이 있는 설문은 수정할 수 없습니다. 응답이 없는 경우에만 수정 가능합니다."
           buttonText="확인"
           buttonClick={() => setEditBlockAlert(false)}
           onClose={() => setEditBlockAlert(false)}

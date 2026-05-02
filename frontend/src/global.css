@@ -307,6 +307,28 @@
   .no-print {
     display: none !important;
   }
+
+  /* Fix app shell overflow so all content prints */
+  html, body, #root {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide main nav/sidebar that wraps the app */
+  nav, aside, [data-sidebar] {
+    display: none !important;
+  }
+
+  /* Ensure charts and cards don't break across pages */
+  .bg-white.rounded-2xl {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Remove shadows for cleaner print */
+  * {
+    box-shadow: none !important;
+  }
 }
 
 /* Reduced motion preference */
