@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8">
+<style>
+  @font-face { font-family: 'Pretendard'; src: url('https://cdn.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff'); }
+  body { margin: 0; font-family: 'Pretendard', system-ui, sans-serif; background: #f9fafb; padding: 16px; }
+  .group { margin-bottom: 12px; }
+  .label { font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 5px; display: block; }
+  .input { width: 100%; max-width: 340px; padding: 10px 16px; border: 1px solid #d1d5db; border-radius: 12px; font-family: inherit; font-size: 14px; color: #111827; background: white; outline: none; box-sizing: border-box; }
+  .input::placeholder { color: #9ca3af; }
+  .input-focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+  .input-error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
+  .hint { font-size: 11px; color: #6b7280; margin-top: 4px; }
+  .hint-error { color: #ef4444; }
+</style></head>
+<body>
+<div class="group">
+  <label class="label">이메일</label>
+  <input class="input" type="email" placeholder="name@example.com">
+</div>
+<div class="group">
+  <label class="label">비밀번호 (focused)</label>
+  <input class="input input-focus" type="password" placeholder="비밀번호를 입력하세요" value="•••••••">
+  <div class="hint">8자 이상 입력해주세요</div>
+</div>
+<div class="group">
+  <label class="label">설문 제목 (error)</label>
+  <input class="input input-error" type="text" value="너무 긴 설문 제목이 들어갑니다">
+  <div class="hint hint-error">50자 이하로 입력해주세요</div>
+</div>
+</body></html>

@@ -4,8 +4,9 @@ import { useNavbarStore } from '../../store/NavbarStore';
 import { useAuthStore } from '../../store/AuthStore';
 import { useResponsive } from '../../hooks/useResponsive';
 import { usePWA } from '../../hooks/usePWA';
+import logo from '../../assets/logo.svg';
 
-// Icons as inline SVGs for better performance
+// Icons
 const DashboardIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -70,28 +71,19 @@ const DownloadIcon = () => (
   </svg>
 );
 
-type NavItem = {
-  id: string;
-  icon: React.FC;
-  text: string;
-  path: string;
-};
-
-const SurveyIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-    <path d="M14 2v6h6" />
-    <line x1="16" y1="13" x2="8" y2="13" />
-    <line x1="16" y1="17" x2="8" y2="17" />
-  </svg>
-);
-
 const MySurveyIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 11l3 3L22 4" />
     <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
   </svg>
 );
+
+type NavItem = {
+  id: string;
+  icon: React.FC;
+  text: string;
+  path: string;
+};
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'surveys', icon: DashboardIcon, text: '대시보드', path: '/surveys' },
@@ -106,7 +98,7 @@ interface ResponsiveSidebarProps {
 }
 
 export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
-  const { setUserId, setLoginStatus } = useAuthStore();
+  const { setUserId, setLoginStatus, userName, userEmail } = useAuthStore();
   const { activeItem, handleItem, isMobileSidebarOpen, setMobileSidebarOpen } = useNavbarStore();
   const { isMobile, isTablet } = useResponsive();
   const { isInstallable, installApp } = usePWA();
@@ -152,11 +144,20 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
 
   const showMobileView = isMobile || isTablet;
 
+  // Get display initial from name or email
+  const displayInitial = userName
+    ? userName.charAt(0).toUpperCase()
+    : userEmail
+    ? userEmail.charAt(0).toUpperCase()
+    : 'U';
+
+  const displayName = userName || userEmail || '사용자';
+
   return (
-    <div className="flex min-h-screen bg-background-secondary">
+    <div className="flex min-h-screen bg-background-secondary print:block print:min-h-0">
       {/* Mobile Header */}
       {showMobileView && (
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-background-sidebar border-b border-secondary-800">
+        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-background-sidebar border-b border-secondary-800 print:hidden">
           <button
             onClick={() => setMobileSidebarOpen(true)}
             className="p-2 text-text-inverse rounded-lg hover:bg-secondary-800 transition-colors"
@@ -164,16 +165,16 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           >
             <MenuIcon />
           </button>
-          
-          <button 
+
+          <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <img src="/logo.png" alt="FormFlex" className="w-8 h-8 object-contain" />
             <span className="text-text-inverse font-semibold text-lg">FormFlex</span>
           </button>
-          
-          <div className="w-10" /> {/* Spacer for centering */}
+
+          <div className="w-10" />
         </header>
       )}
 
@@ -188,24 +189,24 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
       {/* Sidebar */}
       <aside
         className={`
-          ${showMobileView 
+          ${showMobileView
             ? `fixed inset-y-0 left-0 z-50 w-[280px] transform transition-transform duration-300 ease-out
                ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
             : 'fixed inset-y-0 left-0 w-[200px]'
           }
-          flex flex-col bg-background-sidebar
+          flex flex-col bg-background-sidebar print:hidden
         `}
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-secondary-800">
-          <button 
+          <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <img src="/logo.png" alt="FormFlex" className="w-8 h-8 object-contain" />
             <span className="text-text-inverse font-semibold">FormFlex</span>
           </button>
-          
+
           {showMobileView && (
             <button
               onClick={() => setMobileSidebarOpen(false)}
@@ -229,7 +230,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           {NAV_ITEMS.map((item) => {
             const isActive = activeItem === item.id;
             const Icon = item.icon;
-            
+
             return (
               <button
                 key={item.id}
@@ -237,16 +238,16 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
                 className={`
                   w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left
                   transition-all duration-200 group
-                  ${isActive 
-                    ? 'bg-primary-500 text-white' 
+                  ${isActive
+                    ? 'bg-primary-500 text-white'
                     : 'text-secondary-400 hover:bg-secondary-800 hover:text-text-inverse'
                   }
                 `}
               >
-                <span className={`${isActive ? 'text-white' : 'text-secondary-400 group-hover:text-text-inverse'}`}>
+                <span className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-secondary-400 group-hover:text-text-inverse'}`}>
                   <Icon />
                 </span>
-                <span className="text-sm font-medium">{item.text}</span>
+                <span className="text-sm font-medium truncate">{item.text}</span>
               </button>
             );
           })}
@@ -257,7 +258,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           <div className="px-3 py-2">
             <button
               onClick={installApp}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary-400 
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary-400
                        bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-colors"
             >
               <DownloadIcon />
@@ -269,16 +270,15 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
         {/* User Profile Section */}
         <div className="p-3 mt-auto border-t border-secondary-800">
           <div className="flex items-center gap-3 p-2 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold">
-              J
+            <div className="w-9 h-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+              {displayInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-inverse truncate">Jin Soo Park</p>
-              <p className="text-xs text-secondary-500">Pro Plan</p>
+              <p className="text-sm font-medium text-text-inverse truncate">{displayName}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 text-secondary-400 hover:text-error hover:bg-secondary-800 rounded-lg transition-colors"
+              className="p-2 text-secondary-400 hover:text-error hover:bg-secondary-800 rounded-lg transition-colors flex-shrink-0"
               title="로그아웃"
             >
               <LogoutIcon />
@@ -290,7 +290,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
       {/* Main Content */}
       <main
         className={`
-          flex-1 min-h-screen
+          flex-1 min-h-screen print:ml-0 print:pt-0 print:min-h-0
           ${showMobileView ? 'pt-16' : 'ml-[200px]'}
         `}
       >

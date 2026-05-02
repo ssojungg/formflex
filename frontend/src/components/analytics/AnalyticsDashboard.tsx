@@ -34,7 +34,6 @@ function AnalyticsDashboard() {
     enabled: !!surveyId,
   });
 
-  // Mock data for stats
   const stats = {
     avgTime: '3분 42초',
     dropoutRate: '22%',
@@ -46,66 +45,72 @@ function AnalyticsDashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Left Sidebar - Survey List */}
-      {showSidebar && (
-        <div className="w-72 border-r border-border bg-card flex-shrink-0 flex flex-col">
-          <div className="p-4 border-b border-border">
-            <h2 className="text-sm font-semibold text-foreground">설문 목록</h2>
-            <p className="text-xs text-muted-foreground mt-1">드래그하여 분석할 설문 선택</p>
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
+
+      {/* ── Full-width Header — h-16 matches main nav logo height ── */}
+      <AnalyticsHeader
+        title={questionData?.title || '새 설문조사'}
+        stats={stats}
+        onToggleSidebar={() => setShowSidebar(!showSidebar)}
+        showSidebar={showSidebar}
+      />
+
+      {/* ── Body: sidebar + content side-by-side below header ── */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Survey Selector Sidebar */}
+        {showSidebar && (
+          <div className="w-64 border-r border-border bg-card flex-shrink-0 flex flex-col">
+            <div className="px-4 py-3 border-b border-border flex-shrink-0">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                설문 선택
+              </p>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <SurveySelector
+                selectedId={surveyId}
+                onSelect={(id) => navigate(`/result?id=${id}`)}
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <SurveySelector
-              selectedId={surveyId}
-              onSelect={(id) => navigate(`/result?id=${id}`)}
-            />
+        )}
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Tabs */}
+          <div className="border-b border-border bg-card px-4 md:px-6 flex-shrink-0">
+            <div className="flex gap-6">
+              {(['question', 'response', 'trend'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {tab === 'question' ? '질문별' : tab === 'response' ? '응답별' : '트렌드'}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <AnalyticsHeader
-          title={questionData?.title || '새 설문조사'}
-          stats={stats}
-          onToggleSidebar={() => setShowSidebar(!showSidebar)}
-          showSidebar={showSidebar}
-        />
+          {/* Stats Bar */}
+          <AnalyticsStats stats={stats} />
 
-        {/* Tabs */}
-        <div className="border-b border-border bg-card px-4 md:px-6">
-          <div className="flex gap-6">
-            {(['question', 'response', 'trend'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab === 'question' ? '질문별' : tab === 'response' ? '응답별' : '트렌드'}
-              </button>
-            ))}
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+            {activeTab === 'question' && (
+              <QuestionAnalytics questions={questionData?.questions || []} />
+            )}
+            {activeTab === 'response' && (
+              <ResponseAnalytics data={{ head: answerData?.list?.head || [], rows: (answerData?.list?.rows as unknown as any[][]) || [] }} />
+            )}
+            {activeTab === 'trend' && (
+              <TrendAnalytics surveyId={surveyId} />
+            )}
           </div>
-        </div>
-
-        {/* Stats Bar */}
-        <AnalyticsStats stats={stats} />
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          {activeTab === 'question' && (
-            <QuestionAnalytics questions={questionData?.questions || []} />
-          )}
-          {activeTab === 'response' && (
-            <ResponseAnalytics data={answerData?.list || { head: [], rows: [] }} />
-          )}
-          {activeTab === 'trend' && (
-            <TrendAnalytics surveyId={surveyId} />
-          )}
         </div>
       </div>
     </div>

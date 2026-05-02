@@ -1,4 +1,4 @@
-import { useQuery, useMutation, UseMutationOptions } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { AxiosError } from 'axios';
@@ -23,6 +23,31 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+const fontClasses: { [key: string]: string } = {
+  pretendard: 'font-pretendardFont',
+  tmoney: 'font-tMoney',
+  nps: 'font-npsFont',
+  omyu: 'font-omyuFont',
+  seolleim: 'font-seolleimFont',
+};
+
+function CalendarIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
 function ResponseForm() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +55,7 @@ function ResponseForm() {
   const [searchParams] = useSearchParams();
   const surveyId = Number(searchParams.get('id'));
   const myId = useAuthStore((state) => state.userId);
+  const myName = useAuthStore((state) => state.userName);
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [responseSubmit, setResponseSubmit] = useState<ResponseSubmit>({
@@ -54,38 +80,40 @@ function ResponseForm() {
   } = useQuery<QuestionDataForm, AxiosError>({
     queryKey: ['surveyData', surveyId],
     queryFn: () => responseformAPI(surveyId),
+    enabled: !!surveyId && !isNaN(surveyId),
   });
 
   useEffect(() => {
     if (surveyData) {
-      const initialQuestions = surveyData.questions.map((question) => ({
-        questionId: question.questionId,
-        objContent: [],
-        subContent: '',
-      }));
-      setResponseSubmit((prevState) => ({
-        ...prevState,
-        questions: initialQuestions,
-      }));
+      setResponseSubmit({
+        userId: myId ?? 0,
+        questions: surveyData.questions.map((q) => ({
+          questionId: q.questionId,
+          objContent: [],
+          subContent: '',
+        })),
+      });
     }
-  }, [surveyData]);
+  }, [surveyData, myId]);
 
   const mutationOptions: UseMutationOptions<ResponseSubmit, Error, ResponseSubmit> = {
-    mutationFn: (newResponseSubmit) => responseSubmitAPI(surveyId, newResponseSubmit),
-    onSuccess: () => setShowSuccess(true),
-    onError: () => {
-      setShowError(true);
+    mutationFn: (data) => responseSubmitAPI(surveyId, data),
+    onSuccess: () => {
+      // Invalidate queries so dashboard & my-responses update immediately without refresh
+      queryClient.invalidateQueries({ queryKey: ['allForm'] });
+      queryClient.invalidateQueries({ queryKey: ['myResponse'] });
+      queryClient.invalidateQueries({ queryKey: ['surveyData', surveyId] });
+      setShowSuccess(true);
     },
+    onError: () => setShowError(true),
   };
 
   const mutation = useMutation(mutationOptions);
 
-  const handleSubmit = async () => {
-    const isEveryQuestionAnswered = responseSubmit.questions.every((question) => {
-      const hasObjContent = Array.isArray(question.objContent) && question.objContent.length > 0;
-      const hasSubContent = question.subContent && question.subContent.trim() !== '';
-      return hasObjContent || hasSubContent;
-    });
+  // Check ownership by userId (after backend fix) OR by userName as fallback
+  const isSurveyOwner =
+    (!!myId && !!surveyData?.userId && myId === surveyData.userId) ||
+    (!!myName && !!surveyData?.userName && myName === surveyData.userName);
 
     if (isEveryQuestionAnswered) {
       await mutation.mutateAsync(responseSubmit);
@@ -94,9 +122,34 @@ function ResponseForm() {
     }
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  const handleOptionSelect = (choiceId: number, questionId: number) => {
+    setResponseSubmit((prev) => ({
+      userId: myId ?? 0,
+      questions: prev.questions.map((q) =>
+        q.questionId === questionId ? { ...q, objContent: [choiceId] } : q,
+      ),
+    }));
+  };
+
+  const handleCheckBoxSelect = (newSelectedOptions: number[], questionId: number) => {
+    setResponseSubmit((prev) => ({
+      userId: myId ?? 0,
+      questions: prev.questions.map((q) =>
+        q.questionId === questionId ? { ...q, objContent: newSelectedOptions } : q,
+      ),
+    }));
+  };
+
+  const handleSubChange = (userResponse: string, questionId: number) => {
+    setResponseSubmit((prev) => ({
+      userId: myId ?? 0,
+      questions: prev.questions.map((q) =>
+        q.questionId === questionId ? { ...q, subContent: userResponse } : q,
+      ),
+    }));
+  };
+
+  if (isLoading) return <Loading />;
 
   if (isError || !surveyData) {
     return (
@@ -109,13 +162,19 @@ function ResponseForm() {
     );
   }
 
+  // Determine where to return after completing/exiting the survey
+  const returnPath = (() => {
+    if (activeItem === 'myforms') return '/myform';
+    return '/surveys'; // covers 'surveys', old 'all', and all other cases → always return to survey dashboard
+  })();
+
   if (showSuccess) {
     return (
       <Alert
         type="success"
         message="제출에 성공하였습니다."
         buttonText="확인"
-        buttonClick={() => window.location.replace('/myresponses')}
+        buttonClick={() => navigate(returnPath)}
       />
     );
   }

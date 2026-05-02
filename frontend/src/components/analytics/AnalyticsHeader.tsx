@@ -13,7 +13,7 @@ interface AnalyticsHeaderProps {
 
 function AnalyticsHeader({ title, stats, onToggleSidebar, showSidebar }: AnalyticsHeaderProps) {
   return (
-    <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-border bg-card">
+    <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-border bg-card flex-shrink-0">
       <div className="flex items-center gap-4">
         {/* Toggle Sidebar Button */}
         <button

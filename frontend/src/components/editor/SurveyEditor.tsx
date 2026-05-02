@@ -1,51 +1,132 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { useSurveyStore, Question, QuestionType, QuestionOption } from '../../store/SurveyStore';
+import { useSurveyStore, Question, QuestionType } from '../../store/SurveyStore';
+import { useAuthStore } from '../../store/AuthStore';
+import { createSurveyAPI } from '../../api/survey';
+import { responseformAPI } from '../../api/responseform';
+import { EditableSurvey } from '../../types/editableSurvey';
 
 // ==================== ICONS ====================
-const PlusIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
+function PlusIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
 
-const ArrowLeftIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M19 12H5M12 19l-7-7 7-7"/>
-  </svg>
-);
+function ArrowLeftIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+  );
+}
 
-const SaveIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-    <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-  </svg>
-);
+function SaveIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+      <polyline points="17 21 17 13 7 13 7 21" />
+      <polyline points="7 3 7 8 15 8" />
+    </svg>
+  );
+}
 
-const EyeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-  </svg>
-);
+function EyeIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
 
-const SendIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-  </svg>
-);
+function SendIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+  );
+}
 
-const TrashIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-  </svg>
-);
+function TrashIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+    </svg>
+  );
+}
 
-const CopyIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-  </svg>
-);
+function CopyIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  );
+}
 
 const GripIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -54,23 +135,56 @@ const GripIcon = () => (
   </svg>
 );
 
-const CloseIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-);
+function CloseIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
 
-const ImageIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-  </svg>
-);
+function ImageIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}
 
-const SparkleIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z"/>
-  </svg>
-);
+function SparkleIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z" />
+    </svg>
+  );
+}
 
 const ChevronDownIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -78,24 +192,58 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-const SettingsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-  </svg>
-);
+function SettingsIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+    </svg>
+  );
+}
 
-const CalendarIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-);
+function CalendarIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
 
-const MailIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-  </svg>
-);
+function MailIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
 
 const CheckIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -125,23 +273,62 @@ const CARD_SHAPES = [
 ];
 
 // ==================== EDITABLE INPUT ====================
-const EditableInput = React.memo(({ 
-  value, onChange, placeholder, className, multiline = false, rows = 1
-}: { 
-  value: string; onChange: (val: string) => void; placeholder?: string; className?: string; multiline?: boolean; rows?: number;
-}) => {
-  const [local, setLocal] = useState(value);
-  const [focused, setFocused] = useState(false);
+const EditableInput = React.memo(
+  ({
+    value,
+    onChange,
+    placeholder,
+    className,
+    multiline = false,
+    rows = 1,
+  }: {
+    value: string;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    className?: string;
+    multiline?: boolean;
+    rows?: number;
+  }) => {
+    const [local, setLocal] = useState(value);
+    const [focused, setFocused] = useState(false);
 
-  useEffect(() => { if (!focused) setLocal(value); }, [value, focused]);
+    useEffect(() => {
+      if (!focused) setLocal(value);
+    }, [value, focused]);
 
-  const handleBlur = () => { setFocused(false); if (local !== value) onChange(local); };
+    const handleBlur = () => {
+      setFocused(false);
+      if (local !== value) onChange(local);
+    };
 
-  if (multiline) {
-    return <textarea value={local} onChange={(e) => setLocal(e.target.value)} onFocus={() => setFocused(true)} onBlur={handleBlur} placeholder={placeholder} className={className} rows={rows} onClick={(e) => e.stopPropagation()} />;
-  }
-  return <input type="text" value={local} onChange={(e) => setLocal(e.target.value)} onFocus={() => setFocused(true)} onBlur={handleBlur} placeholder={placeholder} className={className} onClick={(e) => e.stopPropagation()} />;
-});
+    if (multiline) {
+      return (
+        <textarea
+          value={local}
+          onChange={(e) => setLocal(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          className={className}
+          rows={rows}
+          onClick={(e) => e.stopPropagation()}
+        />
+      );
+    }
+    return (
+      <input
+        type="text"
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        className={className}
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
+  },
+);
 EditableInput.displayName = 'EditableInput';
 
 // ==================== QUESTION CARD ====================
@@ -340,7 +527,69 @@ const QuestionCard = React.memo(({
                 </div>
               )}
             </div>
-          )}
+            <div
+              className={`flex items-center gap-0.5 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenAI(question.id);
+                }}
+                className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                title="AI 생성"
+              >
+                <SparkleIcon />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUploadImage(question.id);
+                }}
+                className="p-1.5 rounded-lg text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                title="이미지 추가"
+              >
+                <ImageIcon />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(question.id, 'up');
+                }}
+                disabled={isFirst}
+                className="p-1.5 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 disabled:opacity-30 transition-colors"
+              >
+                <ChevronIcon direction="up" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(question.id, 'down');
+                }}
+                disabled={isLast}
+                className="p-1.5 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 disabled:opacity-30 transition-colors"
+              >
+                <ChevronIcon direction="down" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCopy(question.id);
+                }}
+                className="p-1.5 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 transition-colors"
+              >
+                <CopyIcon />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(question.id);
+                }}
+                className="p-1.5 rounded-lg text-secondary-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <TrashIcon />
+              </button>
+            </div>
+          </div>
 
           {question.type === 'rating' && (
             <div className="flex gap-2">
@@ -394,12 +643,13 @@ QuestionCard.displayName = 'QuestionCard';
 // ==================== MAIN EDITOR ====================
 function SurveyEditor() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const userId = useAuthStore((state) => state.userId);
   const [searchParams] = useSearchParams();
   const surveyId = searchParams.get('id');
   const getSurveyById = useSurveyStore((state) => state.getSurveyById);
   const addSurvey = useSurveyStore((state) => state.addSurvey);
   const updateSurvey = useSurveyStore((state) => state.updateSurvey);
-  const publishSurvey = useSurveyStore((state) => state.publishSurvey);
   const existingSurvey = surveyId ? getSurveyById(surveyId) : undefined;
 
   // States
@@ -418,7 +668,7 @@ function SurveyEditor() {
   const [enableEmailReport, setEnableEmailReport] = useState(false);
   const [emailReportThreshold, setEmailReportThreshold] = useState(100);
   const [reportEmail, setReportEmail] = useState('');
-  
+
   // UI States
   const [showSettings, setShowSettings] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -434,23 +684,75 @@ function SurveyEditor() {
   const questionImageInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImageForQuestion, setUploadingImageForQuestion] = useState<string | null>(null);
 
-  const cardRadius = CARD_SHAPES.find(s => s.id === cardShape)?.radius || '16px';
+  const cardRadius = CARD_SHAPES.find((s) => s.id === cardShape)?.radius || '16px';
 
   useEffect(() => {
     if (questions.length > 0 && !selectedQuestionId) setSelectedQuestionId(questions[0].id);
   }, [questions, selectedQuestionId]);
 
+  // Load survey data for edit mode from backend API
+  useEffect(() => {
+    if (!surveyId) return;
+    // Map backend question types back to frontend types
+    const backendToFrontend: Record<string, QuestionType> = {
+      MULTIPLE_CHOICE: 'single_choice',
+      CHECKBOX: 'multiple_choice',
+      DROPDOWN: 'dropdown',
+      SUBJECTIVE_QUESTION: 'short_text',
+    };
+    responseformAPI(Number(surveyId))
+      .then((data: any) => {
+        if (data.title) setTitle(data.title);
+        if (data.description) setDescription(data.description);
+        if (data.color) setThemeColor(data.color);
+        if (data.font) setSelectedFont(data.font);
+        if (data.deadline) setDeadline(data.deadline);
+        if (data.mainImageUrl) setCoverImage(data.mainImageUrl);
+        if (data.questions?.length > 0) {
+          const mapped: Question[] = data.questions.map((q: any) => ({
+            id: String(q.questionId),
+            type: (backendToFrontend[q.type] || 'short_text') as QuestionType,
+            label: q.content || '',
+            required: false,
+            options: q.choices?.map((c: any) => ({
+              id: String(c.choiceId),
+              text: c.option,
+            })) || [],
+            imageUrls: q.imageUrl ? [q.imageUrl] : [],
+          }));
+          setQuestions(mapped);
+        }
+      })
+      .catch(() => {}); // silently ignore if fetch fails
+  }, [surveyId]);
+
   const generateId = () => `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   const addQuestion = (type: QuestionType) => {
     const labels: Record<QuestionType, string> = {
-      short_text: '짧은 답변을 입력해주세요', long_text: '자세한 의견을 들려주세요', email: '이메일 주소를 입력해주세요',
-      number: '숫자를 입력해주세요', single_choice: '하나를 선택해주세요', multiple_choice: '해당하는 것을 모두 선택해주세요',
-      dropdown: '목록에서 선택해주세요', rating: '평점을 매겨주세요', date: '날짜를 선택해주세요', section_divider: '섹션 제목',
+      short_text: '짧은 답변을 입력해주세요',
+      long_text: '자세한 의견을 들려주세요',
+      email: '이메일 주소를 입력해주세요',
+      number: '숫자를 입력해주세요',
+      single_choice: '하나를 선택해주세요',
+      multiple_choice: '해당하는 것을 모두 선택해주세요',
+      dropdown: '목록에서 선택해주세요',
+      rating: '평점을 매겨주세요',
+      date: '날짜를 선택해주세요',
+      section_divider: '섹션 제목',
     };
     const newQ: Question = {
-      id: generateId(), type, label: labels[type], placeholder: '', required: false,
-      options: ['single_choice', 'multiple_choice', 'dropdown'].includes(type) ? [{ id: `opt-${Date.now()}-1`, text: '옵션 1' }, { id: `opt-${Date.now()}-2`, text: '옵션 2' }] : undefined,
+      id: generateId(),
+      type,
+      label: labels[type],
+      placeholder: '',
+      required: false,
+      options: ['single_choice', 'multiple_choice', 'dropdown'].includes(type)
+        ? [
+            { id: `opt-${Date.now()}-1`, text: '옵션 1' },
+            { id: `opt-${Date.now()}-2`, text: '옵션 2' },
+          ]
+        : undefined,
       ratingMax: type === 'rating' ? 5 : undefined,
     };
     setQuestions([...questions, newQ]);
@@ -507,12 +809,20 @@ function SurveyEditor() {
   }, []);
   
   const removeQuestionImage = useCallback((qId: string, imgIdx: number) => {
-    setQuestions(prev => prev.map(q => q.id !== qId || !q.imageUrls ? q : { ...q, imageUrls: q.imageUrls.filter((_, i) => i !== imgIdx) }));
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id !== qId || !q.imageUrls ? q : { ...q, imageUrls: q.imageUrls.filter((_, i) => i !== imgIdx) },
+      ),
+    );
   }, []);
 
   const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) { const reader = new FileReader(); reader.onload = (ev) => setCoverImage(ev.target?.result as string); reader.readAsDataURL(file); }
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setCoverImage(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleQuestionImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -521,22 +831,36 @@ function SurveyEditor() {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const url = ev.target?.result as string;
-        setQuestions(prev => prev.map(q => q.id !== uploadingImageForQuestion ? q : { ...q, imageUrls: [...(q.imageUrls || []), url] }));
+        setQuestions((prev) =>
+          prev.map((q) =>
+            q.id !== uploadingImageForQuestion ? q : { ...q, imageUrls: [...(q.imageUrls || []), url] },
+          ),
+        );
         setUploadingImageForQuestion(null);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const openAIForQuestion = (id: string) => { setAiTargetQuestion(id); setAiPrompt(''); setShowAIModal(true); };
-  const handleUploadImageForQuestion = (id: string) => { setUploadingImageForQuestion(id); questionImageInputRef.current?.click(); };
+  const openAIForQuestion = (id: string) => {
+    setAiTargetQuestion(id);
+    setAiPrompt('');
+    setShowAIModal(true);
+  };
+  const handleUploadImageForQuestion = (id: string) => {
+    setUploadingImageForQuestion(id);
+    questionImageInputRef.current?.click();
+  };
 
   const handleAIGenerate = () => {
     if (!aiTargetQuestion || !aiPrompt.trim()) return;
-    const q = questions.find(x => x.id === aiTargetQuestion);
+    const q = questions.find((x) => x.id === aiTargetQuestion);
     if (!q) return;
     if (q.options) {
-      const newOpts = aiPrompt.split(/[,\n]/).filter(Boolean).map((t, i) => ({ id: `opt-${Date.now()}-${i}`, text: t.trim() }));
+      const newOpts = aiPrompt
+        .split(/[,\n]/)
+        .filter(Boolean)
+        .map((t, i) => ({ id: `opt-${Date.now()}-${i}`, text: t.trim() }));
       if (newOpts.length > 0) updateQuestion(aiTargetQuestion, { options: newOpts });
     }
     setShowAIModal(false);
@@ -544,16 +868,88 @@ function SurveyEditor() {
 
   const handleSave = () => {
     const data = { title: title || '제목 없는 설문', description, questions, themeColor, isPublic, hashtags };
-    if (existingSurvey) { updateSurvey(existingSurvey.id, data); } 
-    else { const newS = addSurvey({ ...data, status: 'draft' }); navigate(`/create?id=${newS.id}`, { replace: true }); }
-    setIsSaved(true); setTimeout(() => setIsSaved(false), 2000);
+    if (existingSurvey) {
+      updateSurvey(existingSurvey.id, data);
+    } else {
+      const newS = addSurvey({ ...data, status: 'draft' });
+      navigate(`/create?id=${newS.id}`, { replace: true });
+    }
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const handlePublish = () => {
-    handleSave();
-    if (existingSurvey) publishSurvey(existingSurvey.id);
-    setShowPublish(false);
-    navigate('/myform');
+  // Zustand 스토어에만 저장함. 백엔드 api 를 아무도 호출하지 않는 문제점 발생
+  const handlePublish = async () => {
+    if (isPublishing) return;
+    setIsPublishing(true);
+    // 질문 타입 반환: SurveyEditor 형식 -> 백엔드가 이해하는 형식
+    const mappedQuestions = questions
+      .filter((q) => q.type !== 'section_divider')
+      .map((q) => {
+        if (q.type === 'single_choice') {
+          return {
+            type: 'MULTIPLE_CHOICE' as const,
+            content: q.label,
+            choices: (q.options || []).map((o) => ({ option: o.text })),
+          };
+        }
+        if (q.type === 'multiple_choice') {
+          return {
+            type: 'CHECKBOX' as const,
+            content: q.label,
+            choices: (q.options || []).map((o) => ({ option: o.text })),
+          };
+        }
+        if (q.type === 'dropdown') {
+          return {
+            type: 'DROPDOWN' as const,
+            content: q.label,
+            choices: (q.options || []).map((o) => ({ option: o.text })),
+          };
+        }
+        return {
+          type: 'SUBJECTIVE_QUESTION' as const,
+          content: q.label,
+        };
+      });
+    if (!title || !title.trim()) {
+      alert('제목은 필수입니다');
+      return;
+    }
+    if (!deadline) {
+      alert('마감일은 필수입니다');
+      return;
+    }
+
+    const payload: EditableSurvey = {
+      userId: userId as number,
+      title,
+      description,
+      open: isPublic,
+      font: selectedFont,
+      color: themeColor,
+      buttonStyle: 'smooth', // 나중에 cardSharp랑 연결 가능
+      mainImageUrl: coverImage || '',
+      deadline,
+      questions: mappedQuestions,
+      emailReportEnabled: enableEmailReport,
+      emailReportThreshold: enableEmailReport ? emailReportThreshold : undefined,
+      reportEmail: enableEmailReport ? reportEmail : undefined,
+    };
+
+    try {
+      await createSurveyAPI(payload);
+      // Remove cached data entirely so the list always fetches fresh on next mount
+      queryClient.removeQueries({ queryKey: ['myForm'] });
+      queryClient.removeQueries({ queryKey: ['allForm'] });
+      setShowPublish(false);
+      navigate('/myform');
+    } catch (error) {
+      console.log('설문 생성 오류', error);
+      alert('설문 생성에 실패하였습니다. 다시 시도해주세요.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const addHashtag = () => { 
@@ -569,7 +965,13 @@ function SurveyEditor() {
     <div className="h-screen flex flex-col bg-[#f8f7ff]" style={{ fontFamily: selectedFont }}>
       {/* Hidden inputs */}
       <input type="file" ref={coverInputRef} accept="image/*" onChange={handleCoverUpload} className="hidden" />
-      <input type="file" ref={questionImageInputRef} accept="image/*" onChange={handleQuestionImageUpload} className="hidden" />
+      <input
+        type="file"
+        ref={questionImageInputRef}
+        accept="image/*"
+        onChange={handleQuestionImageUpload}
+        className="hidden"
+      />
 
       {/* Header */}
       <header className="flex-shrink-0 bg-white border-b border-gray-200 z-50">
@@ -957,7 +1359,9 @@ function SurveyEditor() {
                 </button>
               </div>
               <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
-                {coverImage && <img src={coverImage} alt="Cover" className="w-full h-32 object-cover rounded-xl mb-6" />}
+                {coverImage && (
+                  <img src={coverImage} alt="Cover" className="w-full h-32 object-cover rounded-xl mb-6" />
+                )}
                 <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: `${themeColor}15` }}>
                   <h1 className="text-xl font-bold text-gray-900 mb-2">{title || '제목 없는 설문'}</h1>
                   {description && <p className="text-gray-600 text-sm">{description}</p>}

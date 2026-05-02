@@ -12,10 +12,11 @@ import logo from '../assets/logo.svg';
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUserId, setLoginStatus } = useAuthStore();
+  const { setUserId, setLoginStatus, setUserName, setUserEmail } = useAuthStore();
   const [loginInfo, setLoginInfo] = useState<LoginForm>({ email: '', password: '' });
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
 
   const saveRedirectPath = () => {
     const fullPath = location.state?.from?.pathname + location.state?.from?.search || '/myform';
@@ -42,11 +43,14 @@ function Login() {
     onSuccess: (data) => {
       setUserId(data.id);
       setLoginStatus(true);
+      if (data.name) setUserName(data.name);
+      if (data.email) setUserEmail(data.email);
       handleLoginSuccess();
     },
     onError: (error: AxiosError) => {
       const err = error as AxiosError<ApiResponseError>;
       setErrorMessage(err.response?.data?.message || '로그인에 실패했습니다.');
+      setShowErrorAlert(true);
     },
   });
 
@@ -240,7 +244,7 @@ function Login() {
             </button>
           </p>
 
-          {isError && <Alert type="error" message={errorMessage} buttonText="확인" />}
+          {showErrorAlert && <Alert type="error" message={errorMessage} buttonText="확인" onClose={() => setShowErrorAlert(false)} />}
         </div>
       </div>
     </div>

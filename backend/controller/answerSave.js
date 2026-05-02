@@ -1,5 +1,7 @@
 const { sequelize } = require('../models');
 const { Survey, Question, Answer, Choice } = require('../models');
+const { QueryTypes } = require('sequelize');
+const { sendPdfReportEmail } = require('./sendPdfReport');
 
 const createAnswer = async (req, res) => {
   const t = await sequelize.transaction(); // 트랜잭션 시작
@@ -140,6 +142,35 @@ const createAnswer = async (req, res) => {
       console.log(`question subContent : ${question.subContent}`);
     }
     await t.commit();
+    //try/catch로 감싼 이유 : 이메일 발송이 실패하더라도 이미 t.coomit() 으로 응답 저장은 완료됐으니까 응답자한테 에러를 보여주면 안됨
+    //이메일 에러는 서버 로그에만 남기고 사라져야해서 try/catch 사용함
+    //(응답 저장 성공 후 임계값 체크)
+    try {
+      const surveyRecord = await Survey.findByPk(surveyId);
+
+      //이메일 기능이 켜져 있고. 아직 발송 안 했을 때만 확인
+      if (surveyRecord.emailReportEnabled && !surveyRecord.emailReportSent) {
+        const result = await sequelize.query(
+          `SELECT COUNT(DISTINCT a."userId") as cnt
+           FROM "Answer" a
+           INNER JOIN "Question" q ON a."questionId" = q.id
+           WHERE q."surveyId" = :sid`,
+          { replacements: { sid: surveyId }, type: QueryTypes.SELECT },
+        );
+        const respondentCount = Number(result[0].cnt);
+
+        if (respondentCount >= surveyRecord.emailReportThreshold) {
+          await sendPdfReportEmail(surveyId, surveyRecord.reportEmail);
+          await Survey.update(
+            { emailReportSent: true },
+            { where: { id: surveyId } },
+          );
+        }
+      }
+    } catch (emailError) {
+      //이메일 발송 실패해도 응답 저장은 이미 성공했으나 에러 전파 안함
+      console.log('이메일 리포트 발송 오류:', emailError);
+    }
     res.status(201).json({ message: '저장되었습니다.' });
   } catch (error) {
     await t.rollback();

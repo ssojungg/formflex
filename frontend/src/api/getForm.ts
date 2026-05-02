@@ -1,6 +1,7 @@
 import { restFetcher } from '../queryClient';
 
-const LIMIT = 9;
+const ALL_SURVEY_LIMIT = 18; // Show more surveys on dashboard to fill screen
+const MY_SURVEY_LIMIT = 9;
 
 interface AllSurveyResponse {
   userId: number;
@@ -13,12 +14,14 @@ export const getAllSurveyAPI = async ({
   title,
   sort,
 }: AllSurveyResponse & { title?: string; sort?: string }) => {
-  const params: any = { page: currentPage, limit: LIMIT };
+  const params: any = { page: currentPage, limit: ALL_SURVEY_LIMIT };
   if (title) params.title = title;
   if (sort === 'attendCount') {
-    params.attendCount = true; // 참여자 순 정렬
+    params.attendCount = true;
   } else if (sort === 'deadline') {
-    params.deadline = true; // 마감일 순 정렬
+    params.deadline = true;
+  } else if (sort === 'oldest') {
+    params.oldest = true;
   }
   const response = await restFetcher({
     method: 'GET',
@@ -34,12 +37,14 @@ export const getMySurveyAPI = async ({
   title,
   sort,
 }: AllSurveyResponse & { title?: string; sort?: string }) => {
-  const params: any = { page: currentPage, limit: LIMIT };
+  const params: any = { page: currentPage, limit: MY_SURVEY_LIMIT };
   if (title) params.title = title;
   if (sort === 'attendCount') {
-    params.attendCount = true; // 참여자 순 정렬
+    params.attendCount = true;
   } else if (sort === 'deadline') {
-    params.deadline = true; // 마감일 순 정렬
+    params.deadline = true;
+  } else if (sort === 'oldest') {
+    params.oldest = true;
   }
   const response = await restFetcher({
     method: 'GET',
@@ -55,7 +60,7 @@ export const getMyResponseAPI = async ({
   title,
   sort,
 }: AllSurveyResponse & { title?: string; sort?: string }) => {
-  const params: any = { page: currentPage, limit: LIMIT };
+  const params: any = { page: currentPage, limit: MY_SURVEY_LIMIT };
   if (title) params.title = title;
   if (sort === 'attendCount') {
     params.attendCount = true; // 참여자 순 정렬
