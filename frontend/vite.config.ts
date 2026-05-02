@@ -98,8 +98,8 @@ export default defineConfig({
             },
           },
         ],
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api/],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /^\/offline\.html/],
       },
       devOptions: {
         enabled: true,
