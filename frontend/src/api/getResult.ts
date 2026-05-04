@@ -23,3 +23,14 @@ export const getExcelDownloadAPI = async (surveyId: number) => {
   });
   return response;
 };
+
+export const sendReportEmailAPI = async (surveyId: number, email: string, pdfBlob: Blob, surveyTitle: string) => {
+  const formData = new FormData();
+  formData.append('email', email);
+  formData.append('surveyTitle', surveyTitle);
+  formData.append('pdf', pdfBlob, 'report.pdf');
+  const response = await api.post(`/surveys/${surveyId}/report-email`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};

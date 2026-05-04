@@ -97,4 +97,58 @@ const sendSurveyEmailWithSurveyId = async (surveyId, emails) => {
   }
 };
 
-module.exports = { sendSurveyEmailWithSurveyId };
+// PDF 리포트 이메일 전송 (메모리 버퍼, 디스크 저장 없음)
+const sendReportEmail = async (email, pdfBuffer, surveyTitle) => {
+  let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: true,
+    auth: {
+      type: 'OAuth2',
+      user: process.env.GMAIL_OAUTH_USER,
+      clientId: process.env.GMAIL_OAUTH_CLIENT_ID,
+      clientSecret: process.env.GMAIL_OAUTH_CLIENT_SECRET,
+      refreshToken: process.env.GMAIL_OAUTH_REFRESH_TOKEN,
+    },
+  });
+
+  const mailOptions = {
+    from: `"FormFlex" <${process.env.EMAIL}>`,
+    to: email,
+    subject: `[FormFlex] 설문 분석 리포트: ${surveyTitle || '설문 결과'}`,
+    html: `
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding: 20px; background: linear-gradient(to right, #918DCA, #99A8DB, #A3C9F0);">
+            <table align="center" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%;">
+              <tr>
+                <td style="background-color: #ffffff; padding: 30px; text-align: center; border-radius: 8px;">
+                  <h1 style="color: #333333; font-size: 22px;">설문 분석 리포트</h1>
+                  <p style="color: #555555; font-size: 16px; margin-top: 16px;">
+                    <strong>${surveyTitle || '설문'}</strong>의 분석 결과가 첨부되어 있습니다.
+                  </p>
+                  <p style="color: #888888; font-size: 13px; margin-top: 8px;">
+                    첨부된 PDF 파일을 열어 분석 결과를 확인하세요.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    `,
+    attachments: [
+      {
+        filename: `${surveyTitle || 'report'}_분석결과.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
+  };
+
+  await sendMail(transporter, mailOptions);
+  return { message: '리포트 이메일 발송 완료' };
+};
+
+module.exports = { sendSurveyEmailWithSurveyId, sendReportEmail };

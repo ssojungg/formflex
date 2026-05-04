@@ -1,11 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import ReactApexChart from 'react-apexcharts';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { QuestionResultForm, QuestionData } from '../types/questionData';
 import { AnswerData } from '../types/answerData';
-import { getAnswerResultAPI, getQuestionResultAPI } from '../api/getResult';
+import { getAnswerResultAPI, getQuestionResultAPI, sendReportEmailAPI } from '../api/getResult';
 import { useResponsive } from '../hooks/useResponsive';
 import useInfiniteList from '../hooks/useInfiniteList';
 
@@ -191,6 +193,12 @@ function ResultPage() {
   const [showSidebar, setShowSidebar] = useState(!isMobile && !isTablet);
   const [isPrinting, setIsPrinting] = useState(false);
 
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [reportEmail, setReportEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const { surveys: mySurveys } = useInfiniteList('myForm');
 
   const { data: questionData, isLoading: qLoading } = useQuery<QuestionResultForm, AxiosError>({
@@ -304,6 +312,64 @@ function ResultPage() {
     requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
   };
 
+  const handleSendEmail = async () => {
+    if (!reportEmail.trim()) {
+      setEmailError('이메일을 입력해 주세요');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reportEmail)) {
+      setEmailError('올바른 이메일 형식이 아닙니다');
+      return;
+    }
+
+    setEmailError('');
+    setIsSending(true);
+
+    try {
+      // Render all tabs simultaneously for capture
+      setIsPrinting(true);
+      await new Promise((r) => setTimeout(r, 1500));
+
+      const target = contentRef.current;
+      if (!target) throw new Error('콘텐츠를 찾을 수 없습니다');
+
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        height: target.scrollHeight,
+        windowHeight: target.scrollHeight,
+      });
+
+      setIsPrinting(false);
+
+      const imgWidth = 210; // A4 mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pageHeight = 297;
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      let y = 0;
+      while (y < imgHeight) {
+        if (y > 0) pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, -y, imgWidth, imgHeight);
+        y += pageHeight;
+      }
+
+      const pdfBlob = pdf.output('blob');
+      await sendReportEmailAPI(surveyId, reportEmail, pdfBlob, questionData?.title || '설문');
+
+      setShowEmailModal(false);
+      setReportEmail('');
+      alert('리포트가 이메일로 전송되었습니다.');
+    } catch (err) {
+      console.error(err);
+      setEmailError('전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      setIsPrinting(false);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div className="flex h-full bg-gray-50 overflow-hidden print:overflow-visible print:block print:h-auto">
       {/* Sidebar */}
@@ -363,7 +429,11 @@ function ResultPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 text-gray-600">
+            <button
+              onClick={() => { setShowEmailModal(true); setEmailError(''); }}
+              className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 text-gray-600"
+              disabled={!hasData}
+            >
               <MailIcon />
               <span className="hidden sm:inline">이메일</span>
             </button>
@@ -469,7 +539,7 @@ function ResultPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 print:overflow-visible print:p-0">
+            <div ref={contentRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 print:overflow-visible print:p-0">
 
               {/* ── 질문별 탭 ── */}
               {(activeTab === 'question' || isPrinting) && (
@@ -660,6 +730,55 @@ function ResultPage() {
           </>
         )}
       </div>
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-1">리포트 이메일 발송</h2>
+            <p className="text-xs text-gray-400 mb-4">분석 결과 PDF를 이메일로 전송합니다</p>
+
+            <label className="block text-xs font-medium text-gray-600 mb-1">받는 이메일</label>
+            <input
+              type="email"
+              value={reportEmail}
+              onChange={(e) => setReportEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendEmail()}
+              placeholder="example@email.com"
+              disabled={isSending}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
+            />
+            {emailError && <p className="mt-1.5 text-xs text-red-500">{emailError}</p>}
+
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => { setShowEmailModal(false); setReportEmail(''); setEmailError(''); }}
+                disabled={isSending}
+                className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSendEmail}
+                disabled={isSending}
+                className="flex-1 px-4 py-2.5 text-sm bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSending ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    전송 중…
+                  </>
+                ) : (
+                  <>
+                    <MailIcon />
+                    전송
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

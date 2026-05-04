@@ -22,6 +22,8 @@
     "aws-sdk": "^2.1539.0",
     "axios": "^1.15.2",
     "framer-motion": "^11.18.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "react": "^18.3.1",
     "react-apexcharts": "^1.4.1",
     "react-color": "^2.19.3",

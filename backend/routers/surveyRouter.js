@@ -30,7 +30,7 @@ const surveyAnswerController = require('../controller/answerSave');
 const getSurveyUrlController = require('../controller/getSurveyUrl');
 const surveyResultController = require('../controller/surveyResult');
 const getAnswerController = require('../controller/answerReadByuserId');
-const { sendSurveyEmailWithSurveyId } = require('../controller/urlShare');
+const { sendSurveyEmailWithSurveyId, sendReportEmail } = require('../controller/urlShare');
 const getResultController = require('../controller/getResultsByRes');
 
 // 1. POST / (생성)
@@ -49,7 +49,25 @@ router.get('/:id/all', showAllSurveysController.showAllSurveys);
 router.get('/:id/urls', getSurveyUrlController.getUrl);
 router.get('/:id/list', getResultController.getResultsByResponses);
 
-// 3. POST /:id/share (순서 중요: 고정 경로 'share'를 :id 뒤에 선언)
+// 3-a. POST /:id/report-email (PDF 리포트 이메일 발송)
+const memoryUpload = multer({ storage: multer.memoryStorage() });
+router.post('/:id/report-email', memoryUpload.single('pdf'), async (req, res) => {
+  const { email, surveyTitle } = req.body;
+  const pdfBuffer = req.file?.buffer;
+
+  if (!email) return res.status(400).json({ message: 'email 필드가 필요합니다' });
+  if (!pdfBuffer) return res.status(400).json({ message: 'PDF 파일이 필요합니다' });
+
+  try {
+    const result = await sendReportEmail(email, pdfBuffer, surveyTitle);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || '서버 오류 발생' });
+  }
+});
+
+// 3-b. POST /:id/share (순서 중요: 고정 경로 'share'를 :id 뒤에 선언)
 router.post('/:id/share', async (req, res) => {
   const surveyId = req.params.id;
   const { emails } = req.body;
