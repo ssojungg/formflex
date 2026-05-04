@@ -1,10 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import usePaginationSurveyList from '../hooks/usePaginationSurveyList';
+import useInfiniteList from '../hooks/useInfiniteList';
 import { Survey } from '../types/survey';
 import Alert from '../components/common/Alert';
-import { useResponsive } from '../hooks/useResponsive';
 
 // Icons
 const SearchIcon = () => (
@@ -51,27 +50,16 @@ const DocumentIcon = () => (
     <path d="M14 2v6h6" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
   </svg>
 );
-const ChevronLeft = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="m15 18-6-6 6-6" />
-  </svg>
-);
-const ChevronRight = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="m9 18 6-6-6-6" />
-  </svg>
-);
 
 const INDIGO = '#6366f1';
 
 function surveyStatus(survey: Survey): 'active' | 'closed' {
-  if (!survey.open) return 'closed';
+  if (survey.open === false) return 'closed';
   if (survey.deadline && new Date(survey.deadline) < new Date()) return 'closed';
   return 'active';
 }
 
 function isEditable(survey: Survey): boolean {
-  // Editable when no responses, regardless of open/close status
   return survey.attendCount === 0;
 }
 
@@ -79,33 +67,68 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
 }
 
+const ProgressBar = ({
+  attendCount,
+  threshold,
+}: {
+  attendCount: number;
+  threshold: number | null | undefined;
+}) => {
+  if (!threshold) return null;
+  const pct = Math.min((attendCount / threshold) * 100, 100);
+  return (
+    <div className="mt-2 pt-2 border-t border-border-light">
+      <div className="flex justify-between text-xs text-text-tertiary mb-1">
+        <span>리포트 목표</span>
+        <span>{attendCount}/{threshold}명</span>
+      </div>
+      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-primary-500 rounded-full transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
 function MyForm() {
   const navigate = useNavigate();
-  const { isMobile } = useResponsive();
-
-  const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [editBlockAlert, setEditBlockAlert] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const {
-    data,
+    surveys,
+    totalCount,
     isPending,
-    currentPage,
-    handlePageChange,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    searchTerm,
     handleSearchChange,
-    setSearchTerm: setHookSearch,
-  } = usePaginationSurveyList('myForm');
+  } = useInfiniteList('myForm');
 
-  const surveys: Survey[] = data?.surveys ?? [];
-  const totalPages = data?.totalPages ?? 1;
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Stats
   const stats = useMemo(() => {
-    const totalApprox = (data?.totalPages ?? 1) * 9;
     const totalResponses = surveys.reduce((acc, s) => acc + (s.attendCount || 0), 0);
     const activeCount = surveys.filter((s) => surveyStatus(s) === 'active').length;
-    return { totalApprox, totalResponses, activeCount };
-  }, [surveys, data]);
+    return { totalCount, totalResponses, activeCount };
+  }, [surveys, totalCount]);
 
   const handleEditClick = (e: React.MouseEvent, survey: Survey) => {
     e.stopPropagation();
@@ -133,11 +156,7 @@ function MyForm() {
                 type="text"
                 placeholder="설문 제목을 입력하세요..."
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setHookSearch(e.target.value);
-                  handleSearchChange(e.target.value);
-                }}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-border-light rounded-xl text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
               />
             </div>
@@ -177,7 +196,7 @@ function MyForm() {
                 <DocumentIcon />
               </div>
               <div>
-                <p className="text-2xl font-bold text-text-primary">{stats.totalApprox}</p>
+                <p className="text-2xl font-bold text-text-primary">{stats.totalCount ?? '-'}</p>
                 <p className="text-xs text-text-tertiary">전체 설문</p>
               </div>
             </div>
@@ -250,7 +269,7 @@ function MyForm() {
                       transition={{ delay: (index + 1) * 0.03 }}
                       className="bg-white rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all group relative"
                     >
-                      {/* Card header - click to view form */}
+                      {/* Card header */}
                       <div
                         className="relative h-28 p-4 cursor-pointer"
                         style={{ background: `linear-gradient(135deg, ${INDIGO}18 0%, ${INDIGO}40 100%)` }}
@@ -262,7 +281,6 @@ function MyForm() {
                           {status === 'active' ? 'Active' : 'Closed'}
                         </span>
 
-                        {/* Edit button overlay */}
                         <button
                           onClick={(e) => handleEditClick(e, survey)}
                           className={`absolute top-3 right-3 flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg transition-all ${
@@ -283,7 +301,7 @@ function MyForm() {
                         </div>
                       </div>
 
-                      {/* Card content - click to view form */}
+                      {/* Card content */}
                       <div
                         className="p-4 cursor-pointer"
                         onClick={() => navigate(`/responseform?id=${survey.surveyId}`)}
@@ -297,7 +315,6 @@ function MyForm() {
                           <span>{formatDate(survey.createdAt)}</span>
                         </div>
 
-                        {/* Bottom action row */}
                         <div className="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-border-light">
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/result?id=${survey.surveyId}`); }}
@@ -307,6 +324,11 @@ function MyForm() {
                             분석
                           </button>
                         </div>
+
+                        <ProgressBar
+                          attendCount={survey.attendCount}
+                          threshold={survey.emailReportThreshold}
+                        />
                       </div>
                     </motion.div>
                   );
@@ -321,16 +343,21 @@ function MyForm() {
                 className="bg-white rounded-xl overflow-hidden shadow-card"
               >
                 <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-secondary-50 text-sm font-medium text-text-secondary border-b border-border-light">
-                  <div className="col-span-5">제목</div>
+                  <div className="col-span-4">제목</div>
                   <div className="col-span-2">상태</div>
                   <div className="col-span-2">응답 수</div>
-                  <div className="col-span-2">날짜</div>
+                  <div className="col-span-2">목표</div>
+                  <div className="col-span-1">날짜</div>
                   <div className="col-span-1">관리</div>
                 </div>
                 <div className="divide-y divide-border-light">
                   {surveys.map((survey, index) => {
                     const status = surveyStatus(survey);
                     const canEdit = isEditable(survey);
+                    const threshold = survey.emailReportThreshold;
+                    const pct = threshold
+                      ? Math.min((survey.attendCount / threshold) * 100, 100)
+                      : null;
                     return (
                       <motion.div
                         key={survey.surveyId}
@@ -340,7 +367,7 @@ function MyForm() {
                         onClick={() => navigate(`/responseform?id=${survey.surveyId}`)}
                         className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 md:px-6 py-4 hover:bg-secondary-50 cursor-pointer transition-colors"
                       >
-                        <div className="md:col-span-5 flex items-center gap-3">
+                        <div className="md:col-span-4 flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center"
                             style={{ backgroundColor: `${INDIGO}20` }}>
                             <DocumentIcon />
@@ -357,7 +384,25 @@ function MyForm() {
                         <div className="md:col-span-2 flex items-center text-sm text-text-secondary">
                           {survey.attendCount.toLocaleString()}명
                         </div>
-                        <div className="md:col-span-2 flex items-center text-sm text-text-tertiary">
+                        <div className="md:col-span-2 flex items-center">
+                          {pct !== null ? (
+                            <div className="w-full">
+                              <div className="flex justify-between text-xs text-text-tertiary mb-1">
+                                <span>{survey.attendCount}/{threshold}명</span>
+                                <span>{Math.round(pct)}%</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary-500 rounded-full"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-text-tertiary">-</span>
+                          )}
+                        </div>
+                        <div className="md:col-span-1 flex items-center text-sm text-text-tertiary">
                           {formatDate(survey.createdAt)}
                         </div>
                         <div className="md:col-span-1 flex items-center gap-1">
@@ -375,7 +420,7 @@ function MyForm() {
                                 ? 'text-text-tertiary hover:text-primary-500 hover:bg-primary-50'
                                 : 'text-gray-200 cursor-not-allowed'
                             }`}
-                            title={canEdit ? '수정하기' : '수정 불가 (응답 있거나 공개 상태)'}
+                            title={canEdit ? '수정하기' : '수정 불가 (응답 있음)'}
                           >
                             <EditIcon />
                           </button>
@@ -413,38 +458,15 @@ function MyForm() {
           </div>
         )}
 
-        {/* Pagination */}
-        {!isPending && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-8">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-xl border border-border-light hover:bg-secondary-50 disabled:opacity-30"
-            >
-              <ChevronLeft />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`w-9 h-9 rounded-xl text-sm font-medium transition-colors ${
-                  page === currentPage
-                    ? 'bg-primary-500 text-white'
-                    : 'border border-border-light text-text-secondary hover:bg-secondary-50'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-xl border border-border-light hover:bg-secondary-50 disabled:opacity-30"
-            >
-              <ChevronRight />
-            </button>
-          </div>
-        )}
+        {/* Infinite scroll sentinel */}
+        <div ref={loadMoreRef} className="h-12 flex items-center justify-center mt-4">
+          {isFetchingNextPage && (
+            <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          )}
+          {!isFetchingNextPage && !hasNextPage && surveys.length > 0 && (
+            <p className="text-xs text-text-tertiary">모든 설문을 불러왔습니다</p>
+          )}
+        </div>
       </div>
 
       {/* Edit Not Allowed Alert */}

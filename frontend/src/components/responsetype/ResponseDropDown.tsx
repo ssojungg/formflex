@@ -24,7 +24,7 @@ function ResponseDropDown({ question, color, index, onOptionSelect, isViewPage }
   const selectedLabel = question.choices?.find((c) => c.choiceId === selectedOption)?.option;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
       {/* Question Header */}
       <div className="flex items-center gap-3 px-6 pt-6 pb-4">
         <span
@@ -97,7 +97,7 @@ function ResponseDropDown({ question, color, index, onOptionSelect, isViewPage }
             {isOpen && (
               <div
                 className="absolute top-full mt-2 left-0 right-0 bg-white rounded-xl border border-gray-100
-                           shadow-xl z-10 overflow-hidden"
+                           shadow-xl z-50 overflow-hidden"
               >
                 {question.choices?.map((choice) => (
                   <button

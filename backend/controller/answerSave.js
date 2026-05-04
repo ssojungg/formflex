@@ -10,6 +10,7 @@ const createAnswer = async (req, res) => {
     const { userId, questions } = req.body;
     const survey = await Survey.findByPk(surveyId);
     if (!survey) {
+      await t.rollback();
       return res.status(400).json({ message: '설문이 존재하지 않습니다.' });
     }
     for (const question of questions) {
@@ -18,11 +19,13 @@ const createAnswer = async (req, res) => {
         transaction: t,
       });
       if (!questionData) {
+        await t.rollback();
         return res.status(400).json({
           message: `Question with ID ${question.questionId} not found`,
         });
       }
       if (questionData.surveyId != surveyId) {
+        await t.rollback();
         return res
           .status(404)
           .json({ message: `설문에 해당 질문이 없습니다.` });
@@ -39,16 +42,17 @@ const createAnswer = async (req, res) => {
       ) {
         // objContent의 각 요소에 대한 별도의 Answer 레코드 생성
         for (const objContentItem of question.objContent) {
-          // console.log(`question objContentItem : ${objContentItem}`);
           const option = await Choice.findByPk(objContentItem, {
             transaction: t,
           });
           if (!option) {
+            await t.rollback();
             return res
               .status(400)
               .json({ message: `Choice with ID ${objContentItem} not found` });
           }
           if (option.questionId != question.questionId) {
+            await t.rollback();
             return res
               .status(404)
               .json({ message: `질문에 해당 선택지가 없습니다.` });
@@ -87,6 +91,7 @@ const createAnswer = async (req, res) => {
             questionData.type !== 'CHECKBOX' &&
             question.objContent.length > 1
           ) {
+            await t.rollback();
             return res.status(409).json({ message: `하나만 선택해주세요.` });
           }
           if (
@@ -135,16 +140,9 @@ const createAnswer = async (req, res) => {
           );
         }
       }
-      console.log(`questionId : ${question.questionId}`);
-      console.log(`question type :  ${questionData.type}`);
-      console.log(`question content : ${question.content} `);
-      console.log(`question objContent : ${question.objContent}`);
-      console.log(`question subContent : ${question.subContent}`);
     }
     await t.commit();
-    //try/catch로 감싼 이유 : 이메일 발송이 실패하더라도 이미 t.coomit() 으로 응답 저장은 완료됐으니까 응답자한테 에러를 보여주면 안됨
-    //이메일 에러는 서버 로그에만 남기고 사라져야해서 try/catch 사용함
-    //(응답 저장 성공 후 임계값 체크)
+    //try/catch로 감싼 이유 : 이메일 발송이 실패하더라도 이미 t.commit() 으로 응답 저장은 완료됐으니까 응답자한테 에러를 보여주면 안됨
     try {
       const surveyRecord = await Survey.findByPk(surveyId);
 

@@ -25,6 +25,7 @@ const getUserSurveys = async (req, res) => {
           'createdAt',
           'deadline',
           'open',
+          'emailReportThreshold',
         ],
       });
       queryCount++;
@@ -57,6 +58,7 @@ const getUserSurveys = async (req, res) => {
         updatedAt: survey.updatedAt,
         deadline: survey.deadline,
         attendCount: countMap[survey.id] || 0,
+        emailReportThreshold: survey.emailReportThreshold || null,
       }));
       queryCount++;
       if ('attendCount' in req.query) {
@@ -80,7 +82,7 @@ const getUserSurveys = async (req, res) => {
       console.log(`==============`);
       res
         .status(200)
-        .json({ surveys: currentPageData, totalPages: totalPages });
+        .json({ surveys: currentPageData, totalPages: totalPages, totalCount: totalCount });
     } else {
       const selectSurveys = await Survey.findAll({
         where: { userId: userId },

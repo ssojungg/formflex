@@ -20,6 +20,7 @@ const showAllSurveys = async (req, res) => {
         where: { open: true },
         attributes: [
           'id',
+          'userId',
           'title',
           'open',
           'mainImageUrl',
@@ -75,6 +76,7 @@ const showAllSurveys = async (req, res) => {
 
       const preResult = surveys.map((survey) => ({
         surveyId: survey.id,
+        ownerId: survey.userId,
         title: survey.title,
         open: survey.open,
         mainImageUrl: survey.mainImageUrl || null,
@@ -137,6 +139,7 @@ const showAllSurveys = async (req, res) => {
         where: { id: searchedIds },
         attributes: [
           'id',
+          'userId',
           'title',
           'open',
           'mainImageUrl',
@@ -186,6 +189,7 @@ const showAllSurveys = async (req, res) => {
 
       const sortedList = searchedSurveys.map((survey) => ({
         surveyId: survey.id,
+        ownerId: survey.userId,
         title: survey.title,
         open: survey.open,
         mainImageUrl: survey.mainImageUrl || null,
@@ -193,6 +197,7 @@ const showAllSurveys = async (req, res) => {
         updatedAt: survey.updatedAt,
         deadline: survey.deadline,
         isAttended: attendSet.has(survey.id),
+        attendCount: countMap[survey.id] || 0,
       }));
 
       if ('attendCount' in req.query) {

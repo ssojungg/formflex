@@ -28,7 +28,7 @@ function Login() {
   }
 
   const handleLoginSuccess = () => {
-    const from = localStorage.getItem('redirectPath') || '/myform';
+    const from = localStorage.getItem('redirectPath') || '/surveys';
     navigate(from, { replace: true });
   };
 
