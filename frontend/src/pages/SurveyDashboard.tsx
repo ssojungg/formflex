@@ -1,9 +1,9 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/AuthStore';
 import Alert from '../components/common/Alert';
-import usePaginationSurveyList from '../hooks/usePaginationSurveyList';
+import useInfiniteList from '../hooks/useInfiniteList';
 import { Survey } from '../types/survey';
 
 // ==================== ICONS ====================
@@ -183,7 +183,7 @@ function SurveyCard({ survey, index, onClick }: SurveyCardProps) {
       layout
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: index * 0.04 }}
+      transition={{ duration: 0.2, delay: Math.min(index * 0.04, 0.5) }}
       onClick={onClick}
       className="group bg-white rounded-2xl overflow-hidden border border-[#E8E6F0] cursor-pointer
                  shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
@@ -293,49 +293,44 @@ function EmptyState({ hasSearch, hasFilter, onCreateClick, isLoggedIn }: {
 function SurveyDashboard() {
   const navigate = useNavigate();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const myUserId = useAuthStore((state) => state.userId);
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [accessAlert, setAccessAlert] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortValue, setSortValue] = useState('');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
-  const [visibleCount, setVisibleCount] = useState(9);
-
-  // Calculate how many cards fit in the viewport without scrolling
-  useEffect(() => {
-    const calculate = () => {
-      const SIDEBAR_W = window.innerWidth > 768 ? 200 : 0;
-      const H_PADDING = 32;
-      const HEADER_H = 310; // title + stats cards + control row + count label
-      const CARD_H = 260;   // thumbnail(144) + body(~100) + gap(16)
-      const CARD_W = 280;
-      const GAP = 16;
-
-      const availW = Math.min(window.innerWidth - SIDEBAR_W - H_PADDING * 2, 1200);
-      const cols = Math.max(1, Math.floor((availW + GAP) / (CARD_W + GAP)));
-      const availH = window.innerHeight - HEADER_H;
-      const rows = Math.max(1, Math.floor((availH + GAP) / (CARD_H + GAP)));
-      setVisibleCount(cols * rows);
-    };
-    calculate();
-    window.addEventListener('resize', calculate);
-    return () => window.removeEventListener('resize', calculate);
-  }, []);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const {
-    data,
+    surveys: allSurveys,
     isPending,
-    currentPage,
-    handlePageChange,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     handleSearchChange,
     handleSortChange,
     searchTerm,
     setSearchTerm,
-  } = usePaginationSurveyList('allForm');
+  } = useInfiniteList('allForm');
 
-  const allSurveys: Survey[] = data?.surveys ?? [];
-  const totalPages = data?.totalPages ?? 1;
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const surveys = useMemo(() => {
     if (statusFilter === 'all') return allSurveys;
@@ -355,10 +350,23 @@ function SurveyDashboard() {
     return { total: allSurveys.length, totalResponses, activeCount, activeRate };
   }, [allSurveys, activeCount]);
 
-  const handleSurveyClick = (surveyId: number) => {
+  const handleSurveyClick = useCallback((survey: Survey) => {
     if (!isLoggedIn) { setShowLoginModal(true); return; }
-    navigate(`/responseform?id=${surveyId}`);
-  };
+    if (survey.ownerId && survey.ownerId === myUserId) {
+      setAccessAlert('본인이 만든 설문에는 참여할 수 없습니다.');
+      return;
+    }
+    if (survey.isAttended) {
+      setAccessAlert('이미 참여한 설문입니다.\n내 정보 > 내가 참여한 설문에서 확인하세요.');
+      return;
+    }
+    const status = surveyStatus(survey);
+    if (status === 'closed') {
+      setAccessAlert('마감된 설문입니다.');
+      return;
+    }
+    navigate(`/responseform?id=${survey.surveyId}`);
+  }, [isLoggedIn, myUserId, navigate]);
 
   const handleSortSelect = (value: string) => {
     setSortValue(value);
@@ -601,12 +609,12 @@ function SurveyDashboard() {
             className="grid gap-4"
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}
           >
-            {surveys.slice(0, visibleCount).map((survey, index) => (
+            {surveys.map((survey, index) => (
               <SurveyCard
                 key={survey.surveyId}
                 survey={survey}
                 index={index}
-                onClick={() => handleSurveyClick(survey.surveyId)}
+                onClick={() => handleSurveyClick(survey)}
               />
             ))}
           </div>
@@ -615,15 +623,15 @@ function SurveyDashboard() {
         {/* ── List View ── */}
         {!isPending && viewMode === 'list' && surveys.length > 0 && (
           <div className="flex flex-col gap-2">
-            {surveys.slice(0, visibleCount).map((survey, index) => {
+            {surveys.map((survey, index) => {
               const status = surveyStatus(survey);
               return (
                 <motion.div
                   key={survey.surveyId}
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.03 }}
-                  onClick={() => handleSurveyClick(survey.surveyId)}
+                  transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.4) }}
+                  onClick={() => handleSurveyClick(survey)}
                   className="bg-white rounded-2xl border border-[#E8E6F0] overflow-hidden
                              cursor-pointer hover:shadow-md transition-all flex group"
                 >
@@ -673,50 +681,18 @@ function SurveyDashboard() {
           />
         )}
 
-        {/* ── Pagination ── */}
-        {!isPending && totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-10">
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-4 py-2 rounded-xl text-sm border border-[#E8E6F0] bg-white
-                         text-[#6B6880] hover:bg-[#F8F7FF] disabled:opacity-30
-                         disabled:cursor-not-allowed transition-colors"
-            >
-              이전
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                type="button"
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`w-9 h-9 rounded-xl text-sm font-medium transition-all ${
-                  page === currentPage
-                    ? 'text-white shadow-md'
-                    : 'border border-[#E8E6F0] bg-white text-[#6B6880] hover:bg-[#F8F7FF]'
-                }`}
-                style={
-                  page === currentPage
-                    ? { background: 'linear-gradient(135deg, #5B4CF5, #7B6FF5)' }
-                    : {}
-                }
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 rounded-xl text-sm border border-[#E8E6F0] bg-white
-                         text-[#6B6880] hover:bg-[#F8F7FF] disabled:opacity-30
-                         disabled:cursor-not-allowed transition-colors"
-            >
-              다음
-            </button>
-          </div>
-        )}
+        {/* ── Infinite scroll trigger ── */}
+        <div ref={loadMoreRef} className="h-12 flex items-center justify-center mt-4">
+          {isFetchingNextPage && (
+            <div className="flex items-center gap-2 text-sm text-[#9B97A8]">
+              <div className="w-4 h-4 border-2 border-[#5B4CF5] border-t-transparent rounded-full animate-spin" />
+              불러오는 중...
+            </div>
+          )}
+          {!isFetchingNextPage && !hasNextPage && allSurveys.length > 0 && (
+            <p className="text-xs text-[#C4C0D0]">모든 설문을 불러왔습니다</p>
+          )}
+        </div>
       </div>
 
       {/* Login Modal */}
@@ -730,6 +706,17 @@ function SurveyDashboard() {
           secondaryButtonText="회원가입"
           secondaryButtonClick={() => navigate('/signup')}
           onClose={() => setShowLoginModal(false)}
+        />
+      )}
+
+      {/* Access Alert */}
+      {accessAlert && (
+        <Alert
+          type="error"
+          message={accessAlert}
+          buttonText="확인"
+          buttonClick={() => setAccessAlert('')}
+          onClose={() => setAccessAlert('')}
         />
       )}
     </div>

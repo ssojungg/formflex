@@ -7,7 +7,7 @@ import { QuestionResultForm, QuestionData } from '../types/questionData';
 import { AnswerData } from '../types/answerData';
 import { getAnswerResultAPI, getQuestionResultAPI } from '../api/getResult';
 import { useResponsive } from '../hooks/useResponsive';
-import usePaginationSurveyList from '../hooks/usePaginationSurveyList';
+import useInfiniteList from '../hooks/useInfiniteList';
 
 // ── Icons ──────────────────────────────────────────────────────────────
 const MenuIcon = () => (
@@ -189,8 +189,9 @@ function ResultPage() {
 
   const [activeTab, setActiveTab] = useState<'question' | 'response' | 'trend'>('question');
   const [showSidebar, setShowSidebar] = useState(!isMobile && !isTablet);
+  const [isPrinting, setIsPrinting] = useState(false);
 
-  const { data: mySurveys } = usePaginationSurveyList('myForm');
+  const { surveys: mySurveys } = useInfiniteList('myForm');
 
   const { data: questionData, isLoading: qLoading } = useQuery<QuestionResultForm, AxiosError>({
     queryKey: ['questionResult', surveyId],
@@ -293,7 +294,14 @@ function ResultPage() {
   const hasData = !!surveyId && (!!questionData || !!answerData);
 
   const handleExport = () => {
-    window.print();
+    setIsPrinting(true);
+    const cleanup = () => {
+      setIsPrinting(false);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    // Double rAF ensures React re-renders all tab content before print dialog opens
+    requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
   };
 
   return (
@@ -305,7 +313,7 @@ function ResultPage() {
             <h2 className="text-sm font-semibold text-gray-800">내 설문</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {mySurveys?.surveys?.map((survey: any) => {
+            {mySurveys.map((survey) => {
               const isSelected = survey.surveyId === surveyId;
               const isActive = new Date(survey.deadline) > new Date();
               return (
@@ -464,7 +472,7 @@ function ResultPage() {
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 print:overflow-visible print:p-0">
 
               {/* ── 질문별 탭 ── */}
-              {activeTab === 'question' && (
+              {(activeTab === 'question' || isPrinting) && (
                 <>
                   {/* Stacked summary (only if multiple choice questions) */}
                   {stackedSeries.length > 0 && choiceQuestions.length > 1 && (
@@ -517,7 +525,7 @@ function ResultPage() {
               )}
 
               {/* ── 응답별 탭 ── */}
-              {activeTab === 'response' && (
+              {(activeTab === 'response' || isPrinting) && (
                 <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
@@ -560,7 +568,7 @@ function ResultPage() {
               )}
 
               {/* ── 트렌드 탭 ── */}
-              {activeTab === 'trend' && (
+              {(activeTab === 'trend' || isPrinting) && (
                 <div className="space-y-5">
                   {/* Daily trend */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm">

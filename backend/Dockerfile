@@ -15,5 +15,5 @@ RUN npm install -g nodemon
 COPY . /app
 
 #CMD ["npm", "start"]
-CMD ["nodemon", "server/index.js", "-L"]
+CMD ["nodemon", "index.js", "-L"]
 

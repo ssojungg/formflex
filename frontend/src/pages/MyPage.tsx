@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation } from '@tanstack/react-query';
-import usePaginationSurveyList from '../hooks/usePaginationSurveyList';
+import useInfiniteList from '../hooks/useInfiniteList';
 import { useAuthStore } from '../store/AuthStore';
-import { useResponsive } from '../hooks/useResponsive';
 import { getIdAPI, patchProfileAPI } from '../api/myprofile';
 import noImage from '../assets/noImage.png';
 
@@ -77,7 +76,6 @@ function surveyIsActive(deadline: string, open?: boolean): boolean {
 
 function MyPage() {
   const navigate = useNavigate();
-  const { isMobile } = useResponsive();
   const { userId, setUserId, setLoginStatus, userName, userEmail, setUserName } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('created');
 
@@ -94,8 +92,16 @@ function MyPage() {
   const [profileName, setProfileName] = useState(userName || '');
   const [profileEmail, setProfileEmail] = useState(userEmail || '');
 
-  const { data: myFormsData, isPending: formsLoading } = usePaginationSurveyList('myForm');
-  const { data: myResponsesData } = usePaginationSurveyList('myResponse');
+  const {
+    surveys: mySurveys,
+    totalCount: myFormsTotalCount,
+    isPending: formsLoading,
+  } = useInfiniteList('myForm');
+
+  const {
+    surveys: myResponses,
+    totalCount: myResponsesTotalCount,
+  } = useInfiniteList('myResponse');
 
   // Fetch real user profile on mount
   useEffect(() => {
@@ -164,8 +170,8 @@ function MyPage() {
   };
 
   const tabs = [
-    { id: 'created' as Tab, label: '내가 만든 설문', icon: DocumentIcon, count: myFormsData?.surveys?.length || 0 },
-    { id: 'participated' as Tab, label: '내가 참여한 설문', icon: CheckCircleIcon, count: myResponsesData?.surveys?.length || 0 },
+    { id: 'created' as Tab, label: '내가 만든 설문', icon: DocumentIcon, count: myFormsTotalCount ?? mySurveys.length },
+    { id: 'participated' as Tab, label: '내가 참여한 설문', icon: CheckCircleIcon, count: myResponsesTotalCount ?? myResponses.length },
     { id: 'settings' as Tab, label: '계정 설정', icon: SettingsIcon },
   ];
 
@@ -207,16 +213,16 @@ function MyPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border-light">
             <div className="text-center">
-              <p className="text-2xl font-bold text-text-primary">{myFormsData?.surveys?.length || 0}</p>
+              <p className="text-2xl font-bold text-text-primary">{myFormsTotalCount ?? mySurveys.length}</p>
               <p className="text-sm text-text-tertiary">생성한 설문</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-text-primary">{myResponsesData?.surveys?.length || 0}</p>
+              <p className="text-2xl font-bold text-text-primary">{myResponsesTotalCount ?? myResponses.length}</p>
               <p className="text-sm text-text-tertiary">참여한 설문</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-text-primary">
-                {myFormsData?.surveys?.reduce((acc, s) => acc + (s.attendCount || 0), 0) || 0}
+                {mySurveys.reduce((acc, s) => acc + (s.attendCount || 0), 0)}
               </p>
               <p className="text-sm text-text-tertiary">총 응답 수</p>
             </div>
@@ -239,7 +245,7 @@ function MyPage() {
                   }`}
                 >
                   <Icon />
-                  <span className={isMobile ? 'hidden' : ''}>{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                   {tab.count !== undefined && (
                     <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
                       activeTab === tab.id ? 'bg-primary-100 text-primary-600' : 'bg-secondary-100 text-secondary-600'
@@ -267,57 +273,77 @@ function MyPage() {
                     <div className="flex justify-center py-12">
                       <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                     </div>
-                  ) : myFormsData?.surveys?.length ? (
-                    myFormsData.surveys.map((survey) => {
+                  ) : mySurveys.length ? (
+                    mySurveys.map((survey) => {
                       const isActive = surveyIsActive(survey.deadline, survey.open);
+                      const threshold = survey.emailReportThreshold;
+                      const pct = threshold
+                        ? Math.min((survey.attendCount / threshold) * 100, 100)
+                        : null;
                       return (
                         <div
                           key={survey.surveyId}
-                          className="flex items-center gap-4 p-4 border border-border-light rounded-xl hover:bg-secondary-50 transition-colors"
+                          className="p-4 border border-border-light rounded-xl hover:bg-secondary-50 transition-colors"
                         >
-                          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden flex-shrink-0">
-                            {survey.mainImageUrl ? (
-                              <img
-                                src={survey.mainImageUrl}
-                                alt={survey.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => { (e.target as HTMLImageElement).src = noImage; }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-primary-400">
-                                <DocumentIcon />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-medium text-text-primary truncate">{survey.title}</h3>
-                              <span className={`shrink-0 px-2 py-0.5 text-xs rounded ${
-                                isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-secondary-100 text-secondary-600'
-                              }`}>
-                                {isActive ? '진행중' : '종료'}
-                              </span>
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden flex-shrink-0">
+                              {survey.mainImageUrl ? (
+                                <img
+                                  src={survey.mainImageUrl}
+                                  alt={survey.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = noImage; }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-primary-400">
+                                  <DocumentIcon />
+                                </div>
+                              )}
                             </div>
-                            <p className="text-sm text-text-tertiary">
-                              응답 {survey.attendCount || 0}명 · 마감일 {survey.deadline ? new Date(survey.deadline).toLocaleDateString('ko-KR') : '없음'}
-                            </p>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-medium text-text-primary truncate">{survey.title}</h3>
+                                <span className={`shrink-0 px-2 py-0.5 text-xs rounded ${
+                                  isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-secondary-100 text-secondary-600'
+                                }`}>
+                                  {isActive ? '진행중' : '종료'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-text-tertiary">
+                                응답 {survey.attendCount || 0}명 · 마감일 {survey.deadline ? new Date(survey.deadline).toLocaleDateString('ko-KR') : '없음'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => navigate(`/result?id=${survey.surveyId}`)}
+                                className="p-2 text-secondary-500 hover:text-primary-500 hover:bg-primary-50 rounded-lg"
+                                title="분석"
+                              >
+                                <ChartIcon />
+                              </button>
+                              <button
+                                onClick={() => navigate(`/responseform?id=${survey.surveyId}`)}
+                                className="p-2 text-secondary-500 hover:text-primary-500 hover:bg-primary-50 rounded-lg"
+                                title="설문 보기"
+                              >
+                                <EyeIcon />
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => navigate(`/result?id=${survey.surveyId}`)}
-                              className="p-2 text-secondary-500 hover:text-primary-500 hover:bg-primary-50 rounded-lg"
-                              title="분석"
-                            >
-                              <ChartIcon />
-                            </button>
-                            <button
-                              onClick={() => navigate(`/responseform?id=${survey.surveyId}`)}
-                              className="p-2 text-secondary-500 hover:text-primary-500 hover:bg-primary-50 rounded-lg"
-                              title="설문 보기"
-                            >
-                              <EyeIcon />
-                            </button>
-                          </div>
+                          {pct !== null && (
+                            <div className="mt-3 pt-3 border-t border-border-light">
+                              <div className="flex justify-between text-xs text-text-tertiary mb-1">
+                                <span>리포트 목표</span>
+                                <span>{survey.attendCount}/{threshold}명 ({Math.round(pct)}%)</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary-500 rounded-full transition-all duration-500"
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })
@@ -346,8 +372,8 @@ function MyPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-4"
                 >
-                  {myResponsesData?.surveys?.length ? (
-                    myResponsesData.surveys.map((survey) => (
+                  {myResponses.length ? (
+                    myResponses.map((survey) => (
                       <div
                         key={survey.surveyId}
                         onClick={() => navigate(`/myanswer?userId=${userId}&surveyId=${survey.surveyId}`)}

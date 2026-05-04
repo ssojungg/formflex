@@ -8,10 +8,13 @@ export type Survey = {
   deadline: string;
   isAttended?: boolean;
   attendCount: number;
+  ownerId?: number;
+  emailReportThreshold?: number | null;
 };
 
 export type SurveyCoverType = {
   surveys: Survey[];
   sortedList?: Survey[];
   totalPages: number;
+  totalCount?: number;
 };

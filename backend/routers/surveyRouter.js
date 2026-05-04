@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer'); // ← S3 대신 기본 multer 사용
-const upload = multer(); // ← 로컬 테스트용
+const multer = require('multer');
+const upload = multer();
+
 const surveyController = require('../controller/surveyCreate');
 const surveyModifyController = require('../controller/surveyModify');
 const surveyAllUserController = require('../controller/formAllUser');
@@ -16,28 +17,24 @@ const getAnswerController = require('../controller/answerReadByuserId');
 const { sendSurveyEmailWithSurveyId } = require('../controller/urlShare');
 const getResultController = require('../controller/getResultsByRes');
 
+// 1. POST / (생성)
 router.post(
   '/',
   upload.fields([{ name: 'mainImageUrl' }, { name: 'imageUrl' }]),
   surveyController.createSurveyWithQuestionsAndChoices,
 );
-//router.post('/', surveyController.createSurveyWithQuestionsAndChoices);
+
+// 2. 구체적인 경로들 (고정된 경로들부터 먼저 선언)
 router.get('/:userId/answers/:surveyId', getAnswerController.getAnswerByuserId);
-router.put(
-  '/:id',
-  upload.fields([{ name: 'mainImageUrl' }, { name: 'imageUrl' }]),
-  surveyModifyController.ModifySurveyWithQuestionsAndChoices,
-);
 router.get('/:id/forms', surveyAllUserController.getUserSurveys);
 router.get('/:id/join', surveyAnsweredController.surveyAnswered);
 router.get('/:id/results', surveyResultController.surveyResult);
-router.get('/:id', surveyGetController.getSurveyById);
 router.get('/:id/all', showAllSurveysController.showAllSurveys);
-router.delete('/:id', surveyDeleteController.deleteSurveyAndRelatedData);
-router.post('/:id', surveyAnswerController.createAnswer);
 router.get('/:id/urls', getSurveyUrlController.getUrl);
+router.get('/:id/list', getResultController.getResultsByResponses);
+
+// 3. POST /:id/share (순서 중요: 고정 경로 'share'를 :id 뒤에 선언)
 router.post('/:id/share', async (req, res) => {
-  console.log('Request body:', req.body);
   const surveyId = req.params.id;
   const { emails } = req.body;
 
@@ -56,6 +53,16 @@ router.post('/:id/share', async (req, res) => {
   }
 });
 
-router.get('/:id/list', getResultController.getResultsByResponses);
+// 4. 동작 경로 (PUT, DELETE, POST)
+router.put(
+  '/:id',
+  upload.fields([{ name: 'mainImageUrl' }, { name: 'imageUrl' }]),
+  surveyModifyController.ModifySurveyWithQuestionsAndChoices,
+);
+router.delete('/:id', surveyDeleteController.deleteSurveyAndRelatedData);
+router.post('/:id', surveyAnswerController.createAnswer);
+
+// 5. 가장 범용적인 GET /:id (맨 마지막에 위치해야 함)
+router.get('/:id', surveyGetController.getSurveyById);
 
 module.exports = router;

@@ -110,16 +110,21 @@ export function Dashboard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getSurveyStatus = (survey: Survey): 'active' | 'closed' => {
+    if (survey.open === false) return 'closed';
+    if (!survey.deadline) return 'active';
+    return new Date(survey.deadline) < new Date() ? 'closed' : 'active';
+  };
+
   // Filter surveys based on status
   const filteredSurveys = surveyData.surveys?.filter((survey) => {
     if (filterStatus === 'all') return true;
-    const isActive = new Date(survey.deadline) > new Date();
-    return filterStatus === 'active' ? isActive : !isActive;
+    return getSurveyStatus(survey) === filterStatus;
   }) || [];
 
   // Count surveys by status
-  const activeSurveys = surveyData.surveys?.filter(s => new Date(s.deadline) > new Date()).length || 0;
-  const closedSurveys = (surveyData.surveys?.length || 0) - activeSurveys;
+  const activeSurveys = surveyData.surveys?.filter(s => getSurveyStatus(s) === 'active').length || 0;
+  const closedSurveys = surveyData.surveys?.filter(s => getSurveyStatus(s) === 'closed').length || 0;
 
   const handleSortChange = (value: SortOption) => {
     setSortOption(value);
