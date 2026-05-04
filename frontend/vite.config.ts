@@ -56,6 +56,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
         globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff,woff2}'],
         runtimeCaching: [
           {
@@ -121,6 +122,18 @@ export default defineConfig({
       extensions: ['.js', '.cjs'],
       strictRequires: true,
       transformMixedEsModules: true,
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-charts': ['apexcharts', 'react-apexcharts'],
+          'vendor-pdf': ['html2canvas', 'jspdf'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-mui': ['@mui/material', '@mui/system', '@mui/base', '@mui/styled-engine'],
+        },
+      },
     },
   },
   resolve: {
