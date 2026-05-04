@@ -1031,11 +1031,26 @@ function SurveyEditor() {
   // Zustand 스토어에만 저장함. 백엔드 api 를 아무도 호출하지 않는 문제점 발생
   const handlePublish = async () => {
     if (isPublishing) return;
+
+    // 배포 전 유효성 검사 — API 호출 전에 모두 통과해야 함
+    if (!title || !title.trim()) {
+      alert('설문 제목을 입력해주세요.');
+      return;
+    }
+    if (!deadline) {
+      alert('마감일을 설정해주세요.');
+      return;
+    }
+    const realQuestions = questions.filter((q) => q.type !== 'section_divider');
+    if (realQuestions.length === 0) {
+      alert('질문을 하나 이상 추가해주세요.');
+      return;
+    }
+
     setIsPublishing(true);
+
     // 질문 타입 반환: SurveyEditor 형식 -> 백엔드가 이해하는 형식
-    const mappedQuestions = questions
-      .filter((q) => q.type !== 'section_divider')
-      .map((q) => {
+    const mappedQuestions = realQuestions.map((q) => {
         if (q.type === 'single_choice') {
           return {
             type: 'MULTIPLE_CHOICE' as const,
@@ -1062,14 +1077,6 @@ function SurveyEditor() {
           content: q.label,
         };
       });
-    if (!title || !title.trim()) {
-      alert('제목은 필수입니다');
-      return;
-    }
-    if (!deadline) {
-      alert('마감일은 필수입니다');
-      return;
-    }
 
     const payload: EditableSurvey = {
       userId: userId as number,
