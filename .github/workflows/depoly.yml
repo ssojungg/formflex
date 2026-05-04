@@ -52,10 +52,3 @@ jobs:
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
 
-      - name: Lambda 핸들러 설정
-        run: |
-          aws lambda update-function-configuration \
-            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
-            --handler handler.handler
-          aws lambda wait function-updated \
-            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
