@@ -25,7 +25,7 @@ jobs:
       - name: 배포용 압축 파일 생성
         run: |
           cd backend
-          zip - r ../lambda.zip . \
+          zip -r ../lambda.zip . \
              --exclude ".env" \
              --exclude "*.git"
 
@@ -38,16 +38,16 @@ jobs:
 
       - name: S3로 압축 파일 업로드
         run: |
-          aws s3 cp lambda.zip s3://${{secrets.AWS_BUCKET}}/deploy/lambda.zip
+          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy/lambda.zip
 
       - name: S3에서 람다 함수 배포
         run: |
           aws lambda update-function-code \
-              --function-name ${{secrets.AWS_LAMBDA_FUNCTION_NAME}} \
-              --s3-bucket ${{secrets.AWS_BUCKET}} \
+              --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+              --s3-bucket ${{ secrets.AWS_BUCKET }} \
               --s3-key deploy/lambda.zip
 
       - name: 배포 완료 대기
         run: |
           aws lambda wait function-updated \
-            --function-name $ {{serects.AWS_LAMBDA_FUNCTION_NAME}}
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
