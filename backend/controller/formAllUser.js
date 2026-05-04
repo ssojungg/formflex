@@ -47,7 +47,7 @@ const getUserSurveys = async (req, res) => {
       queryCount++;
       const countMap = {};
       for (const row of answerCounts) {
-        countMap[row['question.surveyId']] = parseInt(row.count);
+        countMap[row['Question.surveyId']] = parseInt(row.count);
       }
       const preResult = surveys.map((survey) => ({
         surveyId: survey.id,

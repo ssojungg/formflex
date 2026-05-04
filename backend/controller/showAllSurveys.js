@@ -17,7 +17,7 @@ const showAllSurveys = async (req, res) => {
 
     if (!title) {
       const surveys = await Survey.findAll({
-        where: { open: true },
+        where: {},
         attributes: [
           'id',
           'userId',
@@ -111,7 +111,7 @@ const showAllSurveys = async (req, res) => {
       });
     } else {
       const selectSurveys = await Survey.findAll({
-        where: { open: true },
+        where: {},
         attributes: ['id', 'title'],
       });
       queryCount++; // 1번: 전체 설문 제목

@@ -294,7 +294,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           ${showMobileView ? 'pt-16' : 'ml-[200px]'}
         `}
       >
-        <div className="h-full">{children}</div>
+        <div>{children}</div>
       </main>
     </div>
   );
