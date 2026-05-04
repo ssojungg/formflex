@@ -6,9 +6,44 @@ on:
     paths:
       - "backend/**"
       - "index.js"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "index.js"
+
 jobs:
-  depoly:
+  build:
+    name: 빌드 검증
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node.js 22 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 프로덕션 의존성 패키지 설치
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: 배포용 압축 파일 생성
+        run: |
+          cd backend
+          zip -r ../lambda.zip . \
+             --exclude ".env" \
+             --exclude "*.git"
+
+      - name: 빌드 결과 확인
+        run: ls -lh lambda.zip
+
+  deploy:
+    name: 람다 배포
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
