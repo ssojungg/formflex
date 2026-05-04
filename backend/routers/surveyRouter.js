@@ -1,3 +1,19 @@
+/**
+ * surveyRouter.js
+ *
+ * [라우트 선언 순서 규칙]
+ * Express는 라우트를 선언된 순서대로 매칭합니다.
+ * 아래 순서를 반드시 지켜야 라우팅 충돌이 발생하지 않습니다:
+ *
+ *  1. POST /           - 설문 생성 (고정 경로)
+ *  2. GET  /:id/xxx    - 하위 경로가 있는 고정 패턴 (forms, join, results 등)
+ *  3. POST /:id/share  - 공유 이메일 발송
+ *  4. PUT/DELETE/POST /:id - 설문 수정·삭제·응답 저장
+ *  5. GET  /:id        - 가장 범용적인 단일 ID 조회 (반드시 마지막)
+ *
+ * /:id 경로를 먼저 두면 'forms', 'all' 같은 하위 경로가 ID로 잘못 매칭됩니다.
+ */
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');

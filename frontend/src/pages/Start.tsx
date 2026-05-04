@@ -242,7 +242,7 @@ function Start() {
 
             {/* Trust Badge */}
             <p className="mt-8 text-sm text-secondary-500">
-              신용카드 없이 시작 가능 · 무제한 설문 생성
+              무제한 설문 생성
             </p>
           </div>
 
