@@ -154,7 +154,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
   const displayName = userName || userEmail || '사용자';
 
   return (
-    <div className="flex min-h-screen bg-background-secondary print:block print:min-h-0">
+    <div className="flex h-screen bg-background-secondary print:block print:h-auto">
       {/* Mobile Header */}
       {showMobileView && (
         <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-background-sidebar border-b border-secondary-800 print:hidden">
@@ -290,7 +290,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
       {/* Main Content */}
       <main
         className={`
-          flex-1 min-h-screen print:ml-0 print:pt-0 print:min-h-0
+          flex-1 overflow-auto print:ml-0 print:pt-0
           ${showMobileView ? 'pt-16' : 'ml-[200px]'}
         `}
       >

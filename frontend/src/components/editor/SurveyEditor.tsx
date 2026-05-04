@@ -209,6 +209,26 @@ function ChevronIcon({ direction = 'down' }: { direction?: 'up' | 'down' }) {
   );
 }
 
+function PaletteIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+    </svg>
+  );
+}
+
 function SettingsIcon() {
   return (
     <svg
@@ -434,6 +454,7 @@ const QuestionCard = React.memo(
     isFirst,
     isLast,
     cardRadius,
+    themeColor,
     onSelect,
     onUpdate,
     onDelete,
@@ -452,6 +473,7 @@ const QuestionCard = React.memo(
     isFirst: boolean;
     isLast: boolean;
     cardRadius: string;
+    themeColor: string;
     onSelect: (id: string) => void;
     onUpdate: (id: string, updates: Partial<Question>) => void;
     onDelete: (id: string) => void;
@@ -468,8 +490,11 @@ const QuestionCard = React.memo(
       <Reorder.Item
         value={question}
         onClick={() => onSelect(question.id)}
-        className={`group bg-white border-2 transition-all duration-200 ${isSelected ? 'border-primary-500 shadow-lg shadow-primary-500/10' : 'border-transparent hover:border-secondary-200 shadow-sm hover:shadow-md'}`}
-        style={{ borderRadius: cardRadius }}
+        className={`group bg-white border-2 transition-all duration-200 ${isSelected ? 'shadow-lg' : 'border-transparent hover:border-secondary-200 shadow-sm hover:shadow-md'}`}
+        style={{
+          borderRadius: cardRadius,
+          ...(isSelected ? { borderColor: themeColor } : {}),
+        }}
       >
         <div className="p-5">
           {/* Header */}
@@ -477,7 +502,10 @@ const QuestionCard = React.memo(
             <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-secondary-400">
               <GripIcon />
             </div>
-            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold">
+            <div
+              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-semibold"
+              style={{ backgroundColor: themeColor + '22', color: themeColor }}
+            >
               {index + 1}
             </div>
             <div className="flex-1 min-w-0">
@@ -629,7 +657,8 @@ const QuestionCard = React.memo(
                       e.stopPropagation();
                       onAddOption(question.id);
                     }}
-                    className="flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 py-1"
+                    className="flex items-center gap-1.5 text-sm py-1"
+                    style={{ color: themeColor }}
                   >
                     <PlusIcon /> 옵션 추가
                   </button>
@@ -674,7 +703,8 @@ const QuestionCard = React.memo(
                         e.stopPropagation();
                         onAddOption(question.id);
                       }}
-                      className="flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 py-1"
+                      className="flex items-center gap-1.5 text-sm py-1"
+                    style={{ color: themeColor }}
                     >
                       <PlusIcon /> 옵션 추가
                     </button>
@@ -765,6 +795,7 @@ function SurveyEditor() {
   const [showSettings, setShowSettings] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
+  const [showMobileCustom, setShowMobileCustom] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [showMobileCustomize, setShowMobileCustomize] = useState(false);
   const [aiTargetQuestion, setAiTargetQuestion] = useState<string | null>(null);
@@ -1113,6 +1144,14 @@ function SurveyEditor() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowMobileCustom(true)}
+              className="lg:hidden p-2.5 rounded-xl transition-colors text-white"
+              style={{ backgroundColor: themeColor }}
+              title="커스터마이징"
+            >
+              <PaletteIcon />
+            </button>
+            <button
               onClick={() => setShowSettings(true)}
               className="p-2.5 rounded-xl text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 transition-colors"
             >
@@ -1189,6 +1228,7 @@ function SurveyEditor() {
                   isFirst={i === 0}
                   isLast={i === questions.length - 1}
                   cardRadius={cardRadius}
+                  themeColor={themeColor}
                   onSelect={setSelectedQuestionId}
                   onUpdate={updateQuestion}
                   onDelete={deleteQuestion}
@@ -1766,6 +1806,141 @@ function SurveyEditor() {
                 >
                   {isPublishing ? '배포 중...' : '배포하기'}
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Customization Drawer */}
+      <AnimatePresence>
+        {showMobileCustom && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 lg:hidden"
+          >
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowMobileCustom(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl overflow-y-auto"
+            >
+              <div className="sticky top-0 bg-white border-b border-secondary-100 px-5 py-4 flex items-center justify-between">
+                <h3 className="font-semibold text-secondary-900">커스터마이징</h3>
+                <button
+                  onClick={() => setShowMobileCustom(false)}
+                  className="p-2 rounded-lg hover:bg-secondary-100 transition-colors"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+              <div className="p-5 space-y-6">
+                {/* Color Theme */}
+                <div>
+                  <p className="text-sm font-medium text-secondary-700 mb-2">테마 색상</p>
+                  <div className="flex flex-wrap gap-2">
+                    {THEME_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setThemeColor(color)}
+                        className={`w-8 h-8 rounded-full transition-all ${themeColor === color ? 'ring-2 ring-offset-2 ring-secondary-400 scale-110' : 'hover:scale-110'}`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {/* Font */}
+                <div>
+                  <p className="text-sm font-medium text-secondary-700 mb-2">폰트</p>
+                  <select
+                    value={selectedFont}
+                    onChange={(e) => setSelectedFont(e.target.value)}
+                    className="w-full px-3 py-2 bg-secondary-50 border border-secondary-200 rounded-xl text-sm focus:outline-none focus:border-primary-500"
+                  >
+                    {FONTS.map((f) => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Card Shape */}
+                <div>
+                  <p className="text-sm font-medium text-secondary-700 mb-2">카드 모양</p>
+                  <div className="flex gap-2">
+                    {CARD_SHAPES.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => setCardShape(s.id)}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg transition-colors ${cardShape === s.id ? 'text-white' : 'bg-secondary-100 text-secondary-600 hover:bg-secondary-200'}`}
+                        style={cardShape === s.id ? { backgroundColor: themeColor } : {}}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Hashtags */}
+                <div>
+                  <p className="text-sm font-medium text-secondary-700 mb-2">해시태그</p>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={hashtagInput}
+                      onChange={(e) => setHashtagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                          e.preventDefault();
+                          addHashtag();
+                        }
+                      }}
+                      placeholder="#태그"
+                      className="flex-1 px-3 py-2 bg-secondary-50 border border-secondary-200 rounded-xl text-sm outline-none focus:border-primary-500"
+                    />
+                    <button
+                      onClick={addHashtag}
+                      className="px-3 py-2 text-white rounded-xl text-sm font-medium"
+                      style={{ backgroundColor: themeColor }}
+                    >
+                      추가
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {hashtags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary-50 text-primary-700 text-xs"
+                      >
+                        #{tag}
+                        <button
+                          onClick={() => setHashtags(hashtags.filter((t) => t !== tag))}
+                          className="hover:text-red-500"
+                        >
+                          <CloseIcon />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {suggestedTags
+                      .filter((t) => !hashtags.includes(t))
+                      .slice(0, 4)
+                      .map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setHashtags([...hashtags, tag])}
+                          className="px-2 py-1 text-xs bg-secondary-100 text-secondary-600 rounded-full hover:bg-secondary-200"
+                        >
+                          #{tag}
+                        </button>
+                      ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           </motion.div>
