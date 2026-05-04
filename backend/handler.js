@@ -33,13 +33,16 @@ const Excel = require('exceljs');
 
 let isDbConnected = false;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers':
-    'Content-Type,Accept,X-Requested-With,remember-me',
-  'Access-Control-Allow-Credentials': 'true',
-};
+function getCorsHeaders(event) {
+  const origin = event.headers?.origin || event.headers?.Origin || '*';
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,Accept,X-Requested-With,remember-me,Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
 
 function matchPath(pattern, path) {
   const paramNames = [];
@@ -82,7 +85,7 @@ function createReq(event, pathParams) {
   };
 }
 //컨트롤러 호출 -> lambda 응답 변환
-function callController(controllerFn, req) {
+function callController(controllerFn, req, corsHeaders) {
   return new Promise((resolve) => {
     const res = {
       _statusCode: 200,
@@ -270,8 +273,9 @@ const routes = [
 exports.handler = async (event) => {
   const method = event.requestContext?.http?.method || event.httpMethod;
   const path = event.rawPath || event.path;
-  //CORS
-  if (event.httpMethod === 'OPTIONS') {
+  const corsHeaders = getCorsHeaders(event);
+  //CORS preflight
+  if (method === 'OPTIONS') {
     return { statusCode: 200, headers: corsHeaders, body: '' };
   }
 
@@ -293,7 +297,7 @@ exports.handler = async (event) => {
     const params = matchPath(route.path, path);
     if (params) {
       const req = createReq(event, params);
-      return callController(route.handler, req);
+      return callController(route.handler, req, corsHeaders);
     }
   }
 
