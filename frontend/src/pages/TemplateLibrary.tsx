@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSurveyStore, Template } from '../store/SurveyStore';
 import { useAuthStore } from '../store/AuthStore';
-import { useResponsive } from '../hooks/useResponsive';
+import useInfiniteList from '../hooks/useInfiniteList';
 import Alert from '../components/common/Alert';
 
 // Icons
@@ -95,12 +95,10 @@ const SORT_OPTIONS = [
 
 function TemplateLibrary() {
   const navigate = useNavigate();
-  const { isMobile } = useResponsive();
-  
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const templates = useSurveyStore((state) => state.templates);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const mySurveys = useSurveyStore((state) => state.mySurveys);
+  const { surveys: mySurveys } = useInfiniteList('myForm');
   const likedTemplates = useSurveyStore((state) => state.likedTemplates);
   const savedTemplates = useSurveyStore((state) => state.savedTemplates);
   const toggleLikeTemplate = useSurveyStore((state) => state.toggleLikeTemplate);
@@ -168,7 +166,10 @@ function TemplateLibrary() {
 
   const handleShareTemplate = () => {
     if (!selectedSurveyForShare) return;
-    publishAsTemplate(selectedSurveyForShare, shareCategory);
+    const survey = mySurveys.find((s) => String(s.surveyId) === selectedSurveyForShare);
+    if (survey) {
+      publishAsTemplate(selectedSurveyForShare, shareCategory, survey.title);
+    }
     setShowShareModal(false);
     setSelectedSurveyForShare(null);
     setShareTitle('');
@@ -495,14 +496,14 @@ function TemplateLibrary() {
                       ) : (
                         mySurveys.map((survey) => (
                           <div
-                            key={survey.id}
+                            key={survey.surveyId}
                             onClick={() => {
-                              setSelectedSurveyForShare(survey.id);
+                              setSelectedSurveyForShare(String(survey.surveyId));
                               setShareTitle(survey.title);
-                              setShareDescription(survey.description);
+                              setShareDescription('');
                             }}
                             className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                              selectedSurveyForShare === survey.id
+                              selectedSurveyForShare === String(survey.surveyId)
                                 ? 'bg-primary-50 border border-primary-300'
                                 : 'hover:bg-secondary-50 border border-transparent'
                             }`}
@@ -512,9 +513,9 @@ function TemplateLibrary() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-text-primary truncate">{survey.title}</p>
-                              <p className="text-xs text-text-tertiary">{survey.questions.length}문항</p>
+                              <p className="text-xs text-text-tertiary">{survey.attendCount ?? 0}명 응답</p>
                             </div>
-                            {selectedSurveyForShare === survey.id && (
+                            {selectedSurveyForShare === String(survey.surveyId) && (
                               <span className="text-primary-500"><CheckIcon /></span>
                             )}
                           </div>
