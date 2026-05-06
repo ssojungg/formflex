@@ -19,44 +19,38 @@ const sendPdfReportEmail = async (surveyId, toEmail) => {
   if (!survey) throw new Error('설문을 찾을 수 없습니다.');
 
   //pdf 문서 생성
-  const doc = new PDFDocument({ margin: 50 });
-  doc.registerFont('NanumGothic', FONT_PATH);
-  doc.font('NanumGothic');
-  const stream = new PassThrough();
-  const chunks = [];
+  const pdfBuffer = await new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50 });
+    doc.registerFont('NanumGothic', FONT_PATH);
+    doc.font('NanumGothic');
+    const stream = new PassThrough();
+    const chunks = [];
 
-  //pdf 데이터를 메모리에 모으기
-  stream.on('data', (chunk) => chunks.push(chunk));
-  doc.pipe(stream);
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+    doc.on('error', reject);
 
-  //pdf 내용 작성
-  doc.fontSize(22).text(`설문 분석 보고서`, { align: 'center' }).moveDown(0.5);
+    doc.pipe(stream);
 
-  doc.fontSize(16).text(survey.title, { align: 'center' }).moveDown(1.5);
+    doc.fontSize(22).text('설문 분석 보고서', { align: 'center' }).moveDown(0.5);
+    doc.fontSize(16).text(survey.title, { align: 'center' }).moveDown(1.5);
 
-  for (const quesetion of survey.Questions) {
-    //질문 제목
-    doc.fontSize(13).text(quesetion.contnet).moveDown(0.3);
+    for (const question of survey.Questions) {
+      doc.fontSize(13).text(question.contnet).moveDown(0.3);
 
-    // 객관식이면 선택지별 응답 수 표시
-    if (quesetion.Choices && quesetion.Choices.length > 0) {
-      for (const choice of quesetion.Choices) {
-        doc.fontSize(11).text(`  • ${choice.option}: ${choice.count}표`);
+      if (question.Choices && question.Choices.length > 0) {
+        for (const choice of question.Choices) {
+          doc.fontSize(11).text(`  • ${choice.option}: ${choice.count}표`);
+        }
+      } else {
+        doc.fontSize(11).fillColor('gray').text('  (주관식 질문)').fillColor('black');
       }
-    } else {
-      doc
-        .fontSize(11)
-        .fillColor('gray')
-        .text('  (주관식 질문)')
-        .fillColor('black');
+      doc.moveDown(1);
     }
-    doc.moveDown(1);
-  }
-  doc.end();
 
-  //pdf 생성 완료될 때까지 대기
-  await new Promise((resolve) => stream.on('end', resolve));
-  const pdfBuffer = Buffer.concat(chunks);
+    doc.end();
+  });
 
   //이메일 발송 설정(기존 urlShare.js 동일한 OAuth2 방식)
   const transporter = nodemailer.createTransport({
