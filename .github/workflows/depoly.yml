@@ -2,7 +2,7 @@ name: Deploy Backend to Lambda
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
     paths:
       - "backend/**"
       - "index.js"
@@ -43,7 +43,7 @@ jobs:
     name: 람다 배포
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
@@ -71,14 +71,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: 배포 모드 설정 (dev / prod)
-        run: |
-          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            echo "DEPLOY_MODE=prod" >> $GITHUB_ENV
-          else
-            echo "DEPLOY_MODE=dev" >> $GITHUB_ENV
-          fi
-
       - name: Chromium Lambda Layer 생성
         run: |
           mkdir -p chromium-layer/nodejs
@@ -91,10 +83,11 @@ jobs:
 
       - name: Chromium Layer 배포
         run: |
+          aws s3 cp chromium-layer.zip s3://${{ secrets.AWS_BUCKET }}/layers/chromium-layer.zip
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           LAYER_VERSION=$(aws lambda publish-layer-version \
             --layer-name formflex-chromium \
-            --zip-file fileb://chromium-layer.zip \
+            --content S3Bucket=${{ secrets.AWS_BUCKET }},S3Key=layers/chromium-layer.zip \
             --compatible-runtimes nodejs22.x \
             --query 'Version' \
             --output text)
@@ -102,14 +95,9 @@ jobs:
 
       - name: S3로 압축 파일 업로드
         run: |
-          if [ "$DEPLOY_MODE" = "prod" ]; then
-            aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy/lambda.zip
-          else
-            aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/test/${{ github.ref_name }}.zip
-          fi
+          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy/lambda.zip
 
       - name: S3에서 람다 함수 배포
-        if: env.DEPLOY_MODE == 'prod'
         run: |
           aws lambda update-function-code \
               --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
@@ -117,13 +105,11 @@ jobs:
               --s3-key deploy/lambda.zip
 
       - name: 배포 완료 대기
-        if: env.DEPLOY_MODE == 'prod'
         run: |
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
 
       - name: Lambda 핸들러 및 Layer 설정
-        if: env.DEPLOY_MODE == 'prod'
         run: |
           aws lambda update-function-configuration \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
