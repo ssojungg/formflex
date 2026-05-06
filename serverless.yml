@@ -4,9 +4,11 @@ provider:
   name: aws
   runtime: nodejs22.x
   region: ap-northeast-2
-  timeout: 30
+  timeout: 120
+  memorySize: 1536
   environment:
     NODE_ENV: production
+    FRONTEND_URL: ${env:FRONTEND_URL}
 functions:
   api:
     name: formflex
