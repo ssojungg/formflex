@@ -32,6 +32,7 @@ const getSurveyUrlController = require('../controller/getSurveyUrl');
 const surveyResultController = require('../controller/surveyResult');
 const getAnswerController = require('../controller/answerReadByuserId');
 const { sendSurveyEmailWithSurveyId, sendReportEmail } = require('../controller/urlShare');
+const { generatePresignedUploadUrl, getFileFromS3, deleteFileFromS3 } = require('../controller/imageUpload');
 const getResultController = require('../controller/getResultsByRes');
 
 // 1. POST / (생성)
@@ -50,17 +51,29 @@ router.get('/:id/all', showAllSurveysController.showAllSurveys);
 router.get('/:id/urls', getSurveyUrlController.getUrl);
 router.get('/:id/list', getResultController.getResultsByResponses);
 
-// 3-a. POST /:id/report-email (PDF 리포트 이메일 발송)
-const memoryUpload = multer({ storage: multer.memoryStorage() });
-router.post('/:id/report-email', memoryUpload.single('pdf'), async (req, res) => {
-  const { email, surveyTitle } = req.body;
-  const pdfBuffer = req.file?.buffer;
+// 3-a. GET /:id/report-upload-url (S3 presigned upload URL 발급)
+router.get('/:id/report-upload-url', async (req, res) => {
+  try {
+    const s3Key = `tmp/reports/${Date.now()}_survey${req.params.id}.pdf`;
+    const uploadUrl = await generatePresignedUploadUrl(s3Key);
+    res.status(200).json({ uploadUrl, s3Key });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || '서버 오류 발생' });
+  }
+});
+
+// 3-b. POST /:id/report-email (s3Key를 받아 S3에서 PDF 읽고 이메일 발송)
+router.post('/:id/report-email', express.json(), async (req, res) => {
+  const { email, surveyTitle, s3Key } = req.body;
 
   if (!email) return res.status(400).json({ message: 'email 필드가 필요합니다' });
-  if (!pdfBuffer) return res.status(400).json({ message: 'PDF 파일이 필요합니다' });
+  if (!s3Key) return res.status(400).json({ message: 's3Key 필드가 필요합니다' });
 
   try {
+    const pdfBuffer = await getFileFromS3(s3Key);
     const result = await sendReportEmail(email, pdfBuffer, surveyTitle);
+    deleteFileFromS3(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${s3Key}`).catch(() => {});
     res.status(200).json(result);
   } catch (error) {
     console.error(error);

@@ -26,6 +26,7 @@ const { getUrl } = require('./controller/getSurveyUrl');
 const { sendSurveyEmailWithSurveyId, sendReportEmail } = require('./controller/urlShare');
 const { getAnswerByuserId } = require('./controller/answerReadByuserId');
 const { getResultsByResponses } = require('./controller/getResultsByRes');
+const { generatePresignedUploadUrl, getFileFromS3, deleteFileFromS3 } = require('./controller/imageUpload');
 
 const { Question, Answer, Choice } = require('./models');
 const { sequelize } = require('./models');
@@ -249,15 +250,29 @@ const routes = [
   { method: 'GET', path: '/api/surveys/:id', handler: getSurveyById },
   { method: 'POST', path: '/api/surveys/:id', handler: createAnswer },
   {
+    method: 'GET',
+    path: '/api/surveys/:id/report-upload-url',
+    handler: async (req, res) => {
+      try {
+        const s3Key = `tmp/reports/${Date.now()}_survey${req.params.id}.pdf`;
+        const uploadUrl = await generatePresignedUploadUrl(s3Key);
+        res.status(200).json({ uploadUrl, s3Key });
+      } catch (error) {
+        res.status(500).json({ message: error.message || '서버 오류 발생' });
+      }
+    },
+  },
+  {
     method: 'POST',
     path: '/api/surveys/:id/report-email',
     handler: async (req, res) => {
-      const { email, surveyTitle, pdfBase64 } = req.body;
+      const { email, surveyTitle, s3Key } = req.body;
       if (!email) return res.status(400).json({ message: 'email 필드가 필요합니다' });
-      if (!pdfBase64) return res.status(400).json({ message: 'PDF 데이터가 필요합니다' });
+      if (!s3Key) return res.status(400).json({ message: 's3Key 필드가 필요합니다' });
       try {
-        const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+        const pdfBuffer = await getFileFromS3(s3Key);
         const result = await sendReportEmail(email, pdfBuffer, surveyTitle);
+        deleteFileFromS3(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${s3Key}`).catch(() => {});
         res.status(200).json(result);
       } catch (error) {
         res.status(500).json({ message: error.message || '서버 오류 발생' });

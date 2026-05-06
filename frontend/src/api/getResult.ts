@@ -25,16 +25,21 @@ export const getExcelDownloadAPI = async (surveyId: number) => {
 };
 
 export const sendReportEmailAPI = async (surveyId: number, email: string, pdfBlob: Blob, surveyTitle: string) => {
-  const pdfBase64 = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(pdfBlob);
+  // 1) presigned upload URL 발급
+  const { data: { uploadUrl, s3Key } } = await api.get(`/surveys/${surveyId}/report-upload-url`);
+
+  // 2) PDF를 S3에 직접 업로드 (Lambda 거치지 않음 → 용량 무제한)
+  await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/pdf' },
+    body: pdfBlob,
   });
+
+  // 3) s3Key만 Lambda에 전달 (수십 bytes 페이로드)
   const response = await api.post(`/surveys/${surveyId}/report-email`, {
     email,
     surveyTitle,
-    pdfBase64,
+    s3Key,
   });
   return response.data;
 };
