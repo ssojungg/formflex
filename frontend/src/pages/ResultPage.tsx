@@ -373,11 +373,35 @@ function ResultPage() {
 
   return (
     <div className="flex h-full bg-gray-50 overflow-hidden print:overflow-visible print:block print:h-auto">
+      {/* Mobile overlay backdrop */}
+      {showSidebar && isMobile && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      {showSidebar && !isMobile && (
-        <div className="w-64 border-r border-gray-100 bg-white flex-shrink-0 flex flex-col print:hidden">
-          <div className="h-16 flex items-center px-4 border-b border-gray-100 flex-shrink-0">
+      {showSidebar && (
+        <div className={`
+          ${isMobile
+            ? 'fixed inset-y-0 left-0 z-50 w-72 shadow-xl'
+            : 'w-64 border-r border-gray-100 flex-shrink-0'
+          } bg-white flex flex-col print:hidden
+        `}>
+          <div className="h-16 flex items-center justify-between px-4 border-b border-gray-100 flex-shrink-0">
             <h2 className="text-sm font-semibold text-gray-800">내 설문</h2>
+            {isMobile && (
+              <button
+                onClick={() => setShowSidebar(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"
+                aria-label="닫기"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto">
             {mySurveys.map((survey) => {

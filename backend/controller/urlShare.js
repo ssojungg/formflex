@@ -35,7 +35,7 @@ const sendSurveyEmailWithSurveyId = async (surveyId, emails) => {
       service: 'gmail',
       host: 'smtp.gmail.com',
       port: 587,
-      secure: true,
+      secure: false,
       auth: {
         type: 'OAuth2',
         user: process.env.GMAIL_OAUTH_USER,
