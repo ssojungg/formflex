@@ -143,8 +143,9 @@ const createAnswer = async (req, res) => {
     }
     await t.commit();
     //try/catch로 감싼 이유 : 이메일 발송이 실패하더라도 이미 t.commit() 으로 응답 저장은 완료됐으니까 응답자한테 에러를 보여주면 안됨
+    let surveyRecord;
     try {
-      const surveyRecord = await Survey.findByPk(surveyId);
+      surveyRecord =await Survey.findByPk(surveyId);
 
       //이메일 기능이 켜져 있고. 아직 발송 안 했을 때만 확인
       if (surveyRecord.emailReportEnabled && !surveyRecord.emailReportSent) {
