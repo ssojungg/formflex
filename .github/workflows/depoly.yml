@@ -2,7 +2,7 @@ name: Deploy Backend to Lambda
 
 on:
   push:
-    branches: [main, "be/fix/#51"]
+    branches: ["**"]
     paths:
       - "backend/**"
       - "index.js"
@@ -43,7 +43,7 @@ jobs:
     name: 람다 배포
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/be/fix/#51')
+    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
@@ -71,6 +71,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: 배포 모드 설정 (dev / prod)
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            echo "DEPLOY_MODE=prod" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_MODE=dev" >> $GITHUB_ENV
+          fi
+
       - name: Chromium Lambda Layer 생성
         run: |
           mkdir -p chromium-layer/nodejs
@@ -94,9 +102,14 @@ jobs:
 
       - name: S3로 압축 파일 업로드
         run: |
-          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy/lambda.zip
+          if [ "$DEPLOY_MODE" = "prod" ]; then
+            aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy/lambda.zip
+          else
+            aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/test/${{ github.ref_name }}.zip
+          fi
 
       - name: S3에서 람다 함수 배포
+        if: env.DEPLOY_MODE == 'prod'
         run: |
           aws lambda update-function-code \
               --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
@@ -104,11 +117,13 @@ jobs:
               --s3-key deploy/lambda.zip
 
       - name: 배포 완료 대기
+        if: env.DEPLOY_MODE == 'prod'
         run: |
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
 
       - name: Lambda 핸들러 및 Layer 설정
+        if: env.DEPLOY_MODE == 'prod'
         run: |
           aws lambda update-function-configuration \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
