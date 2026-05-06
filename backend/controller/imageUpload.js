@@ -13,10 +13,6 @@ const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp', '.gif'];
 // AWS S3 클라이언트 설정
 const s3Client = new S3Client({
   region: process.env.AWS_S3_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_S3_SECRET_KEY,
-  },
 });
 
 async function uploadFileToS3(file) {
@@ -95,6 +91,10 @@ async function updateFileOnS3(newFile) {
 }
 
 // multer-s3 설정
+if (!process.env.AWS_BUCKET) {
+  throw new Error('AWS_BUCKET 환경변수가 설정되지 않았습니다.');
+}
+
 const uploadS3 = multer({
   storage: multerS3({
     s3: s3Client,
