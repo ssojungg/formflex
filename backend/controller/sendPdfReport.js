@@ -1,7 +1,10 @@
 const PDFDocument = require('pdfkit');
 const nodemailer = require('nodemailer');
 const { PassThrough } = require('stream');
+const path = require('path');
 const { Survey, Question, Choice } = require('../models');
+
+const FONT_PATH = path.join(__dirname, '../assets/fonts/NanumGothic.ttf');
 
 const sendPdfReportEmail = async (surveyId, toEmail) => {
   //DB에서 질문 + 설문 + 선택지 한번에 가져오기
@@ -17,11 +20,13 @@ const sendPdfReportEmail = async (surveyId, toEmail) => {
 
   //pdf 문서 생성
   const doc = new PDFDocument({ margin: 50 });
+  doc.registerFont('NanumGothic', FONT_PATH);
+  doc.font('NanumGothic');
   const stream = new PassThrough();
   const chunks = [];
 
   //pdf 데이터를 메모리에 모으기
-  stream.on('data', (chunk) => chunk.push(chunk));
+  stream.on('data', (chunk) => chunks.push(chunk));
   doc.pipe(stream);
 
   //pdf 내용 작성
