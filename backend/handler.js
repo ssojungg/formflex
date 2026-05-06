@@ -23,7 +23,7 @@ const { showAllSurveys } = require('./controller/showAllSurveys');
 const { deleteSurveyAndRelatedData } = require('./controller/surveyDelete');
 const { createAnswer } = require('./controller/answerSave');
 const { getUrl } = require('./controller/getSurveyUrl');
-const { sendSurveyEmailWithSurveyId } = require('./controller/urlShare');
+const { sendSurveyEmailWithSurveyId, sendReportEmail } = require('./controller/urlShare');
 const { getAnswerByuserId } = require('./controller/answerReadByuserId');
 const { getResultsByResponses } = require('./controller/getResultsByRes');
 
@@ -248,6 +248,22 @@ const routes = [
   },
   { method: 'GET', path: '/api/surveys/:id', handler: getSurveyById },
   { method: 'POST', path: '/api/surveys/:id', handler: createAnswer },
+  {
+    method: 'POST',
+    path: '/api/surveys/:id/report-email',
+    handler: async (req, res) => {
+      const { email, surveyTitle, pdfBase64 } = req.body;
+      if (!email) return res.status(400).json({ message: 'email 필드가 필요합니다' });
+      if (!pdfBase64) return res.status(400).json({ message: 'PDF 데이터가 필요합니다' });
+      try {
+        const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+        const result = await sendReportEmail(email, pdfBuffer, surveyTitle);
+        res.status(200).json(result);
+      } catch (error) {
+        res.status(500).json({ message: error.message || '서버 오류 발생' });
+      }
+    },
+  },
   {
     method: 'POST',
     path: '/api/surveys/:id/share',

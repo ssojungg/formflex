@@ -1284,7 +1284,11 @@ function SurveyEditor() {
                 initial={{ opacity: 0, y: 8, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                className="relative bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-lg max-w-[180px] text-center"
+                className="relative text-white text-xs rounded-xl px-3 py-2.5 max-w-[180px] text-center"
+                style={{
+                  backgroundColor: themeColor,
+                  boxShadow: `0 8px 24px ${themeColor}55, 0 2px 8px ${themeColor}33`,
+                }}
               >
                 여기서 디자인을 수정해 보세요!
                 <button
@@ -1292,14 +1296,18 @@ function SurveyEditor() {
                     setShowCoachMark(false);
                     localStorage.setItem('customize_coach_dismissed', '1');
                   }}
-                  className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-600 hover:bg-gray-500 rounded-full flex items-center justify-center text-white"
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-white"
+                  style={{ backgroundColor: `${themeColor}cc` }}
                 >
                   <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
                 </button>
                 {/* 말풍선 꼬리 */}
-                <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-gray-900 rotate-45" />
+                <div
+                  className="absolute -bottom-1.5 right-6 w-3 h-3 rotate-45"
+                  style={{ backgroundColor: themeColor }}
+                />
               </motion.div>
             )}
           </AnimatePresence>
