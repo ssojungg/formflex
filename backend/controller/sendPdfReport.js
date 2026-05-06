@@ -21,7 +21,7 @@ const sendPdfReportEmail = async (surveyId, toEmail) => {
   const chunks = [];
 
   //pdf 데이터를 메모리에 모으기
-  stream.on('data', (chunk) => chunk.push(chunk));
+  stream.on('data', (chunk) => chunks.push(chunk));
   doc.pipe(stream);
 
   //pdf 내용 작성
