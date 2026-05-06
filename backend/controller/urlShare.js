@@ -101,9 +101,6 @@ const sendSurveyEmailWithSurveyId = async (surveyId, emails) => {
 const sendReportEmail = async (email, pdfBuffer, surveyTitle) => {
   let transporter = nodemailer.createTransport({
     service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: true,
     auth: {
       type: 'OAuth2',
       user: process.env.GMAIL_OAUTH_USER,
