@@ -412,7 +412,7 @@ function ResultPage() {
       )}
 
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible print:block">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0 print:overflow-visible print:block">
         {/* Header */}
         <header className="h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100 flex-shrink-0 print:hidden">
           <div className="flex items-center gap-3">
@@ -468,7 +468,7 @@ function ResultPage() {
         {hasData && !isLoading && (
           <>
             {/* Stats Cards */}
-            <div className="px-4 md:px-6 py-4 bg-white border-b border-gray-100">
+            <div className="w-full px-4 md:px-6 py-4 bg-white border-b border-gray-100">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-indigo-50 rounded-2xl p-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white">
@@ -510,7 +510,7 @@ function ResultPage() {
             </div>
 
             {/* Tabs */}
-            <div className="bg-white border-b border-gray-100 px-4 md:px-6 print:hidden">
+            <div className="w-full bg-white border-b border-gray-100 px-4 md:px-6 print:hidden">
               <div className="flex gap-6">
                 {[
                   { id: 'question' as const, label: '질문별 분석' },
@@ -539,7 +539,8 @@ function ResultPage() {
             </div>
 
             {/* Content */}
-            <div ref={contentRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 print:overflow-visible print:p-0">
+            <div ref={contentRef} className="flex-1 overflow-y-auto print:overflow-visible print:p-0">
+              <div className="w-full max-w-5xl mx-auto p-4 md:p-6 space-y-5">
 
               {/* ── 질문별 탭 ── */}
               {(activeTab === 'question' || isPrinting) && (
@@ -726,6 +727,7 @@ function ResultPage() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           </>
         )}

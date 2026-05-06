@@ -25,12 +25,16 @@ export const getExcelDownloadAPI = async (surveyId: number) => {
 };
 
 export const sendReportEmailAPI = async (surveyId: number, email: string, pdfBlob: Blob, surveyTitle: string) => {
-  const formData = new FormData();
-  formData.append('email', email);
-  formData.append('surveyTitle', surveyTitle);
-  formData.append('pdf', pdfBlob, 'report.pdf');
-  const response = await api.post(`/surveys/${surveyId}/report-email`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  const pdfBase64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(pdfBlob);
+  });
+  const response = await api.post(`/surveys/${surveyId}/report-email`, {
+    email,
+    surveyTitle,
+    pdfBase64,
   });
   return response.data;
 };
