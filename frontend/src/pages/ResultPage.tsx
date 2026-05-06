@@ -334,11 +334,12 @@ function ResultPage() {
       if (!target) throw new Error('콘텐츠를 찾을 수 없습니다');
 
       const canvas = await html2canvas(target, {
-        scale: 2,
+        scale: 1,
         useCORS: true,
         allowTaint: true,
         height: target.scrollHeight,
         windowHeight: target.scrollHeight,
+        logging: false,
       });
 
       setIsPrinting(false);
@@ -351,7 +352,7 @@ function ResultPage() {
       let y = 0;
       while (y < imgHeight) {
         if (y > 0) pdf.addPage();
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, -y, imgWidth, imgHeight);
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.75), 'JPEG', 0, -y, imgWidth, imgHeight);
         y += pageHeight;
       }
 
