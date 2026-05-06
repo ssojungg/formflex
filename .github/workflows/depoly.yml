@@ -2,10 +2,11 @@ name: Deploy Backend to Lambda
 
 on:
   push:
-    branches: [main, "be/fix/#51"]
+    # 모든 브랜치에서 push 발생 시 실행
     paths:
       - "backend/**"
       - "index.js"
+      - ".github/workflows/deploy.yml"
   pull_request:
     branches: [main]
     paths:
@@ -36,7 +37,8 @@ jobs:
     name: 람다 배포
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/be/fix/#51')
+    # ★ 핵심 수정: push 이벤트면 무조건 배포 (브랜치 조건 삭제)
+    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
