@@ -2,7 +2,9 @@ const {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');
@@ -122,4 +124,28 @@ const uploadS3 = multer({
   { name: 'imageUrl', maxCount: 10 }, // 클라이언트에서 최대 10개의 이미지를 배열 형태로 보낼 수 있다고 가정
 ]);
 
-module.exports = { uploadS3, uploadFileToS3, deleteFileFromS3, updateFileOnS3 };
+// PDF 임시 업로드용 presigned PUT URL 생성 (5분 유효)
+async function generatePresignedUploadUrl(s3Key) {
+  const command = new PutObjectCommand({
+    Bucket: process.env.AWS_BUCKET,
+    Key: s3Key,
+    ContentType: 'application/pdf',
+  });
+  return getSignedUrl(s3Client, command, { expiresIn: 300 });
+}
+
+// S3에서 파일을 Buffer로 읽기
+async function getFileFromS3(s3Key) {
+  const command = new GetObjectCommand({
+    Bucket: process.env.AWS_BUCKET,
+    Key: s3Key,
+  });
+  const response = await s3Client.send(command);
+  const chunks = [];
+  for await (const chunk of response.Body) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
+module.exports = { uploadS3, uploadFileToS3, deleteFileFromS3, updateFileOnS3, generatePresignedUploadUrl, getFileFromS3 };
