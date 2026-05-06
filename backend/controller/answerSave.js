@@ -166,8 +166,10 @@ const createAnswer = async (req, res) => {
         }
       }
     } catch (emailError) {
-      //이메일 발송 실패해도 응답 저장은 이미 성공했으나 에러 전파 안함
-      console.log('이메일 리포트 발송 오류:', emailError);
+      console.error('[EMAIL_REPORT] 발송 실패 surveyId=%s to=%s', surveyId, surveyRecord?.reportEmail);
+      console.error('[EMAIL_REPORT] 에러 메시지:', emailError.message);
+      console.error('[EMAIL_REPORT] 에러 코드:', emailError.code);
+      console.error('[EMAIL_REPORT] 스택:', emailError.stack);
     }
     res.status(201).json({ message: '저장되었습니다.' });
   } catch (error) {
