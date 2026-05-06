@@ -2,9 +2,7 @@ name: Deploy Backend to Lambda
 
 on:
   push:
-    branches:
-      - main
-      - "be/fix/#51"
+    branches: [main, "be/fix/#51"]
 
     paths:
       - "backend/**"
