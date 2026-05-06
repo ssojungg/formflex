@@ -3,7 +3,6 @@ name: Deploy Backend to Lambda
 on:
   push:
     branches: [main, "be/fix/#51"]
-
     paths:
       - "backend/**"
       - "index.js"
@@ -17,26 +16,19 @@ jobs:
   build:
     name: 빌드 검증
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Node.js 22 설정
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-
       - name: 프로덕션 의존성 패키지 설치
         working-directory: backend
         run: npm ci --omit=dev
-
       - name: 배포용 압축 파일 생성
         run: |
           cd backend
-          zip -r ../lambda.zip . \
-             --exclude ".env" \
-             --exclude "*.git"
-
+          zip -r ../lambda.zip . --exclude ".env" --exclude "*.git"
       - name: 빌드 결과 확인
         run: ls -lh lambda.zip
 
@@ -44,27 +36,10 @@ jobs:
     name: 람다 배포
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/be/fix/#51')
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Node.js 22 설정
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: 프로덕션 의존성 패키지 설치
-        working-directory: backend
-        run: npm ci --omit=dev
-
-      - name: 배포용 압축 파일 생성
-        run: |
-          cd backend
-          zip -r ../lambda.zip . \
-             --exclude ".env" \
-             --exclude "*.git"
-
       - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -80,22 +55,24 @@ jobs:
           npm install @sparticuz/chromium@147 puppeteer-core@24 --omit=dev
           cd ../..
           zip -r chromium-layer.zip chromium-layer/
-          echo "Layer zip size: $(ls -lh chromium-layer.zip | awk '{print $5}')"
 
-      - name: Chromium Layer 배포
+      - name: S3로 Layer 및 Backend 업로드
+        run: |
+          aws s3 cp chromium-layer.zip s3://${{ secrets.AWS_BUCKET }}/layers/chromium-layer.zip
+          cd backend
+          zip -r ../lambda.zip . --exclude ".env" --exclude "*.git"
+          aws s3 cp ../lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy/lambda.zip
+
+      - name: Chromium Layer 배포 (S3 소스 사용)
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           LAYER_VERSION=$(aws lambda publish-layer-version \
             --layer-name formflex-chromium \
-            --zip-file fileb://chromium-layer.zip \
+            --content S3Bucket=${{ secrets.AWS_BUCKET }},S3Key=layers/chromium-layer.zip \
             --compatible-runtimes nodejs22.x \
             --query 'Version' \
             --output text)
           echo "LAYER_ARN=arn:aws:lambda:${{ secrets.AWS_REGION }}:${ACCOUNT_ID}:layer/formflex-chromium:${LAYER_VERSION}" >> $GITHUB_ENV
-
-      - name: S3로 압축 파일 업로드
-        run: |
-          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy/lambda.zip
 
       - name: S3에서 람다 함수 배포
         run: |
@@ -103,9 +80,6 @@ jobs:
               --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
               --s3-bucket ${{ secrets.AWS_BUCKET }} \
               --s3-key deploy/lambda.zip
-
-      - name: 배포 완료 대기
-        run: |
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
 
