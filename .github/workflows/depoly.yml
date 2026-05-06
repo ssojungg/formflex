@@ -83,10 +83,11 @@ jobs:
 
       - name: Chromium Layer 배포
         run: |
+          aws s3 cp chromium-layer.zip s3://${{ secrets.AWS_BUCKET }}/layers/chromium-layer.zip
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           LAYER_VERSION=$(aws lambda publish-layer-version \
             --layer-name formflex-chromium \
-            --zip-file fileb://chromium-layer.zip \
+            --content S3Bucket=${{ secrets.AWS_BUCKET }},S3Key=layers/chromium-layer.zip \
             --compatible-runtimes nodejs22.x \
             --query 'Version' \
             --output text)
