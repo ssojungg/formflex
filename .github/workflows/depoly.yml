@@ -7,6 +7,10 @@ on:
       - "index.js"
       - ".github/workflows/**"
 
+concurrency:
+  group: lambda-deploy
+  cancel-in-progress: false
+
 jobs:
   build:
     name: 빌드 검증
@@ -79,6 +83,20 @@ jobs:
 
       - name: 배포 완료 대기
         run: |
+          aws lambda wait function-updated \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
+
+      - name: 기존 Chromium Layer 조회 및 적용
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          LAYER_VERSION=$(aws lambda list-layer-versions \
+            --layer-name formflex-chromium \
+            --query 'LayerVersions[0].Version' \
+            --output text)
+          LAYER_ARN="arn:aws:lambda:${{ secrets.AWS_REGION }}:${ACCOUNT_ID}:layer/formflex-chromium:${LAYER_VERSION}"
+          aws lambda update-function-configuration \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+            --layers $LAYER_ARN
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
 
