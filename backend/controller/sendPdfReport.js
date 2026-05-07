@@ -1,5 +1,5 @@
-const chromium = require('@sparticuz/chromium');
-const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium'); //chrome 오픈소스 브라우저 실행 엔진(람다 환경용)
+const puppeteer = require('puppeteer-core'); //브라우저를 코드로 조종하는 도구 
 const nodemailer = require('nodemailer');
 const { Survey, User } = require('../models');
 
