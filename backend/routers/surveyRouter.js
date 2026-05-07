@@ -29,7 +29,7 @@ router.post(
 
 // 제미나이 
 router.post('/gemini/choices',generateChoices);
-router.post('gemini/summary',generateSummary);
+router.post('/gemini/summary',generateSummary);
 
 // 2. 구체적인 경로들 (고정된 경로들부터 먼저 선언)
 router.get('/:userId/answers/:surveyId', getAnswerController.getAnswerByuserId);
