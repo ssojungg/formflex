@@ -140,8 +140,9 @@ jobs:
           cd chromium-layer/nodejs
           npm init -y
           npm install @sparticuz/chromium@147 puppeteer-core@24 --omit=dev
-          cd ../..
-          zip -r chromium-layer.zip chromium-layer/
+          cd ..
+          zip -r ../chromium-layer.zip nodejs/
+          cd ..
           echo "Layer zip size: $(ls -lh chromium-layer.zip | awk '{print $5}')"
 
       - name: Chromium Layer 배포
