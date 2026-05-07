@@ -6,12 +6,6 @@ on:
       - "backend/**"
       - "index.js"
       - ".github/workflows/**"
-  pull_request:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - "index.js"
-      - ".github/workflows/**"
 
 jobs:
   build:
