@@ -147,14 +147,13 @@ jobs:
       - name: Chromium Layer 배포
         run: |
           aws s3 cp chromium-layer.zip s3://${{ secrets.AWS_BUCKET }}/layers/chromium-layer.zip
-          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-          LAYER_VERSION=$(aws lambda publish-layer-version \
+          LAYER_ARN=$(aws lambda publish-layer-version \
             --layer-name formflex-chromium \
             --content S3Bucket=${{ secrets.AWS_BUCKET }},S3Key=layers/chromium-layer.zip \
             --compatible-runtimes nodejs22.x \
-            --query 'Version' \
+            --query 'LayerVersionArn' \
             --output text)
-          echo "LAYER_ARN=arn:aws:lambda:${{ secrets.AWS_REGION }}:${ACCOUNT_ID}:layer/formflex-chromium:${LAYER_VERSION}" >> $GITHUB_ENV
+          echo "LAYER_ARN=${LAYER_ARN}" >> $GITHUB_ENV
 
       - name: S3로 압축 파일 업로드
         run: |
