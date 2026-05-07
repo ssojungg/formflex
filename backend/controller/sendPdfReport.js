@@ -99,25 +99,50 @@ const sendPdfReportEmail = async (surveyId, toEmail) => {
     to: toEmail,
     subject: `[FormFlex] 설문 분석 리포트 - ${survey.title}`,
     html: `
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-          <td style="padding: 20px; background: linear-gradient(to right, #918DCA, #99A8DB, #A3C9F0);">
-            <table align="center" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%;">
-              <tr>
-                <td style="background-color: #ffffff; padding: 30px; text-align: center; border-radius: 8px;">
-                  <h2 style="color: #333333;">설문 응답 목표를 달성했습니다! 🎉</h2>
-                  <p style="color: #555555; font-size: 16px;">
-                    <strong>${survey.title}</strong> 설문의 응답자 수가 목표에 도달했습니다.
-                  </p>
-                  <p style="color: #888888; font-size: 13px;">
-                    첨부된 PDF 파일에서 분석 결과를 확인하세요.
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
+      <div style="margin:0;padding:0;background-color:#f5f6fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f6fa;padding:48px 20px;">
+          <tr>
+            <td align="center">
+              <table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;">
+
+                <tr>
+                  <td style="background:linear-gradient(135deg,#918DCA 0%,#A3C9F0 100%);padding:28px 40px;border-radius:14px 14px 0 0;text-align:center;">
+                    <span style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">FormFlex</span>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="background-color:#ffffff;padding:44px 48px 36px;border-radius:0 0 14px 14px;">
+                    <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#918DCA;text-align:center;text-transform:uppercase;letter-spacing:1px;">GOAL ACHIEVED</p>
+                    <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#1c1c2e;text-align:center;line-height:1.3;">응답 목표 달성!</h1>
+                    <p style="margin:0 0 28px;font-size:14px;color:#999;text-align:center;">분석 리포트가 준비되었습니다</p>
+
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background:linear-gradient(135deg,#f0effe,#eaf4ff);border-radius:10px;padding:22px 24px;text-align:center;">
+                          <p style="margin:0 0 4px;font-size:13px;color:#999;">설문 제목</p>
+                          <p style="margin:0;font-size:16px;font-weight:600;color:#1c1c2e;">${survey.title}</p>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+                      <tr>
+                        <td style="border-left:3px solid #918DCA;padding:4px 0 4px 16px;">
+                          <p style="margin:0;font-size:14px;color:#666;line-height:1.7;">설정하신 응답자 목표에 도달했습니다. 첨부된 PDF에서 전체 응답 통계와 인사이트를 확인하세요.</p>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <p style="margin:32px 0 0;font-size:12px;color:#bbb;text-align:center;">© 2025 FormFlex · 본 메일은 발신 전용입니다.</p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
     `,
     attachments: [
       {
