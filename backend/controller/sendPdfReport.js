@@ -13,12 +13,13 @@ const generatePdfWithPuppeteer = async (surveyId, owner) => {
       args: [
         ...chromium.args,
         '--disable-dev-shm-usage',
-        '--single-process',
+        '--no-zygote',
       ],
       defaultViewport: { width: 1280, height: 900 },
       executablePath,
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
+      pipe: true,
     });
 
     const page = await browser.newPage();
