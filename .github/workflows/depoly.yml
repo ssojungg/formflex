@@ -2,15 +2,14 @@ name: Deploy Backend to Lambda
 
 on:
   push:
-    branches: [main]
     paths:
       - "backend/**"
       - "index.js"
-  pull_request:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - "index.js"
+      - ".github/workflows/**"
+
+concurrency:
+  group: lambda-deploy
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -39,8 +38,72 @@ jobs:
       - name: 빌드 결과 확인
         run: ls -lh lambda.zip
 
-  deploy:
-    name: 람다 배포
+  deploy-staging:
+    name: 스테이징 배포 ($LATEST)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node.js 22 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 프로덕션 의존성 패키지 설치
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: 배포용 압축 파일 생성
+        run: |
+          cd backend
+          zip -r ../lambda.zip . \
+             --exclude ".env" \
+             --exclude "*.git"
+
+      - name: AWS 자격 증명 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: S3로 압축 파일 업로드
+        run: |
+          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy-staging/lambda.zip
+
+      - name: $LATEST 업데이트 (staging alias 자동 반영)
+        run: |
+          aws lambda update-function-code \
+              --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+              --s3-bucket ${{ secrets.AWS_BUCKET }} \
+              --s3-key deploy-staging/lambda.zip
+
+      - name: 배포 완료 대기
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
+
+      - name: 기존 Chromium Layer 조회 및 적용
+        run: |
+          LAYER_ARN=$(aws lambda get-function-configuration \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+            --query 'Layers[0].Arn' \
+            --output text)
+          if [ "$LAYER_ARN" = "None" ] || [ -z "$LAYER_ARN" ]; then
+            echo "Layer가 아직 없습니다. prod 배포 후 자동으로 붙습니다."
+            exit 0
+          fi
+          aws lambda update-function-configuration \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+            --layers $LAYER_ARN
+          aws lambda wait function-updated \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
+
+  deploy-prod:
+    name: 프로덕션 배포 (prod alias)
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -117,3 +180,14 @@ jobs:
             --layers ${{ env.LAYER_ARN }}
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
+
+      - name: 버전 publish 및 prod alias 업데이트
+        run: |
+          VERSION=$(aws lambda publish-version \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+            --query 'Version' \
+            --output text)
+          aws lambda update-alias \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+            --name prod \
+            --function-version $VERSION
