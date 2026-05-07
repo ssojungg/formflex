@@ -19,7 +19,6 @@ const generatePdfWithPuppeteer = async (surveyId, owner) => {
       executablePath,
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
-      pipe: true,
     });
 
     const page = await browser.newPage();
