@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const generateChoicesAPI = async (prompt: string): Promise<string[]> => {
   const res = await fetch(`${BASE_URL}/surveys/gemini/choices`, {
