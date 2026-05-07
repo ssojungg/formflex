@@ -88,12 +88,14 @@ jobs:
 
       - name: 기존 Chromium Layer 조회 및 적용
         run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-          LAYER_VERSION=$(aws lambda list-layer-versions \
-            --layer-name formflex-chromium \
-            --query 'LayerVersions[0].Version' \
+          LAYER_ARN=$(aws lambda get-function-configuration \
+            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+            --query 'Layers[0].Arn' \
             --output text)
-          LAYER_ARN="arn:aws:lambda:${{ secrets.AWS_REGION }}:${ACCOUNT_ID}:layer/formflex-chromium:${LAYER_VERSION}"
+          if [ "$LAYER_ARN" = "None" ] || [ -z "$LAYER_ARN" ]; then
+            echo "Layer가 아직 없습니다. prod 배포 후 자동으로 붙습니다."
+            exit 0
+          fi
           aws lambda update-function-configuration \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
             --layers $LAYER_ARN
