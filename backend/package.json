@@ -1,7 +1,5 @@
 {
   "dependencies": {
-    "@sparticuz/chromium-min": "^147.0.0",
-    "puppeteer-core": "^24.0.0",
     "@aws-sdk/client-lambda": "^3.997.0",
     "@aws-sdk/client-s3": "^3.490.0",
     "@aws-sdk/s3-request-presigner": "^3.1043.0",
