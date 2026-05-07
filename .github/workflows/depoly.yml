@@ -79,7 +79,8 @@ jobs:
           aws lambda update-function-code \
               --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
               --s3-bucket ${{ secrets.AWS_BUCKET }} \
-              --s3-key deploy-staging/lambda.zip
+              --s3-key deploy-staging/lambda.zip \
+              --architectures x86_64
 
       - name: 배포 완료 대기
         run: |
@@ -94,11 +95,17 @@ jobs:
             --output text)
           if [ "$LAYER_ARN" = "None" ] || [ -z "$LAYER_ARN" ]; then
             echo "Layer가 아직 없습니다. prod 배포 후 자동으로 붙습니다."
-            exit 0
+            aws lambda update-function-configuration \
+              --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+              --memory-size 2048 \
+              --timeout 120
+          else
+            aws lambda update-function-configuration \
+              --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
+              --memory-size 2048 \
+              --timeout 120 \
+              --layers $LAYER_ARN
           fi
-          aws lambda update-function-configuration \
-            --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
-            --layers $LAYER_ARN
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
 
@@ -152,6 +159,7 @@ jobs:
             --layer-name formflex-chromium \
             --content S3Bucket=${{ secrets.AWS_BUCKET }},S3Key=layers/chromium-layer.zip \
             --compatible-runtimes nodejs22.x \
+            --compatible-architectures x86_64 \
             --query 'LayerVersionArn' \
             --output text)
           echo "LAYER_ARN=${LAYER_ARN}" >> $GITHUB_ENV
@@ -165,7 +173,8 @@ jobs:
           aws lambda update-function-code \
               --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
               --s3-bucket ${{ secrets.AWS_BUCKET }} \
-              --s3-key deploy/lambda.zip
+              --s3-key deploy/lambda.zip \
+              --architectures x86_64
 
       - name: 배포 완료 대기
         run: |
@@ -177,6 +186,8 @@ jobs:
           aws lambda update-function-configuration \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }} \
             --handler handler.handler \
+            --memory-size 2048 \
+            --timeout 120 \
             --layers ${{ env.LAYER_ARN }}
           aws lambda wait function-updated \
             --function-name ${{ secrets.AWS_LAMBDA_FUNCTION_NAME }}
