@@ -7,5 +7,5 @@ export const generateChoicesAPI = async (prompt: string): Promise<string[]> => {
     body: JSON.stringify({ prompt }),
   });
   const data = await res.json();
-  return data.choices;
+  return Array.isArray(data.choices) ? data.choices : [];
 };

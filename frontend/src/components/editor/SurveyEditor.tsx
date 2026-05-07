@@ -1010,7 +1010,11 @@ function SurveyEditor() {
     setIsAiLoading(true);
     try {
       const choices = await generateChoicesAPI(aiPrompt);
-      setAiVersions((prev) => [...prev, choices]);
+      if (Array.isArray(choices) && choices.length > 0) {
+        setAiVersions((prev) => [...prev, choices]);
+      } else {
+        alert('AI가 선택지를 생성하지 못했습니다. 다시 시도해주세요.');
+      }
       setAiPrompt('');
     } catch {
       alert('AI 생성에 실패했습니다.');
