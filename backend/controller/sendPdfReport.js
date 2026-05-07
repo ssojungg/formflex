@@ -8,11 +8,17 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const generatePdfWithPuppeteer = async (surveyId, owner) => {
   let browser = null;
   try {
+    const executablePath = await chromium.executablePath();
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-dev-shm-usage',
+        '--single-process',
+      ],
       defaultViewport: { width: 1280, height: 900 },
-      executablePath: await chromium.executablePath(),
+      executablePath,
       headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
