@@ -1,7 +1,10 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+const model = genAI.getGenerativeModel(
+    { model: "gemini-1.5-flash" },
+    { apiVersion: 'v1' } // 버전 명시!
+  );
 
 // 선택지 생성
 const generateChoices = async (req, res) => {
