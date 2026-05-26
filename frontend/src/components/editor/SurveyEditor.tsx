@@ -7,7 +7,7 @@ import { useAuthStore } from '../../store/AuthStore';
 import { createSurveyAPI } from '../../api/survey';
 import { responseformAPI } from '../../api/responseform';
 import { EditableSurvey } from '../../types/editableSurvey';
-import { generateChoicesAPI } from '../../api/gemini';
+import { generateChoicesAPI, GeminiChoicesResult } from '../../api/gemini';
 
 // ==================== ICONS ====================
 function PlusIcon() {
@@ -803,7 +803,7 @@ function SurveyEditor() {
   );
   const [aiTargetQuestion, setAiTargetQuestion] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
-  const [aiVersions, setAiVersions] = useState<string[][]>([]);
+  const [aiVersions, setAiVersions] = useState<GeminiChoicesResult[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -1009,13 +1009,13 @@ function SurveyEditor() {
     if (!aiTargetQuestion || !aiPrompt.trim()) return;
     setIsAiLoading(true);
     try {
-      const choices = await generateChoicesAPI(aiPrompt);
-      if (Array.isArray(choices) && choices.length > 0) {
-        setAiVersions((prev) => [...prev, choices]);
+      const result = await generateChoicesAPI(aiPrompt);
+      if (result.choices.length > 0) {
+        setAiVersions((prev) => [...prev, result]);
+        setAiPrompt('');
       } else {
         alert('AI가 선택지를 생성하지 못했습니다. 다시 시도해주세요.');
       }
-      setAiPrompt('');
     } catch {
       alert('AI 생성에 실패했습니다.');
     } finally {
@@ -1023,10 +1023,13 @@ function SurveyEditor() {
     }
   };
 
-  const handleSelectVersion = (choices: string[]) => {
+  const handleSelectVersion = (result: GeminiChoicesResult) => {
     if (!aiTargetQuestion) return;
-    const newOpts = choices.map((t, i) => ({ id: `opt-${Date.now()}-${i}`, text: t }));
-    updateQuestion(aiTargetQuestion, { options: newOpts });
+    const newOpts = result.choices.map((t, i) => ({ id: `opt-${Date.now()}-${i}`, text: t }));
+    updateQuestion(aiTargetQuestion, {
+      label: result.title || undefined,
+      options: newOpts,
+    });
     setShowAIModal(false);
     setAiVersions([]);
     setAiPrompt('');
@@ -1901,15 +1904,18 @@ function SurveyEditor() {
                 {aiVersions.length === 0 && !isAiLoading && (
                   <p className="text-sm text-secondary-400 text-center mt-6">원하는 옵션을 설명해주세요.</p>
                 )}
-                {aiVersions.map((choices, idx) => (
+                {aiVersions.map((result, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleSelectVersion(choices)}
+                    onClick={() => handleSelectVersion(result)}
                     className="w-full text-left bg-secondary-50 border border-secondary-200 rounded-xl p-4 hover:border-primary-400 hover:bg-primary-50 transition-all"
                   >
-                    <p className="text-xs font-semibold text-secondary-400 mb-2">Ver {String(idx + 1).padStart(2, '0')}</p>
+                    <p className="text-xs font-semibold text-secondary-400 mb-1">Ver {String(idx + 1).padStart(2, '0')}</p>
+                    {result.title && (
+                      <p className="text-sm font-medium text-secondary-800 mb-2">{result.title}</p>
+                    )}
                     <div className="flex flex-wrap gap-2">
-                      {choices.map((c, i) => (
+                      {result.choices.map((c, i) => (
                         <span key={i} className="px-3 py-1 bg-white border border-secondary-200 rounded-full text-sm text-secondary-700 flex items-center gap-1">
                           <span className="text-secondary-400">×</span> {c}
                         </span>
