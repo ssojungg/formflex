@@ -94,14 +94,14 @@ jobs:
           aws lambda wait function-updated \
             --function-name formflex-dev
 
-      - name: 기존 Chromium Layer 조회 및 적용
+      - name: Chromium Layer 조회 및 적용
         run: |
-          LAYER_ARN=$(aws lambda get-function-configuration \
-            --function-name formflex-dev \
-            --query 'Layers[0].Arn' \
+          LAYER_ARN=$(aws lambda list-layer-versions \
+            --layer-name formflex-chromium \
+            --query 'LayerVersions[0].LayerVersionArn' \
             --output text)
           if [ "$LAYER_ARN" = "None" ] || [ -z "$LAYER_ARN" ]; then
-            echo "Layer가 아직 없습니다. prod 배포 후 자동으로 붙습니다."
+            echo "Chromium Layer가 없습니다. prod 배포를 먼저 실행해주세요."
             aws lambda update-function-configuration \
               --function-name formflex-dev \
               --memory-size 2048 \
