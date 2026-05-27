@@ -84,7 +84,7 @@ jobs:
       - name: $LATEST 업데이트 (staging alias 자동 반영)
         run: |
           aws lambda update-function-code \
-              --function-name formflex_dev \
+              --function-name formflex-dev \
               --s3-bucket ${{ secrets.AWS_BUCKET }} \
               --s3-key deploy-staging/lambda.zip \
               --architectures x86_64
@@ -92,29 +92,29 @@ jobs:
       - name: 배포 완료 대기
         run: |
           aws lambda wait function-updated \
-            --function-name formflex_dev
+            --function-name formflex-dev
 
       - name: 기존 Chromium Layer 조회 및 적용
         run: |
           LAYER_ARN=$(aws lambda get-function-configuration \
-            --function-name formflex_dev \
+            --function-name formflex-dev \
             --query 'Layers[0].Arn' \
             --output text)
           if [ "$LAYER_ARN" = "None" ] || [ -z "$LAYER_ARN" ]; then
             echo "Layer가 아직 없습니다. prod 배포 후 자동으로 붙습니다."
             aws lambda update-function-configuration \
-              --function-name formflex_dev \
+              --function-name formflex-dev \
               --memory-size 2048 \
               --timeout 120
           else
             aws lambda update-function-configuration \
-              --function-name formflex_dev \
+              --function-name formflex-dev \
               --memory-size 2048 \
               --timeout 120 \
               --layers $LAYER_ARN
           fi
           aws lambda wait function-updated \
-            --function-name formflex_dev
+            --function-name formflex-dev
 
   deploy-prod:
     name: 프로덕션 배포 (prod alias)
