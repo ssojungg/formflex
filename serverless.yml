@@ -8,7 +8,7 @@ provider:
   timeout: 120
   memorySize: 1536
   environment:
-    NODE_ENV: ${opt:stage, 'production'}
+    NODE_ENV: formflex_${opt:stage, 'production'}
     # opt: option 줄인말
     # 값 넘기면 그걸로, 없으면 production
     FRONTEND_URL: ${env:FRONTEND_URL}

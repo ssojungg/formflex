@@ -80,7 +80,7 @@ jobs:
       - name: dev 람다 배포
         env:
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-        run: npx serverless@3 deploy --stage formflex_dev
+        run: npx serverless@3 deploy --stage dev
 
       - name: 기존 Chromium Layer 조회 및 적용
         run: |
