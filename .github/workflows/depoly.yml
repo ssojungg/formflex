@@ -8,6 +8,7 @@ on:
       #백엔드 폴더 안에 뭔가 바뀌면 이 파일을 실행해
       - "index.js"
       - ".github/workflows/**"
+      - "serverless.yml"
 
 concurrency:
   group: lambda-deploy
