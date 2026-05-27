@@ -49,7 +49,6 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
-    # ref은 어느 브런치에 push 되었는지 물어보는거
     # main 브런치가 아닐 때만 실행
 
     steps:
@@ -60,16 +59,17 @@ jobs:
         with:
           node-version: "22"
 
-      - name: 루트 의존성 설치 (serverlsess 플러그 인용)
-        run: npm install
-
       - name: 백엔드 프로덕션 의존성 설치
         working-directory: backend
         run: npm ci --omit=dev
         # 개발용 패키지 제외하고 설치 -> 람다 용량 최적화
 
-      - name: Serverless Framework 설치
-        run: npm install -g serverless@3 --force
+      - name: 배포용 압축 파일 생성
+        run: |
+          cd backend
+          zip -r ../lambda.zip . \
+             --exclude ".env" \
+             --exclude "*.git"
 
       - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v4
@@ -78,30 +78,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: dev 람다 배포
-        env:
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-        run: npx serverless@3 deploy --stage dev
-
-      - name: 기존 Chromium Layer 조회 및 적용
+      - name: S3로 압축 파일 업로드
         run: |
-          LAYER_ARN=$(aws lambda get-function-configuration \
-            --function-name formflex_dev \ 
-            --query 'Layers[0].Arn' \
-            --output text)
-          if [ "$LAYER_ARN" = "None" ] || [ -z "$LAYER_ARN" ]; then
-            echo "Layer가 아직 없습니다. prod 배포 후 자동으로 붙습니다."
-            aws lambda update-function-configuration \
+          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy-staging/lambda.zip
+
+      - name: formflex_dev 람다 배포
+        run: |
+          aws lambda update-function-code \
               --function-name formflex_dev \
-              --memory-size 2048 \
-              --timeout 120
-          else
-            aws lambda update-function-configuration \
-              --function-name formflex_dev \
-              --memory-size 2048 \
-              --timeout 120 \
-              --layers $LAYER_ARN
-          fi
+              --s3-bucket ${{ secrets.AWS_BUCKET }} \
+              --s3-key deploy-staging/lambda.zip \
+              --architectures x86_64
+
+      - name: 배포 완료 대기
+        run: |
           aws lambda wait function-updated \
             --function-name formflex_dev
 
