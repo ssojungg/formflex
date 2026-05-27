@@ -179,7 +179,7 @@ jobs:
       - name: S3에서 람다 함수 배포
         run: |
           aws lambda update-function-code \
-              --function-name formflex \
+              --function-name formflex-prod \
               --s3-bucket ${{ secrets.AWS_BUCKET }} \
               --s3-key deploy/lambda.zip \
               --architectures x86_64
@@ -187,26 +187,26 @@ jobs:
       - name: 배포 완료 대기
         run: |
           aws lambda wait function-updated \
-            --function-name formflex
+            --function-name formflex-prod
 
       - name: Lambda 핸들러 및 Layer 설정
         run: |
           aws lambda update-function-configuration \
-            --function-name formflex \
+            --function-name formflex-prod \
             --handler handler.handler \
             --memory-size 2048 \
             --timeout 120 \
             --layers ${{ env.LAYER_ARN }}
           aws lambda wait function-updated \
-            --function-name formflex
+            --function-name formflex-prod
 
       - name: 버전 publish 및 prod alias 업데이트
         run: |
           VERSION=$(aws lambda publish-version \
-            --function-name formflex \
+            --function-name formflex-prod \
             --query 'Version' \
             --output text)
           aws lambda update-alias \
-            --function-name formflex \
+            --function-name formflex-prod \
             --name prod \
             --function-version $VERSION
