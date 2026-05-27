@@ -68,7 +68,7 @@ jobs:
         # 개발용 패키지 제외하고 설치 -> 람다 용량 최적화
 
       - name: Serverless Framework 설치
-        run: npm install -g serverless
+        run: npm install -g serverless@3 --force
 
       - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v4
@@ -80,7 +80,7 @@ jobs:
       - name: dev 람다 배포
         env:
           FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-        run: serverless deploy --stage formflex_dev
+        run: npx serverless@3 deploy --stage formflex_dev
 
       - name: 기존 Chromium Layer 조회 및 적용
         run: |
