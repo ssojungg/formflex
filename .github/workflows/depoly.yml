@@ -60,7 +60,7 @@ jobs:
           node-version: "22"
 
       - name: 루트 의존성 설치 (serverlsess 플러그 인용)
-        run: npm install
+        run: npm install -g serverless@3
 
       - name: 백엔드 프로덕션 의존성 설치
         working-directory: backend
