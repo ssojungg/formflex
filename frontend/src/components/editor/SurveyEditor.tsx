@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/AuthStore';
 import { createSurveyAPI } from '../../api/survey';
 import { responseformAPI } from '../../api/responseform';
 import { EditableSurvey } from '../../types/editableSurvey';
+import { generateChoicesAPI, GeminiChoicesResult } from '../../api/gemini';
 
 // ==================== ICONS ====================
 function PlusIcon() {
@@ -802,6 +803,8 @@ function SurveyEditor() {
   );
   const [aiTargetQuestion, setAiTargetQuestion] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
+  const [aiVersions, setAiVersions] = useState<GeminiChoicesResult[]>([]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -994,6 +997,7 @@ function SurveyEditor() {
   const openAIForQuestion = (id: string) => {
     setAiTargetQuestion(id);
     setAiPrompt('');
+    setAiVersions([]);
     setShowAIModal(true);
   };
   const handleUploadImageForQuestion = (id: string) => {
@@ -1001,19 +1005,34 @@ function SurveyEditor() {
     questionImageInputRef.current?.click();
   };
 
-  const handleAIGenerate = () => {
+  const handleAIGenerate = async () => {
     if (!aiTargetQuestion || !aiPrompt.trim()) return;
-    const q = questions.find((x) => x.id === aiTargetQuestion);
-    if (!q) return;
-    // Mock AI generation
-    if (q.options) {
-      const newOpts = aiPrompt
-        .split(/[,\n]/)
-        .filter(Boolean)
-        .map((t, i) => ({ id: `opt-${Date.now()}-${i}`, text: t.trim() }));
-      if (newOpts.length > 0) updateQuestion(aiTargetQuestion, { options: newOpts });
+    setIsAiLoading(true);
+    try {
+      const result = await generateChoicesAPI(aiPrompt);
+      if (result.choices.length > 0) {
+        setAiVersions((prev) => [...prev, result]);
+        setAiPrompt('');
+      } else {
+        alert('AI가 선택지를 생성하지 못했습니다. 다시 시도해주세요.');
+      }
+    } catch {
+      alert('AI 생성에 실패했습니다.');
+    } finally {
+      setIsAiLoading(false);
     }
+  };
+
+  const handleSelectVersion = (result: GeminiChoicesResult) => {
+    if (!aiTargetQuestion) return;
+    const newOpts = result.choices.map((t, i) => ({ id: `opt-${Date.now()}-${i}`, text: t }));
+    updateQuestion(aiTargetQuestion, {
+      label: result.title || undefined,
+      options: newOpts,
+    });
     setShowAIModal(false);
+    setAiVersions([]);
+    setAiPrompt('');
   };
 
   const handleSave = () => {
@@ -1859,45 +1878,71 @@ function SurveyEditor() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
           >
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAIModal(false)} />
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col"
+              style={{ maxHeight: '80vh' }}
             >
-              <div className="flex items-center justify-between mb-4">
+              {/* 헤더 */}
+              <div className="flex items-center justify-between p-4 border-b border-secondary-100">
                 <div className="flex items-center gap-2">
-                  <SparkleIcon />
-                  <h2 className="text-lg font-semibold text-secondary-900">AI 옵션 생성</h2>
+                  <div className="w-8 h-8 rounded-full bg-secondary-100 flex items-center justify-center text-sm">🤖</div>
+                  <span className="font-semibold text-secondary-900">AI 옵션 생성</span>
                 </div>
                 <button onClick={() => setShowAIModal(false)} className="p-2 rounded-lg hover:bg-secondary-100">
                   <CloseIcon />
                 </button>
               </div>
-              <p className="text-sm text-secondary-500 mb-4">원하는 옵션을 설명해주세요. AI가 선택지를 생성합니다.</p>
-              <textarea
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="예: 여자 아이돌 춤신춤왕에 대해 5개 선택지 만들어줘"
-                className="w-full px-4 py-3 bg-secondary-50 border border-secondary-200 rounded-xl text-sm resize-none outline-none focus:border-primary-500"
-                rows={4}
-              />
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => setShowAIModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-secondary-100 text-secondary-700 font-medium hover:bg-secondary-200"
-                >
-                  취소
-                </button>
+
+              {/* 버전 카드 목록 */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {aiVersions.length === 0 && !isAiLoading && (
+                  <p className="text-sm text-secondary-400 text-center mt-6">원하는 옵션을 설명해주세요.</p>
+                )}
+                {aiVersions.map((result, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectVersion(result)}
+                    className="w-full text-left bg-secondary-50 border border-secondary-200 rounded-xl p-4 hover:border-primary-400 hover:bg-primary-50 transition-all"
+                  >
+                    <p className="text-xs font-semibold text-secondary-400 mb-1">Ver {String(idx + 1).padStart(2, '0')}</p>
+                    {result.title && (
+                      <p className="text-sm font-medium text-secondary-800 mb-2">{result.title}</p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {result.choices.map((c, i) => (
+                        <span key={i} className="px-3 py-1 bg-white border border-secondary-200 rounded-full text-sm text-secondary-700 flex items-center gap-1">
+                          <span className="text-secondary-400">×</span> {c}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                ))}
+                {isAiLoading && (
+                  <div className="text-center text-sm text-secondary-400 py-4">생성 중...</div>
+                )}
+              </div>
+
+              {/* 입력창 */}
+              <div className="p-4 border-t border-secondary-100 flex gap-2">
+                <input
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleAIGenerate(); }}
+                  placeholder="예: 여자 아이돌 춤신춤왕 5개 만들어줘"
+                  className="flex-1 px-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-xl text-sm outline-none focus:border-primary-500"
+                />
                 <button
                   onClick={handleAIGenerate}
-                  disabled={!aiPrompt.trim()}
-                  className="flex-1 py-2.5 rounded-xl bg-primary-500 text-white font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={!aiPrompt.trim() || isAiLoading}
+                  className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <SparkleIcon /> 생성하기
+                  <SendIcon />
                 </button>
               </div>
             </motion.div>

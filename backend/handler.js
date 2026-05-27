@@ -27,6 +27,7 @@ const { sendSurveyEmailWithSurveyId, sendReportEmail } = require('./controller/u
 const { getAnswerByuserId } = require('./controller/answerReadByuserId');
 const { getResultsByResponses } = require('./controller/getResultsByRes');
 const { generatePresignedUploadUrl, getFileFromS3, deleteFileFromS3 } = require('./controller/imageUpload');
+const { generateChoices, generateSummary } = require('./controller/gemini');
 
 const { Question, Answer, Choice } = require('./models');
 const { sequelize } = require('./models');
@@ -207,6 +208,10 @@ const routes = [
   },
   { method: 'PATCH', path: '/api/users/:id', handler: modifyPassword },
   { method: 'GET', path: '/api/users/:id', handler: getMyInfo },
+
+  // Gemini
+  { method: 'POST', path: '/api/surveys/gemini/choices', handler: generateChoices },
+  { method: 'POST', path: '/api/surveys/gemini/summary', handler: generateSummary },
 
   //survey
   {
