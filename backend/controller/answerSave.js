@@ -8,20 +8,29 @@ const createAnswer = async (req, res) => {
   const surveyId = req.params.id;
   try {
     const { userId, questions } = req.body;
+    const questionIds = questions.map((q) => q.questionId);
+    const allObjIds = questions.flatMap((q) => q.objContent || []);
+
+    const [questionDatas, choices, existingAnswers] = await Promise.all([
+      Question.findAll({where: {id: questionIds}, transaction: t}),
+      Choice.findAll({where: {id: allObjIds}, transaction: t}),
+      Answer.findAll({where:{questionId: questionIds,userId},transaction: t}),
+    ]);
+
+    const questionMap = new Map(questionDatas.map((q) => [q.id, q]));
+    const choiceMap = new Map(choices.map((c) => [c.id,c]));
+    const existingSet = new Set(existingAnswers.filter((a) => a.objContent).map((a)=> `${a.questionId}_${a.objContent}`));
     const survey = await Survey.findByPk(surveyId);
     if (!survey) {
       await t.rollback();
       return res.status(400).json({ message: '설문이 존재하지 않습니다.' });
     }
     for (const question of questions) {
-      // 질문의 타입을 확인
-      const questionData = await Question.findByPk(question.questionId, {
-        transaction: t,
-      });
+      const questionData = questionMap.get(question.questionId);
       if (!questionData) {
         await t.rollback();
         return res.status(400).json({
-          message: `Question with ID ${question.questionId} not found`,
+          message: `Question with Id ${question.questionId} not found`,
         });
       }
       if (questionData.surveyId != surveyId) {
@@ -42,30 +51,21 @@ const createAnswer = async (req, res) => {
       ) {
         // objContent의 각 요소에 대한 별도의 Answer 레코드 생성
         for (const objContentItem of question.objContent) {
-          const option = await Choice.findByPk(objContentItem, {
-            transaction: t,
-          });
-          if (!option) {
+          const option = choiceMap.get(objContentItem);
+          if(!option) {
             await t.rollback();
-            return res
-              .status(400)
-              .json({ message: `Choice with ID ${objContentItem} not found` });
+            return res.status(400).json({
+              message: `Choice with Id ${objContentItem} not found`
+            });
           }
           if (option.questionId != question.questionId) {
             await t.rollback();
-            return res
-              .status(404)
-              .json({ message: `질문에 해당 선택지가 없습니다.` });
+            return res.status(404).json({
+              message: `질문에 해당 선택지가 없습니다.`
+            });
           }
           // 같은 레코드 있는지 확인
-          const existingAnswer = await Answer.findOne({
-            where: {
-              questionId: question.questionId,
-              userId: userId,
-              objContent: objContentItem,
-            },
-            transaction: t,
-          });
+          const existingAnswer = existingSet.has(`${question.questionId}_${objContentItem}`);
           // 체크박스의 경우 중복 허용
           if (!existingAnswer && questionData.type === 'CHECKBOX') {
             await Answer.create(
@@ -118,17 +118,9 @@ const createAnswer = async (req, res) => {
         }
       } else {
         // SUBJECTIVE_QUESTION
-        const existingAnswer = await Answer.findOne({
-          where: {
-            questionId: question.questionId,
-            userId: userId,
-            subContent: question.subContent || null,
-            objContent: null,
-          },
-          transaction: t,
-        });
+        const existingAnswerSub = existingAnswers.find((a) => a.questionId === question.questionId && a.subContent === (question.subContent || null));
 
-        if (!existingAnswer) {
+        if (!existingAnswerSub) {
           await Answer.create(
             {
               questionId: question.questionId,

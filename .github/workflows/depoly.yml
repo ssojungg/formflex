@@ -5,16 +5,15 @@ on:
   push:
     paths:
       - "backend/**"
-      #백엔드 폴더 안에 뭔가 바뀌면 이 파일을 실행해
       - "index.js"
       - ".github/workflows/**"
+      - "serverless.yml"
 
 concurrency:
   group: lambda-deploy
   cancel-in-progress: false
 
 jobs:
-  #bulid : 빌드 확인
   build:
     name: 빌드 검증
     runs-on: ubuntu-latest
@@ -30,8 +29,6 @@ jobs:
       - name: 프로덕션 의존성 패키지 설치
         working-directory: backend
         run: npm ci --omit=dev
-        # --omit=dev : package에는 두가지 있음. dependencies(express 실제 서비스) 와 devDependencies(개발할 때만 쓰는것)
-        # --omit=dev : 개발용 패키지까지 올리면 용량이 커지니까 ,--omit=dev를 통해 개발용 패키지는 제외하고 설치
 
       - name: 배포용 압축 파일 생성
         run: |
@@ -48,8 +45,55 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/main'
-    # ref은 어느 브런치에 push 되었는지 물어보는거
-    # refs/heads/브런치 이름
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node.js 22 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 백엔드 프로덕션 의존성 설치
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: 배포용 압축 파일 생성
+        run: |
+          cd backend
+          zip -r ../lambda.zip . \
+             --exclude ".env" \
+             --exclude "*.git"
+
+      - name: AWS 자격 증명 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: S3로 압축 파일 업로드
+        run: |
+          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy-staging/lambda.zip
+
+      - name: formflex-dev 람다 배포
+        run: |
+          aws lambda update-function-code \
+              --function-name formflex-dev \
+              --s3-bucket ${{ secrets.AWS_BUCKET }} \
+              --s3-key deploy-staging/lambda.zip \
+              --architectures x86_64
+
+      - name: 배포 완료 대기
+        run: |
+          aws lambda wait function-updated \
+            --function-name formflex-dev
+
+  deploy-prod:
+    name: 프로덕션 배포 (prod alias)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
@@ -75,78 +119,6 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: S3로 압축 파일 업로드
-        run: |
-          aws s3 cp lambda.zip s3://${{ secrets.AWS_BUCKET }}/deploy-staging/lambda.zip
-
-      - name: $LATEST 업데이트 (staging alias 자동 반영)
-        run: |
-          aws lambda update-function-code \
-              --function-name formflex-dev \
-              --s3-bucket ${{ secrets.AWS_BUCKET }} \
-              --s3-key deploy-staging/lambda.zip \
-              --architectures x86_64
-
-      - name: 배포 완료 대기
-        run: |
-          aws lambda wait function-updated \
-            --function-name formflex-dev
-
-      - name: Chromium Layer 조회 및 적용
-        run: |
-          LAYER_ARN=$(aws lambda list-layer-versions \
-            --layer-name formflex-chromium \
-            --query 'LayerVersions[0].LayerVersionArn' \
-            --output text)
-          if [ "$LAYER_ARN" = "None" ] || [ -z "$LAYER_ARN" ]; then
-            echo "Chromium Layer가 없습니다. prod 배포를 먼저 실행해주세요."
-            aws lambda update-function-configuration \
-              --function-name formflex-dev \
-              --memory-size 2048 \
-              --timeout 120
-          else
-            aws lambda update-function-configuration \
-              --function-name formflex-dev \
-              --memory-size 2048 \
-              --timeout 120 \
-              --layers $LAYER_ARN
-          fi
-          aws lambda wait function-updated \
-            --function-name formflex-dev
-
-  deploy-prod:
-    name: 프로덕션 배포 (prod alias)
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    #브런치가 main 브런치일 때 실제 배포 시작
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Node.js 22 설정
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: 프로덕션 의존성 패키지 설치
-        working-directory: backend
-        run: npm ci --omit=dev
-
-      - name: 배포용 압축 파일 생성
-        run: |
-          cd backend
-          zip -r ../lambda.zip . \
-             --exclude ".env" \
-             --exclude "*.git"
-
-      - name: AWS 자격 증명 설정
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Chromium Lambda Layer 생성
@@ -179,7 +151,7 @@ jobs:
       - name: S3에서 람다 함수 배포
         run: |
           aws lambda update-function-code \
-              --function-name formflex-prod \
+              --function-name formflex \
               --s3-bucket ${{ secrets.AWS_BUCKET }} \
               --s3-key deploy/lambda.zip \
               --architectures x86_64
@@ -187,30 +159,26 @@ jobs:
       - name: 배포 완료 대기
         run: |
           aws lambda wait function-updated \
-            --function-name formflex-prod
+            --function-name formflex
 
       - name: Lambda 핸들러 및 Layer 설정
         run: |
           aws lambda update-function-configuration \
-            --function-name formflex-prod \
+            --function-name formflex \
             --handler handler.handler \
             --memory-size 2048 \
             --timeout 120 \
             --layers ${{ env.LAYER_ARN }}
           aws lambda wait function-updated \
-            --function-name formflex-prod
+            --function-name formflex
 
       - name: 버전 publish 및 prod alias 업데이트
         run: |
           VERSION=$(aws lambda publish-version \
-            --function-name formflex-prod \
+            --function-name formflex \
             --query 'Version' \
             --output text)
-          aws lambda create-alias \
-            --function-name formflex-prod \
-            --name prod \
-            --function-version $VERSION 2>/dev/null || \
           aws lambda update-alias \
-            --function-name formflex-prod \
+            --function-name formflex \
             --name prod \
             --function-version $VERSION

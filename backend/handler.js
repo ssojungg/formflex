@@ -32,6 +32,7 @@ const { generateChoices, generateSummary } = require('./controller/gemini');
 const { Question, Answer, Choice } = require('./models');
 const { sequelize } = require('./models');
 const Excel = require('exceljs');
+//const { Models } = require('openai/resources/models.mjs');
 
 let isDbConnected = false;
 
@@ -125,7 +126,7 @@ function callController(controllerFn, req, corsHeaders) {
 }
 
 // 엑셀 다운도르 헨들러
-async function handleExcelDownload(req) {
+async function handleExcelDownload(req, corsHeaders) {
   const surveyId = req.params.surveyId;
   const workbook = new Excel.Workbook();
   const worksheet = workbook.addWorksheet('설문 응답');
@@ -147,22 +148,26 @@ async function handleExcelDownload(req) {
       ...header.slice(1).map(() => ({ width: 45 })),
     ];
 
-    const userData = {};
-    for (const question of questions) {
-      const answers = await Answer.findAll({
-        where: { questionId: question.id },
-      });
-      for (const answer of answers) {
-        const userId = answer.userId;
-        if (!userData[userId]) userData[userId] = {};
-        if (!userData[userId][question.id]) userData[userId][question.id] = [];
+    const questionIds = questions.map((q) => q.id);
 
-        if (answer.objContent) {
-          const choice = await Choice.findByPk(answer.objContent);
-          userData[userId][question.id].push(choice ? choice.option : 'N/A');
-        } else {
-          userData[userId][question.id].push(answer.subContent || 'N/A');
-        }
+    const answers = await Answer.findAll({
+      where: { questionId: questionIds },
+    });
+
+    const choiceIds = [...new Set(answers.filter((a) => a.objContent).map((a) => a.objContent))];
+    const choices = choiceIds.length ? await Choice.findAll({ where: { id: choiceIds } }) : [];
+    const choiceMap = new Map(choices.map((c) => [c.id, c.option]));
+
+    const userData = {};
+    for (const answer of answers) {
+      const uid = answer.userId;
+      if (!userData[uid]) userData[uid] = {};
+      if (!userData[uid][answer.questionId]) userData[uid][answer.questionId] = [];
+
+      if (answer.objContent) {
+        userData[uid][answer.questionId].push(choiceMap.get(answer.objContent) || 'N/A');
+      } else {
+        userData[uid][answer.questionId].push(answer.subContent || 'N/A');
       }
     }
 
@@ -324,7 +329,7 @@ exports.handler = async (event) => {
   //엑셀 다운로드 (별도 처리)
   const excelParams = matchPath('/api/surveys/:surveyId/download', path);
   if (method === 'GET' && excelParams) {
-    return handleExcelDownload(createReq(event, excelParams));
+    return handleExcelDownload(createReq(event, excelParams), corsHeaders);
   }
 
   //라우트 매칭

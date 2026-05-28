@@ -1,8 +1,7 @@
 const { performance } = require('perf_hooks');
-const { fn, col, literal, where } = require('sequelize');
+const { col, literal } = require('sequelize');
 const { Survey, Answer, Question } = require('../models');
 const { surveyTitleSearch } = require('./surveyTitleSearch');
-const { group } = require('console');
 
 const getUserSurveys = async (req, res) => {
   const start = performance.now();
@@ -11,8 +10,6 @@ const getUserSurveys = async (req, res) => {
     const userId = req.params.id;
     const pageLimit = req.query.limit;
     const page = req.query.page;
-    const startIndex = (page - 1) * pageLimit;
-    const endIndex = startIndex + pageLimit;
     const title = req.query.title;
 
     if (!title) {
@@ -27,6 +24,8 @@ const getUserSurveys = async (req, res) => {
           'open',
           'emailReportThreshold',
         ],
+        limit: Number(pageLimit),
+        offset: (Number(page) - 1) * Number(pageLimit),
       });
       queryCount++;
       const surveyIds = surveys.map((s) => s.id);
@@ -60,7 +59,7 @@ const getUserSurveys = async (req, res) => {
         attendCount: countMap[survey.id] || 0,
         emailReportThreshold: survey.emailReportThreshold || null,
       }));
-      queryCount++;
+
       if ('attendCount' in req.query) {
         preResult.sort((a, b) => b.attendCount - a.attendCount);
       } else if ('deadline' in req.query) {
@@ -72,7 +71,7 @@ const getUserSurveys = async (req, res) => {
       const totalCount = await Survey.count({ where: { userId: userId } });
       queryCount++;
       const totalPages = Math.ceil(totalCount / pageLimit);
-      const currentPageData = preResult.slice(startIndex, endIndex);
+      const currentPageData = preResult;
       const end = performance.now();
       console.log(`=============`);
       console.log(
@@ -80,9 +79,11 @@ const getUserSurveys = async (req, res) => {
       );
       console.log(`[수정 후(폼 모아보기)] 총 쿼리 횟수: ${queryCount}번`);
       console.log(`==============`);
-      res
-        .status(200)
-        .json({ surveys: currentPageData, totalPages: totalPages, totalCount: totalCount });
+      res.status(200).json({
+        surveys: currentPageData,
+        totalPages: totalPages,
+        totalCount: totalCount,
+      });
     } else {
       const selectSurveys = await Survey.findAll({
         where: { userId: userId },
