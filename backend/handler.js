@@ -23,10 +23,17 @@ const { showAllSurveys } = require('./controller/showAllSurveys');
 const { deleteSurveyAndRelatedData } = require('./controller/surveyDelete');
 const { createAnswer } = require('./controller/answerSave');
 const { getUrl } = require('./controller/getSurveyUrl');
-const { sendSurveyEmailWithSurveyId, sendReportEmail } = require('./controller/urlShare');
+const {
+  sendSurveyEmailWithSurveyId,
+  sendReportEmail,
+} = require('./controller/urlShare');
 const { getAnswerByuserId } = require('./controller/answerReadByuserId');
 const { getResultsByResponses } = require('./controller/getResultsByRes');
-const { generatePresignedUploadUrl, getFileFromS3, deleteFileFromS3 } = require('./controller/imageUpload');
+const {
+  generatePresignedUploadUrl,
+  getFileFromS3,
+  deleteFileFromS3,
+} = require('./controller/imageUpload');
 const { generateChoices, generateSummary } = require('./controller/gemini');
 
 const { Question, Answer, Choice } = require('./models');
@@ -41,9 +48,10 @@ function getCorsHeaders(event) {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,Accept,X-Requested-With,remember-me,Authorization',
+    'Access-Control-Allow-Headers':
+      'Content-Type,Accept,X-Requested-With,remember-me,Authorization',
     'Access-Control-Allow-Credentials': 'true',
-    'Vary': 'Origin',
+    Vary: 'Origin',
   };
 }
 
@@ -154,18 +162,25 @@ async function handleExcelDownload(req, corsHeaders) {
       where: { questionId: questionIds },
     });
 
-    const choiceIds = [...new Set(answers.filter((a) => a.objContent).map((a) => a.objContent))];
-    const choices = choiceIds.length ? await Choice.findAll({ where: { id: choiceIds } }) : [];
+    const choiceIds = [
+      ...new Set(answers.filter((a) => a.objContent).map((a) => a.objContent)),
+    ];
+    const choices = choiceIds.length
+      ? await Choice.findAll({ where: { id: choiceIds } })
+      : [];
     const choiceMap = new Map(choices.map((c) => [c.id, c.option]));
 
     const userData = {};
     for (const answer of answers) {
       const uid = answer.userId;
       if (!userData[uid]) userData[uid] = {};
-      if (!userData[uid][answer.questionId]) userData[uid][answer.questionId] = [];
+      if (!userData[uid][answer.questionId])
+        userData[uid][answer.questionId] = [];
 
       if (answer.objContent) {
-        userData[uid][answer.questionId].push(choiceMap.get(answer.objContent) || 'N/A');
+        userData[uid][answer.questionId].push(
+          choiceMap.get(answer.objContent) || 'N/A',
+        );
       } else {
         userData[uid][answer.questionId].push(answer.subContent || 'N/A');
       }
@@ -215,8 +230,16 @@ const routes = [
   { method: 'GET', path: '/api/users/:id', handler: getMyInfo },
 
   // Gemini
-  { method: 'POST', path: '/api/surveys/gemini/choices', handler: generateChoices },
-  { method: 'POST', path: '/api/surveys/gemini/summary', handler: generateSummary },
+  {
+    method: 'POST',
+    path: '/api/surveys/gemini/choices',
+    handler: generateChoices,
+  },
+  {
+    method: 'POST',
+    path: '/api/surveys/gemini/summary',
+    handler: generateSummary,
+  },
 
   //survey
   {
@@ -277,12 +300,16 @@ const routes = [
     path: '/api/surveys/:id/report-email',
     handler: async (req, res) => {
       const { email, surveyTitle, s3Key } = req.body;
-      if (!email) return res.status(400).json({ message: 'email 필드가 필요합니다' });
-      if (!s3Key) return res.status(400).json({ message: 's3Key 필드가 필요합니다' });
+      if (!email)
+        return res.status(400).json({ message: 'email 필드가 필요합니다' });
+      if (!s3Key)
+        return res.status(400).json({ message: 's3Key 필드가 필요합니다' });
       try {
         const pdfBuffer = await getFileFromS3(s3Key);
         const result = await sendReportEmail(email, pdfBuffer, surveyTitle);
-        deleteFileFromS3(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${s3Key}`).catch(() => {});
+        deleteFileFromS3(
+          `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${s3Key}`,
+        ).catch(() => {});
         res.status(200).json(result);
       } catch (error) {
         res.status(500).json({ message: error.message || '서버 오류 발생' });
@@ -313,7 +340,8 @@ const routes = [
 //메인 lambda핸들러
 exports.handler = async (event) => {
   const method = event.requestContext?.http?.method || event.httpMethod;
-  const path = event.rawPath || event.path;
+  const rawPath = event.rawPath || event.path;
+  const path = rawPath.replace(/^.*\/formflex-[^/]+/, '');
   const corsHeaders = getCorsHeaders(event);
   //CORS preflight
   if (method === 'OPTIONS') {
