@@ -341,7 +341,7 @@ const routes = [
 exports.handler = async (event) => {
   const method = event.requestContext?.http?.method || event.httpMethod;
   const rawPath = event.rawPath || event.path;
-  const path = rawPath.replace(/^\/formflex-[^/]+/, '');
+  const path = rawPath.replace(/^.*\/formflex-[^/]+/, '');
   const corsHeaders = getCorsHeaders(event);
   //CORS preflight
   if (method === 'OPTIONS') {
