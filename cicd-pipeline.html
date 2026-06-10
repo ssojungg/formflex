@@ -15,7 +15,7 @@
       min-width: 1100px;
     }
 
-    /* ── PAGE HEADER ─────────────────────────────── */
+    /* ── HEADER ── */
     .page-header {
       display: flex;
       align-items: flex-start;
@@ -26,25 +26,12 @@
     }
     .page-title { font-size: 22px; font-weight: 700; color: #f0f6fc; margin-bottom: 6px; }
     .page-sub   { font-size: 13px; color: #8b949e; }
-    .badges     { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
-    .badge {
-      font-size: 11px; font-weight: 600;
-      border-radius: 20px; padding: 3px 11px;
-      border: 1px solid;
-    }
+    .badges     { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+    .badge      { font-size: 11px; font-weight: 600; border-radius: 20px; padding: 3px 11px; border: 1px solid; }
 
-    /* ── MAIN LAYOUT ─────────────────────────────── */
-    .layout {
-      display: flex;
-      gap: 0;
-      align-items: flex-start;
-    }
-    .col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 20px;
-    }
+    /* ── LAYOUT ── */
+    .layout { display: flex; gap: 0; align-items: flex-start; }
+    .col    { display: flex; flex-direction: column; align-items: center; padding: 0 20px; }
     .col-fe { width: 310px; border-right: 1px solid #21262d; }
     .col-be { flex: 1; }
 
@@ -59,7 +46,7 @@
       display: flex; align-items: center; gap: 7px;
     }
 
-    /* ── CARDS ───────────────────────────────────── */
+    /* ── CARDS ── */
     .card {
       width: 100%;
       border-radius: 8px;
@@ -67,43 +54,37 @@
       border: 1px solid #30363d;
       background: #161b22;
     }
-    .card.trigger  { background: #0c1929; border-color: #1f6feb; }
-    .card.build    { background: #1a1033; border-color: #6e40c9; }
-    .card.staging  { background: #051a26; border-color: #0ea5e9; }
-    .card.prod     { background: #071a12; border-color: #22c55e; }
-    .card.special  { background: #1c0e04; border-color: #f97316; }
-    .card.dark     { background: #111111; border-color: #444; }
-    .card.cond     { background: #1c1400; border-color: #9e6a03; }
+    .card.trigger { background: #0c1929; border-color: #1f6feb; }
+    .card.build   { background: #1a1033; border-color: #6e40c9; }
+    .card.staging { background: #051a26; border-color: #0ea5e9; }
+    .card.prod    { background: #071a12; border-color: #22c55e; }
+    .card.special { background: #1c0e04; border-color: #f97316; }
+    .card.dark    { background: #111111; border-color: #444; }
+    .card.cond    { background: #1c1400; border-color: #9e6a03; }
+    .card.warn    { background: #1a1200; border-color: #d29922; }
 
     .card-tag {
       font-size: 10px; font-weight: 700;
       text-transform: uppercase; letter-spacing: 0.07em;
       margin-bottom: 4px;
     }
-    .card.trigger .card-tag  { color: #58a6ff; }
-    .card.build   .card-tag  { color: #a371f7; }
-    .card.staging .card-tag  { color: #38bdf8; }
-    .card.prod    .card-tag  { color: #4ade80; }
-    .card.special .card-tag  { color: #fb923c; }
-    .card.dark    .card-tag  { color: #999; }
-    .card.cond    .card-tag  { color: #e3b341; }
+    .card.trigger .card-tag { color: #58a6ff; }
+    .card.build   .card-tag { color: #a371f7; }
+    .card.staging .card-tag { color: #38bdf8; }
+    .card.prod    .card-tag { color: #4ade80; }
+    .card.special .card-tag { color: #fb923c; }
+    .card.dark    .card-tag { color: #999; }
+    .card.cond    .card-tag { color: #e3b341; }
+    .card.warn    .card-tag { color: #d29922; }
 
-    .card-title {
-      font-size: 13px; font-weight: 600;
-      color: #f0f6fc; margin-bottom: 7px;
-    }
+    .card-title { font-size: 13px; font-weight: 600; color: #f0f6fc; margin-bottom: 7px; }
 
-    .items { display: flex; flex-direction: column; gap: 3px; }
-    .item  { font-size: 11.5px; color: #8b949e; line-height: 1.55; display: flex; gap: 6px; }
+    .items      { display: flex; flex-direction: column; gap: 3px; }
+    .items-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 20px; }
+    .item       { font-size: 11.5px; color: #8b949e; line-height: 1.55; display: flex; gap: 6px; }
     .item::before { content: '·'; color: #444; flex-shrink: 0; }
 
-    .items-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px 20px;
-    }
-
-    .tags-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+    .tags-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
     .tag {
       font-size: 10px; font-family: monospace;
       padding: 2px 7px; border-radius: 4px; border: 1px solid;
@@ -113,70 +94,32 @@
     .tag.orange { color: #fb923c; border-color: #f9731655; background: #f9731610; }
     .tag.cyan   { color: #38bdf8; border-color: #0ea5e955; background: #0ea5e910; }
     .tag.gray   { color: #aaa;    border-color: #44444455; background: #44444410; }
+    .tag.purple { color: #a371f7; border-color: #6e40c955; background: #6e40c910; }
     .tag.yellow { color: #e3b341; border-color: #9e6a0355; background: #9e6a0310; }
+    .tag.warn   { color: #d29922; border-color: #d2992255; background: #d2992210; }
 
-    /* ── ARROWS ──────────────────────────────────── */
-    .arrow {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 2px 0;
-    }
+    /* ── ARROWS ── */
+    .arrow { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
     .arrow .line { width: 2px; height: 18px; background: #30363d; }
-    .arrow .head {
-      width: 0; height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 7px solid #484f58;
-    }
+    .arrow .head { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #484f58; }
 
-    /* ── FORK SPLIT ──────────────────────────────── */
-    .fork {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .fork-vline { width: 2px; height: 10px; background: #30363d; }
-    .fork-hline { width: 100%; height: 2px; background: #30363d; }
-    .fork-branches {
-      display: flex;
-      gap: 14px;
-      width: 100%;
-    }
-    .branch {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    /* ── FORK ── */
+    .fork          { width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .fork-vline    { width: 2px; height: 10px; background: #30363d; }
+    .fork-hline    { width: 100%; height: 2px; background: #30363d; }
+    .fork-branches { display: flex; gap: 14px; width: 100%; }
+    .branch        { flex: 1; display: flex; flex-direction: column; align-items: center; }
+
     .branch-cond {
       font-size: 10px; font-weight: 700;
       padding: 3px 10px; border-radius: 20px;
-      border: 1px dashed;
-      margin-bottom: 8px;
-      text-align: center;
-      line-height: 1.4;
+      border: 1px dashed; margin-bottom: 8px;
+      text-align: center; line-height: 1.4;
     }
     .branch-cond.staging { color: #38bdf8; border-color: #38bdf866; }
     .branch-cond.prod    { color: #4ade80; border-color: #4ade8066; }
 
-    /* ── LEGEND ──────────────────────────────────── */
-    .legend {
-      margin-top: 36px;
-      padding-top: 18px;
-      border-top: 1px solid #21262d;
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .legend-lbl { font-size: 11px; color: #8b949e; font-weight: 600; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; }
-    .legend-dot  {
-      width: 10px; height: 10px;
-      border-radius: 2px; border: 1px solid; flex-shrink: 0;
-    }
-
-    /* ── CONCURRENCY CHIP ────────────────────────── */
+    /* ── CHIP ── */
     .chip {
       display: inline-flex; align-items: center; gap: 4px;
       font-size: 10px; font-weight: 600;
@@ -184,19 +127,29 @@
       border: 1px solid #9e6a0355; background: #9e6a0310;
       color: #e3b341; margin-top: 8px;
     }
+
+    /* ── LEGEND ── */
+    .legend {
+      margin-top: 36px; padding-top: 18px;
+      border-top: 1px solid #21262d;
+      display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
+    }
+    .legend-lbl  { font-size: 11px; color: #8b949e; font-weight: 600; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+    .legend-dot  { width: 10px; height: 10px; border-radius: 2px; border: 1px solid; flex-shrink: 0; }
   </style>
 </head>
 <body>
 
-<!-- ══════════ PAGE HEADER ══════════ -->
+<!-- ══ HEADER ══ -->
 <div class="page-header">
   <div>
     <div class="page-title">🚀 FormFlex CI/CD Pipeline</div>
-    <div class="page-sub">GitHub Actions (Backend) · Vercel (Frontend) · AWS Lambda + S3 · Region: ap-northeast-2</div>
-    <div class="badges" style="margin-top:8px;">
+    <div class="page-sub">GitHub Actions (Backend) · Vercel (Frontend) · AWS Lambda + S3 · ap-northeast-2</div>
+    <div class="badges">
       <span class="badge" style="color:#4ade80;border-color:#22c55e44;background:#22c55e0d;">● Backend: GitHub Actions</span>
       <span class="badge" style="color:#fff;border-color:#44444466;background:#44444411;">▲ Frontend: Vercel</span>
-      <span class="badge" style="color:#FF9900;border-color:#FF990044;background:#FF99000d;">☁ AWS Lambda (Node 22)</span>
+      <span class="badge" style="color:#FF9900;border-color:#FF990044;background:#FF99000d;">☁ AWS Lambda Node 22</span>
     </div>
   </div>
   <div style="font-size:12px;color:#8b949e;text-align:right;line-height:2;">
@@ -206,20 +159,18 @@
 </div>
 
 
-<!-- ══════════ TWO-COLUMN LAYOUT ══════════ -->
+<!-- ══ LAYOUT ══ -->
 <div class="layout">
 
-  <!-- ╔══════════ FRONTEND COLUMN ══════════╗ -->
+  <!-- ████ FRONTEND ████ -->
   <div class="col col-fe">
     <div class="col-title">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <path d="M8 21h8M12 17v4"/>
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
       </svg>
-      Frontend &nbsp;(Vercel Auto-Deploy)
+      Frontend (Vercel Auto-Deploy)
     </div>
 
-    <!-- Trigger -->
     <div class="card trigger">
       <div class="card-tag">Trigger</div>
       <div class="card-title">git push (모든 브랜치)</div>
@@ -232,7 +183,6 @@
 
     <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-    <!-- Vercel Build -->
     <div class="card dark">
       <div class="card-tag">Build</div>
       <div class="card-title">Vercel Build</div>
@@ -245,19 +195,16 @@
 
     <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-    <!-- Condition -->
     <div class="card cond">
       <div class="card-tag">Branch Condition</div>
       <div class="card-title" style="text-align:center;">어느 브랜치?</div>
     </div>
 
-    <!-- Fork -->
     <div class="fork">
       <div class="fork-vline"></div>
       <div class="fork-hline"></div>
       <div class="fork-branches">
 
-        <!-- feature branch -->
         <div class="branch">
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
           <div class="branch-cond staging">feature / dev</div>
@@ -274,7 +221,6 @@
           </div>
         </div>
 
-        <!-- main branch -->
         <div class="branch">
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
           <div class="branch-cond prod">main</div>
@@ -294,23 +240,23 @@
       </div>
     </div>
   </div>
-  <!-- ╚══════════ /FRONTEND ══════════╝ -->
+  <!-- ████ /FRONTEND ████ -->
 
 
-  <!-- ╔══════════ BACKEND COLUMN ══════════╗ -->
+  <!-- ████ BACKEND ████ -->
   <div class="col col-be">
     <div class="col-title">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
       </svg>
-      Backend &nbsp;(GitHub Actions → AWS Lambda)
+      Backend (GitHub Actions → AWS Lambda)
     </div>
 
-    <!-- ① Trigger -->
+    <!-- ① TRIGGER -->
     <div class="card trigger">
       <div class="card-tag">Trigger — on: push (경로 필터)</div>
       <div class="card-title">특정 경로 변경 시에만 실행</div>
-      <div class="tags-row">
+      <div class="tags-row" style="margin-top:2px;">
         <span class="tag blue">backend/**</span>
         <span class="tag blue">index.js</span>
         <span class="tag blue">.github/workflows/**</span>
@@ -324,61 +270,86 @@
 
     <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-    <!-- ② Job 1: Build -->
+    <!-- ② BUILD JOB -->
     <div class="card build">
-      <div class="card-tag">Job 1 — 빌드 검증 &nbsp;(모든 브랜치 공통, 항상 실행)</div>
-      <div class="card-title">Build &amp; Zip</div>
+      <div class="card-tag">Job 1 — build &nbsp;·&nbsp; 모든 브랜치 공통, 항상 실행</div>
+      <div class="card-title">Build &amp; Zip → Artifact 저장</div>
       <div class="items items-grid">
         <div class="item">actions/checkout@v4</div>
         <div class="item">actions/setup-node@v4 (v22)</div>
         <div class="item">npm ci --omit=dev</div>
-        <div class="item">lambda.zip 생성</div>
-        <div class="item">.env · .git 파일 제외</div>
+        <div class="item">lambda.zip 생성 (.env · .git 제외)</div>
         <div class="item">ls -lh 파일 크기 검증</div>
+        <div class="item">upload-artifact@v4 저장 (1일)</div>
+      </div>
+      <div class="tags-row">
+        <span class="tag purple">📦 lambda-zip artifact → 하위 job에 전달</span>
       </div>
     </div>
 
     <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-    <!-- ③ Branch Condition -->
+    <!-- ③ BRANCH CONDITION -->
     <div class="card cond">
       <div class="card-tag">Branch Condition</div>
       <div class="card-title" style="text-align:center;">어느 브랜치로 푸시했나요?</div>
     </div>
 
-    <!-- ④ Fork -->
+    <!-- ④ FORK -->
     <div class="fork">
       <div class="fork-vline"></div>
       <div class="fork-hline"></div>
       <div class="fork-branches">
 
-        <!-- ── STAGING BRANCH ── -->
+        <!-- ── STAGING ── -->
         <div class="branch">
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
           <div class="branch-cond staging">if: github.ref != 'refs/heads/main'</div>
 
-          <!-- Staging Setup -->
+          <!-- S1: Setup -->
           <div class="card staging" style="width:100%;">
-            <div class="card-tag">Job 2 — 스테이징 배포</div>
-            <div class="card-title">Staging Setup</div>
+            <div class="card-tag">Job 2 — deploy-staging &nbsp;①</div>
+            <div class="card-title">Artifact 다운로드 &amp; AWS 인증</div>
             <div class="items">
-              <div class="item">actions/checkout@v4</div>
-              <div class="item">Node.js 22 설정</div>
-              <div class="item">npm ci --omit=dev</div>
-              <div class="item">lambda.zip 재생성</div>
-              <div class="item">aws-actions/configure-aws-credentials@v4</div>
+              <div class="item">download-artifact@v4 (lambda-zip)</div>
+              <div class="item">setup-node@v4 v22 (Chromium 빌드용)</div>
+              <div class="item">configure-aws-credentials@v4</div>
+            </div>
+            <div class="tags-row">
+              <span class="tag purple">📦 빌드 없이 artifact 재사용</span>
             </div>
           </div>
 
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-          <!-- S3 + Lambda Deploy -->
-          <div class="card staging" style="width:100%;">
-            <div class="card-tag">S3 Upload → Lambda 배포</div>
-            <div class="card-title">formflex-dev 업데이트</div>
+          <!-- S2: Chromium Layer Build -->
+          <div class="card special" style="width:100%;">
+            <div class="card-tag">② Chromium Lambda Layer 빌드 ⚡</div>
+            <div class="card-title">Puppeteer PDF Layer 신규 생성</div>
             <div class="items">
-              <div class="item">aws s3 cp lambda.zip</div>
-              <div class="item">→ s3://bucket/deploy-staging/</div>
+              <div class="item">mkdir chromium-layer/nodejs</div>
+              <div class="item">npm init -y</div>
+              <div class="item">@sparticuz/chromium@147 설치</div>
+              <div class="item">puppeteer-core@24 설치</div>
+              <div class="item">chromium-layer.zip 패키징</div>
+              <div class="item">s3 cp → layers/chromium-layer-dev.zip</div>
+              <div class="item">publish-layer-version</div>
+              <div class="item">LAYER_ARN → $GITHUB_ENV 저장</div>
+            </div>
+            <div class="tags-row">
+              <span class="tag orange">☁ formflex-chromium-dev (신규 버전)</span>
+              <span class="tag orange">nodejs22.x · x86_64</span>
+            </div>
+          </div>
+
+          <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+          <!-- S3: Deploy -->
+          <div class="card staging" style="width:100%;">
+            <div class="card-tag">③ S3 Upload → Lambda 코드 배포</div>
+            <div class="card-title">formflex-dev 코드 업데이트</div>
+            <div class="items">
+              <div class="item">s3 cp → deploy-staging/lambda.zip</div>
               <div class="item">update-function-code</div>
               <div class="item">architectures: x86_64</div>
               <div class="item">lambda wait function-updated</div>
@@ -387,88 +358,124 @@
               <span class="tag cyan">☁ formflex-dev ($LATEST)</span>
             </div>
           </div>
+
+          <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+          <!-- S4: Config -->
+          <div class="card staging" style="width:100%;">
+            <div class="card-tag">④ Lambda 함수 설정 업데이트</div>
+            <div class="card-title">formflex-dev 환경 설정</div>
+            <div class="items">
+              <div class="item">update-function-configuration</div>
+              <div class="item">handler: handler.handler</div>
+              <div class="item">memory-size: 2048 MB</div>
+              <div class="item">timeout: 120 s</div>
+              <div class="item">layers: [$LAYER_ARN] ← Chromium 연결</div>
+              <div class="item">lambda wait function-updated</div>
+            </div>
+            <div class="tags-row">
+              <span class="tag cyan">☁ formflex-dev</span>
+              <span class="tag green">✓ prod와 완전 동일 설정</span>
+            </div>
+          </div>
+
         </div>
         <!-- ── /STAGING ── -->
 
 
-        <!-- ── PRODUCTION BRANCH ── -->
+        <!-- ── PRODUCTION ── -->
         <div class="branch">
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
           <div class="branch-cond prod">if: github.ref == 'refs/heads/main'</div>
 
-          <!-- Prod Setup -->
+          <!-- P1: Setup -->
           <div class="card prod" style="width:100%;">
-            <div class="card-tag">Job 3 — 프로덕션 배포 &nbsp;①&nbsp;Setup</div>
-            <div class="card-title">Lambda Zip 준비</div>
+            <div class="card-tag">Job 3 — deploy-prod &nbsp;①</div>
+            <div class="card-title">Artifact 다운로드 &amp; AWS 인증</div>
             <div class="items">
-              <div class="item">actions/checkout@v4</div>
-              <div class="item">Node.js 22 설정</div>
-              <div class="item">npm ci --omit=dev</div>
-              <div class="item">lambda.zip 재생성 (.env · .git 제외)</div>
-              <div class="item">aws-actions/configure-aws-credentials@v4</div>
+              <div class="item">download-artifact@v4 (lambda-zip)</div>
+              <div class="item">setup-node@v4 v22 (Chromium 빌드용)</div>
+              <div class="item">configure-aws-credentials@v4</div>
+            </div>
+            <div class="tags-row">
+              <span class="tag purple">📦 빌드 없이 artifact 재사용</span>
             </div>
           </div>
 
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-          <!-- Chromium Layer (특수 스텝) -->
+          <!-- P2: Chromium Layer Build -->
           <div class="card special" style="width:100%;">
-            <div class="card-tag">② &nbsp;Chromium Lambda Layer 빌드 &nbsp;⚡ 특수 스텝</div>
-            <div class="card-title">Puppeteer PDF Layer 패키징</div>
+            <div class="card-tag">② Chromium Lambda Layer 빌드 ⚡</div>
+            <div class="card-title">Puppeteer PDF Layer 신규 생성</div>
             <div class="items">
               <div class="item">mkdir chromium-layer/nodejs</div>
+              <div class="item">npm init -y</div>
               <div class="item">@sparticuz/chromium@147 설치</div>
               <div class="item">puppeteer-core@24 설치</div>
               <div class="item">chromium-layer.zip 패키징</div>
-              <div class="item">aws s3 cp → s3://bucket/layers/</div>
+              <div class="item">s3 cp → layers/chromium-layer.zip</div>
               <div class="item">publish-layer-version</div>
               <div class="item">LAYER_ARN → $GITHUB_ENV 저장</div>
             </div>
             <div class="tags-row">
-              <span class="tag orange">☁ formflex-chromium (Layer)</span>
+              <span class="tag orange">☁ formflex-chromium (신규 버전)</span>
               <span class="tag orange">nodejs22.x · x86_64</span>
             </div>
           </div>
 
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-          <!-- Lambda Code Deploy -->
+          <!-- P3: Lambda Deploy -->
           <div class="card prod" style="width:100%;">
-            <div class="card-tag">③ &nbsp;Lambda 코드 배포 + 설정</div>
-            <div class="card-title">formflex-prod 업데이트</div>
+            <div class="card-tag">③ S3 Upload → Lambda 코드 배포</div>
+            <div class="card-title">formflex-prod 코드 업데이트</div>
             <div class="items">
-              <div class="item">aws s3 cp → s3://bucket/deploy/lambda.zip</div>
+              <div class="item">s3 cp → deploy/lambda.zip</div>
               <div class="item">update-function-code (x86_64)</div>
-              <div class="item">lambda wait function-updated ①</div>
-              <div class="item">update-function-configuration</div>
-              <div class="item">handler: handler.handler</div>
-              <div class="item">memory-size: 2048 MB</div>
-              <div class="item">timeout: 120 s</div>
-              <div class="item">layers: [$LAYER_ARN] ← Chromium 연결</div>
-              <div class="item">lambda wait function-updated ②</div>
+              <div class="item">lambda wait function-updated</div>
             </div>
             <div class="tags-row">
               <span class="tag green">☁ formflex-prod</span>
-              <span class="tag green">ap-northeast-2</span>
             </div>
           </div>
 
           <div class="arrow"><div class="line"></div><div class="head"></div></div>
 
-          <!-- Publish & Alias -->
+          <!-- P4: Config -->
           <div class="card prod" style="width:100%;">
-            <div class="card-tag">④ &nbsp;버전 Publish &amp; prod alias 갱신</div>
+            <div class="card-tag">④ 함수 설정 업데이트</div>
+            <div class="card-title">formflex-prod 환경 설정</div>
+            <div class="items">
+              <div class="item">update-function-configuration</div>
+              <div class="item">handler: handler.handler</div>
+              <div class="item">memory-size: 2048 MB</div>
+              <div class="item">timeout: 120 s</div>
+              <div class="item">layers: [$LAYER_ARN] ← Chromium 연결</div>
+              <div class="item">lambda wait function-updated</div>
+            </div>
+            <div class="tags-row">
+              <span class="tag green">☁ ap-northeast-2</span>
+            </div>
+          </div>
+
+          <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+          <!-- P5: Version & Alias -->
+          <div class="card prod" style="width:100%;">
+            <div class="card-tag">⑤ 버전 Publish &amp; prod alias 갱신</div>
             <div class="card-title">무중단 트래픽 전환</div>
             <div class="items">
               <div class="item">publish-version → VERSION 번호 추출</div>
               <div class="item">update-alias --name prod</div>
               <div class="item">prod alias → 새 Lambda 버전 연결</div>
-              <div class="item">기존 버전 즉시 대체 (Zero-downtime)</div>
+              <div class="item">Zero-downtime 즉시 전환</div>
             </div>
             <div class="tags-row">
               <span class="tag green">✓ prod alias 갱신 완료</span>
             </div>
           </div>
+
         </div>
         <!-- ── /PRODUCTION ── -->
 
@@ -476,15 +483,14 @@
     </div>
 
   </div>
-  <!-- ╚══════════ /BACKEND ══════════╝ -->
+  <!-- ████ /BACKEND ████ -->
 
 </div>
 
 
-<!-- ══════════ LEGEND ══════════ -->
+<!-- ══ LEGEND ══ -->
 <div class="legend">
   <span class="legend-lbl">범례</span>
-
   <div class="legend-item">
     <div class="legend-dot" style="background:#0c1929;border-color:#1f6feb;"></div>
     <span style="color:#58a6ff;">Trigger</span>
@@ -503,17 +509,12 @@
   </div>
   <div class="legend-item">
     <div class="legend-dot" style="background:#1c0e04;border-color:#f97316;"></div>
-    <span style="color:#fb923c;">Chromium Layer (특수 스텝)</span>
+    <span style="color:#fb923c;">Chromium Layer</span>
   </div>
   <div class="legend-item">
     <div class="legend-dot" style="background:#111;border-color:#444;"></div>
     <span style="color:#aaa;">Vercel Build</span>
   </div>
-  <div class="legend-item">
-    <div class="legend-dot" style="background:#1c1400;border-color:#9e6a03;"></div>
-    <span style="color:#e3b341;">Branch Condition</span>
-  </div>
-
   <div style="margin-left:auto;font-size:11px;color:#484f58;">
     FormFlex CI/CD · 2026 · .github/workflows/depoly.yml
   </div>

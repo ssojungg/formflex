@@ -59,12 +59,40 @@ jobs:
         with:
           name: lambda-zip
 
+      - name: Node.js 22 설정 (Chromium Layer 빌드용)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Chromium Lambda Layer 생성
+        run: |
+          mkdir -p chromium-layer/nodejs
+          cd chromium-layer/nodejs
+          npm init -y
+          npm install @sparticuz/chromium@147 puppeteer-core@24 --omit=dev
+          cd ..
+          zip -r ../chromium-layer.zip nodejs/
+          cd ..
+          echo "Layer zip size: $(ls -lh chromium-layer.zip | awk '{print $5}')"
+
+      - name: Chromium Layer 배포
+        run: |
+          aws s3 cp chromium-layer.zip s3://${{ secrets.AWS_BUCKET }}/layers/chromium-layer-dev.zip
+          LAYER_ARN=$(aws lambda publish-layer-version \
+            --layer-name formflex-chromium-dev \
+            --content S3Bucket=${{ secrets.AWS_BUCKET }},S3Key=layers/chromium-layer-dev.zip \
+            --compatible-runtimes nodejs22.x \
+            --compatible-architectures x86_64 \
+            --query 'LayerVersionArn' \
+            --output text)
+          echo "LAYER_ARN=${LAYER_ARN}" >> $GITHUB_ENV
 
       - name: S3로 압축 파일 업로드
         run: |
@@ -82,14 +110,6 @@ jobs:
         run: |
           aws lambda wait function-updated \
             --function-name formflex-dev
-
-      - name: 최신 Chromium Layer ARN 조회
-        run: |
-          LAYER_ARN=$(aws lambda list-layer-versions \
-            --layer-name formflex-chromium \
-            --query 'LayerVersions[0].LayerVersionArn' \
-            --output text)
-          echo "LAYER_ARN=${LAYER_ARN}" >> $GITHUB_ENV
 
       - name: Lambda 함수 설정 업데이트
         run: |
