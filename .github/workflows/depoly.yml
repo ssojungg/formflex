@@ -95,9 +95,10 @@ jobs:
         run: |
           aws lambda update-function-configuration \
             --function-name formflex-dev \
+            --handler handler.handler \
             --memory-size 2048 \
             --timeout 120 \
-            --layers ${{env.LAYER_ARN}}
+            --layers ${{ env.LAYER_ARN }}
           aws lambda wait function-updated \
             --function-name formflex-dev
 
