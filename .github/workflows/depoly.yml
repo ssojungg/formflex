@@ -40,6 +40,13 @@ jobs:
       - name: 빌드 결과 확인
         run: ls -lh lambda.zip
 
+      - name: lambda.zip artifact 저장
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-zip
+          path: lambda.zip
+          retention-days: 1
+
   deploy-staging:
     name: 스테이징 배포 ($LATEST)
     needs: build
@@ -47,23 +54,10 @@ jobs:
     if: github.ref != 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Node.js 22 설정
-        uses: actions/setup-node@v4
+      - name: lambda.zip artifact 다운로드
+        uses: actions/download-artifact@v4
         with:
-          node-version: "22"
-
-      - name: 백엔드 프로덕션 의존성 설치
-        working-directory: backend
-        run: npm ci --omit=dev
-
-      - name: 배포용 압축 파일 생성
-        run: |
-          cd backend
-          zip -r ../lambda.zip . \
-             --exclude ".env" \
-             --exclude "*.git"
+          name: lambda-zip
 
       - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v4
@@ -89,6 +83,24 @@ jobs:
           aws lambda wait function-updated \
             --function-name formflex-dev
 
+      - name: 최신 Chromium Layer ARN 조회
+        run: |
+          LAYER_ARN=$(aws lambda list-layer-versions \
+            --layer-name formflex-chromium \
+            --query 'LayerVersions[0].LayerVersionArn' \
+            --output text)
+          echo "LAYER_ARN=${LAYER_ARN}" >> $GITHUB_ENV
+
+      - name: Lambda 함수 설정 업데이트
+        run: |
+          aws lambda update-function-configuration \
+            --function-name formflex-dev \
+            --memory-size 2048 \
+            --timeout 120 \
+            --layers${{env.LAYER_ARN}}
+          aws lambda wait function-updated \
+            --function-name formflex-dev
+
   deploy-prod:
     name: 프로덕션 배포 (prod alias)
     needs: build
@@ -96,23 +108,15 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v4
+      - name: lambda.zip artifact 다운로드
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-zip
 
-      - name: Node.js 22 설정
+      - name: Node.js 22 설정(Chromium Layer 빋드용)
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      - name: 프로덕션 의존성 패키지 설치
-        working-directory: backend
-        run: npm ci --omit=dev
-
-      - name: 배포용 압축 파일 생성
-        run: |
-          cd backend
-          zip -r ../lambda.zip . \
-             --exclude ".env" \
-             --exclude "*.git"
 
       - name: AWS 자격 증명 설정
         uses: aws-actions/configure-aws-credentials@v4
