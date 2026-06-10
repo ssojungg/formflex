@@ -2,6 +2,19 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "frontend",
+      "cwd": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["index.js"],
+      "port": 8000
+    },
+    {
       "name": "cicd-preview",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "-p", "4321", "."],

@@ -7,3 +7,5 @@ node_modules
 /node_modules
 access.log
 error.log
+cicd-pipeline.html
+cicd-explained.html
