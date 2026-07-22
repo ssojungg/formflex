@@ -30,7 +30,7 @@ function EditorHeader({
     <>
       <header className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6 border-b border-border-light bg-white flex-shrink-0">
         {/* Left Section */}
-        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
           <button
             onClick={() => navigate('/myform')}
             className="p-2 hover:bg-surface-secondary rounded-lg transition-colors flex-shrink-0"

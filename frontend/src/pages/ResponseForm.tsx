@@ -7,6 +7,9 @@ import ResponseMultipleChoice from '../components/responsetype/ResponseMultipleC
 import ResponseSubjective from '../components/responsetype/ResponseSubjective';
 import ResponseCheckBox from '../components/responsetype/ResponseCheckBox';
 import ResponseDropDown from '../components/responsetype/ResponseDropDown';
+import ResponseRating from '../components/responsetype/ResponseRating';
+import ResponseEmail from '../components/responsetype/ResponseEmail';
+import ResponseDate from '../components/responsetype/ResponseDate';
 import { QuestionDataForm, ResponseSubmit } from '../types/questionData';
 import { responseformAPI, responseSubmitAPI } from '../api/responseform';
 import { useAuthStore } from '../store/AuthStore';
@@ -270,6 +273,33 @@ function ResponseForm() {
                   />
                 );
               case 'SUBJECTIVE_QUESTION':
+                if (question.format === 'rating') {
+                  return (
+                    <ResponseRating
+                      key={question.questionId}
+                      {...props}
+                      onSubChange={(res) => handleSubChange(res, question.questionId)}
+                    />
+                  );
+                }
+                if (question.format === 'email') {
+                  return (
+                    <ResponseEmail
+                      key={question.questionId}
+                      {...props}
+                      onSubChange={(res) => handleSubChange(res, question.questionId)}
+                    />
+                  );
+                }
+                if (question.format === 'date') {
+                  return (
+                    <ResponseDate
+                      key={question.questionId}
+                      {...props}
+                      onSubChange={(res) => handleSubChange(res, question.questionId)}
+                    />
+                  );
+                }
                 return (
                   <ResponseSubjective
                     key={question.questionId}

@@ -77,11 +77,13 @@ interface EditableTextProps {
   placeholder?: string;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
+  multiline?: boolean;
 }
 
-const EditableText = memo(({ value, onChange, placeholder, className, onClick }: EditableTextProps) => {
+const EditableText = memo(({ value, onChange, placeholder, className, onClick, multiline }: EditableTextProps) => {
   const [localValue, setLocalValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Sync from parent when not focused
   React.useEffect(() => {
@@ -90,7 +92,18 @@ const EditableText = memo(({ value, onChange, placeholder, className, onClick }:
     }
   }, [value, isFocused]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const resizeTextarea = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  React.useEffect(() => {
+    if (multiline) resizeTextarea();
+  }, [multiline, localValue, resizeTextarea]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setLocalValue(e.target.value);
   };
 
@@ -104,6 +117,22 @@ const EditableText = memo(({ value, onChange, placeholder, className, onClick }:
   const handleFocus = () => {
     setIsFocused(true);
   };
+
+  if (multiline) {
+    return (
+      <textarea
+        ref={textareaRef}
+        rows={1}
+        value={localValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        placeholder={placeholder}
+        className={`${className || ''} resize-none overflow-hidden break-words`}
+        onClick={onClick}
+      />
+    );
+  }
 
   return (
     <input
@@ -449,6 +478,7 @@ const QuestionCard = memo(({
             placeholder="질문을 입력하세요"
             className="w-full font-medium text-text-primary bg-transparent border-none focus:outline-none placeholder-text-tertiary mb-1"
             onClick={(e) => e.stopPropagation()}
+            multiline
           />
         )}
 

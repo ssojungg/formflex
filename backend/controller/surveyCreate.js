@@ -56,7 +56,7 @@ const createSurveyWithQuestionsAndChoices = async (req, res) => {
       },
     );
 
-    for (const question of questions) {
+    for (const [index, question] of questions.entries()) {
       if (
         ![
           'MULTIPLE_CHOICE',
@@ -74,6 +74,8 @@ const createSurveyWithQuestionsAndChoices = async (req, res) => {
           type: question.type,
           content: question.content,
           imageUrl: question.imageUrl,
+          orderIndex: index, // 이슈 4: 작성자가 배치한 순서 보존
+          format: question.format, // 이슈 5: subjective 세부 타입 (없으면 null)
         },
         { transaction: t },
       );

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -60,7 +60,10 @@ const BarChartIcon = () => (
 );
 
 const INDIGO = '#6366f1';
-const CHART_COLORS = ['#6366f1', '#8b5cf6', '#06b6d4', '#f59e0b', '#ef4444', '#10b981', '#f97316', '#ec4899'];
+// Soft, harmonious palette (muted jewel tones) for a premium analytics look.
+const CHART_COLORS = ['#6366f1', '#a78bfa', '#22d3ee', '#fbbf24', '#fb7185', '#34d399', '#f97316', '#e879f9'];
+const CHART_FONT =
+  'Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 function typeLabel(type: string) {
@@ -81,16 +84,37 @@ function ChoiceChart({ question }: { question: QuestionData }) {
   const total = choices.reduce((s, c) => s + (c.count || 0), 0);
 
   const barOptions: ApexCharts.ApexOptions = {
-    chart: { type: 'bar', toolbar: { show: false }, background: 'transparent' },
-    plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%' } },
-    colors: [INDIGO],
-    xaxis: { categories: choices.map((c) => c.option), labels: { style: { fontSize: '12px' } } },
+    chart: { type: 'bar', toolbar: { show: false }, background: 'transparent', fontFamily: CHART_FONT, parentHeightOffset: 0 },
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        borderRadius: 8,
+        borderRadiusApplication: 'end',
+        barHeight: '55%',
+        distributed: true,
+      },
+    },
+    colors: CHART_COLORS,
+    fill: {
+      type: 'gradient',
+      gradient: { shade: 'light', type: 'horizontal', gradientToColors: undefined, opacityFrom: 1, opacityTo: 0.85, stops: [0, 100] },
+    },
+    states: { hover: { filter: { type: 'darken' } } },
+    xaxis: {
+      categories: choices.map((c) => c.option),
+      labels: { style: { fontSize: '12px', colors: '#94a3b8' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: { labels: { style: { fontSize: '12px', colors: '#475569' } } },
+    legend: { show: false },
     dataLabels: {
       enabled: true,
-      formatter: (val: number) => total > 0 ? `${Math.round((val / total) * 100)}%` : '0%',
-      style: { fontSize: '11px', colors: ['#fff'] },
+      formatter: (val: number) => (total > 0 ? `${Math.round((val / total) * 100)}%` : '0%'),
+      style: { fontSize: '11px', fontWeight: 700, colors: ['#fff'] },
+      dropShadow: { enabled: false },
     },
-    grid: { borderColor: '#f1f5f9' },
+    grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
     tooltip: {
       y: { formatter: (val: number) => `${val}명 (${total > 0 ? Math.round((val / total) * 100) : 0}%)` },
     },
@@ -98,27 +122,58 @@ function ChoiceChart({ question }: { question: QuestionData }) {
   const barSeries = [{ name: '응답수', data: choices.map((c) => c.count || 0) }];
 
   const donutOptions: ApexCharts.ApexOptions = {
-    chart: { type: 'donut', background: 'transparent' },
+    chart: { type: 'donut', background: 'transparent', fontFamily: CHART_FONT },
     colors: CHART_COLORS,
     labels: choices.map((c) => c.option),
-    legend: { position: 'bottom', fontSize: '12px' },
+    stroke: { width: 2, colors: ['#fff'] },
+    legend: { position: 'bottom', fontSize: '12px', fontWeight: 500, labels: { colors: '#64748b' }, markers: { radius: 12 }, itemMargin: { horizontal: 8, vertical: 3 } },
     dataLabels: { enabled: false },
-    plotOptions: { pie: { donut: { size: '65%' } } },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: '72%',
+          labels: {
+            show: true,
+            total: {
+              show: true,
+              label: '총 응답',
+              fontSize: '12px',
+              color: '#94a3b8',
+              formatter: () => `${total}명`,
+            },
+            value: { fontSize: '22px', fontWeight: 700, color: '#1e293b' },
+          },
+        },
+      },
+    },
     tooltip: { y: { formatter: (val: number) => `${val}명` } },
   };
   const donutSeries = choices.map((c) => c.count || 0);
 
-  if (choices.length === 0) return <p className="text-sm text-gray-400 text-center py-8">응답 데이터 없음</p>;
+  if (choices.length === 0) {
+    return (
+      <div className="mt-2 flex flex-col items-center justify-center py-10 text-center rounded-2xl bg-gray-50/60">
+        <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-300 mb-2">
+          <BarChartIcon />
+        </div>
+        <p className="text-sm text-gray-400">아직 응답 데이터가 없어요</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid lg:grid-cols-2 gap-4 mt-2">
-      <div>
-        <p className="text-xs font-medium text-gray-500 mb-2">응답 분포 (막대)</p>
-        <ReactApexChart options={barOptions} series={barSeries} type="bar" height={Math.max(choices.length * 44, 120)} />
+    <div className="grid lg:grid-cols-2 gap-6 mt-2">
+      <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100 p-4">
+        <p className="text-xs font-semibold text-slate-500 mb-3 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" /> 응답 분포
+        </p>
+        <ReactApexChart options={barOptions} series={barSeries} type="bar" height={Math.max(choices.length * 48, 140)} />
       </div>
-      <div>
-        <p className="text-xs font-medium text-gray-500 mb-2">비율 (도넛)</p>
-        <ReactApexChart options={donutOptions} series={donutSeries} type="donut" height={220} />
+      <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100 p-4">
+        <p className="text-xs font-semibold text-slate-500 mb-3 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-violet-400" /> 비율
+        </p>
+        <ReactApexChart options={donutOptions} series={donutSeries} type="donut" height={260} />
       </div>
     </div>
   );
@@ -237,7 +292,18 @@ function ResultPage() {
       .filter((q) => q.type === 'SUBJECTIVE_QUESTION')
       .reduce((sum, q) => sum + (q.answers?.length || 0), 0);
 
-    return { totalResponses, questionCount, isActive, avgChoiceResponses, subjectiveCount };
+    // 오늘 / 어제 응답 수 (같은 로컬 날짜 기준)
+    const rows = answerData?.list?.rows || [];
+    const sameDay = (a: Date, b: Date) =>
+      a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    const now = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    const todayCount = rows.filter((r) => sameDay(new Date(r.createdAt), now)).length;
+    const yesterdayCount = rows.filter((r) => sameDay(new Date(r.createdAt), yesterday)).length;
+    const todayDelta = todayCount - yesterdayCount;
+
+    return { totalResponses, questionCount, isActive, avgChoiceResponses, subjectiveCount, todayCount, yesterdayCount, todayDelta };
   }, [questionData, answerData]);
 
   // ── Trend: responses per day ───────────────────────────────────────
@@ -254,16 +320,46 @@ function ResultPage() {
     return { labels: sorted.map(([d]) => d), values: sorted.map(([, v]) => v) };
   }, [answerData]);
 
+  // 응답 수 축 최대값을 정수 눈금으로 (작은 범위에서 소수점 눈금이 생기는 문제 방지)
+  const trendYMax = Math.max(...trendData.values, 1);
+  // 작은 범위(<=8)에서는 1칸=1명으로 고정, 큰 범위는 Apex 기본 눈금 사용
+  const trendTickAmount = trendYMax <= 8 ? trendYMax : undefined;
+
+  // 스탯 카드용 미니 스파크라인 옵션 (축·격자 없이 라인만)
+  const sparkOptions = (color: string, area = true): ApexCharts.ApexOptions => ({
+    chart: { type: area ? 'area' : 'line', sparkline: { enabled: true }, fontFamily: CHART_FONT },
+    colors: [color],
+    stroke: { curve: 'smooth', width: 2.5 },
+    fill: area
+      ? { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0, stops: [0, 100] } }
+      : { type: 'solid', opacity: 0 },
+    tooltip: { enabled: false },
+    markers: { size: 0 },
+  });
+  const sparkTrend = trendData.values.slice(-8);
+
   const trendOptions: ApexCharts.ApexOptions = {
-    chart: { type: 'area', toolbar: { show: false }, background: 'transparent' },
+    chart: { type: 'area', toolbar: { show: false }, background: 'transparent', fontFamily: CHART_FONT, zoom: { enabled: false } },
     colors: [INDIGO],
-    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
-    stroke: { curve: 'smooth', width: 2 },
-    xaxis: { categories: trendData.labels, labels: { style: { fontSize: '11px' } } },
-    yaxis: { labels: { formatter: (v) => `${v}명` } },
-    grid: { borderColor: '#f1f5f9' },
+    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.02, stops: [0, 95] } },
+    stroke: { curve: 'smooth', width: 3 },
+    markers: { size: 4, colors: ['#fff'], strokeColors: INDIGO, strokeWidth: 2, hover: { size: 6 } },
+    xaxis: {
+      categories: trendData.labels,
+      labels: { style: { fontSize: '11px', colors: '#94a3b8' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: {
+      min: 0,
+      // 응답 수는 정수이므로 축 눈금도 정수로만 표기 (희소 데이터의 소수점 눈금 방지)
+      max: trendTickAmount ? trendYMax : undefined,
+      tickAmount: trendTickAmount,
+      labels: { formatter: (v) => `${Math.round(v)}명`, style: { colors: '#94a3b8' } },
+    },
+    grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
     dataLabels: { enabled: false },
-    tooltip: { y: { formatter: (v) => `${v}명` } },
+    tooltip: { y: { formatter: (v) => `${Math.round(v)}명` } },
   };
 
   // ── Per-question choice summary (stacked bar) ──────────────────────
@@ -272,17 +368,19 @@ function ResultPage() {
   );
 
   const stackedOptions: ApexCharts.ApexOptions = {
-    chart: { type: 'bar', stacked: true, toolbar: { show: false }, background: 'transparent' },
+    chart: { type: 'bar', stacked: true, toolbar: { show: false }, background: 'transparent', fontFamily: CHART_FONT },
     colors: CHART_COLORS,
-    plotOptions: { bar: { horizontal: false, borderRadius: 4 } },
+    plotOptions: { bar: { horizontal: false, borderRadius: 6, borderRadiusApplication: 'end', columnWidth: '45%' } },
     xaxis: {
       categories: choiceQuestions.map((_, i) => `Q${i + 1}`),
-      labels: { style: { fontSize: '12px' } },
+      labels: { style: { fontSize: '12px', colors: '#94a3b8' } },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
     },
-    yaxis: { labels: { formatter: (v) => `${v}명` } },
-    legend: { position: 'bottom' },
+    yaxis: { labels: { formatter: (v) => `${v}명`, style: { colors: '#94a3b8' } } },
+    legend: { position: 'bottom', fontSize: '12px', labels: { colors: '#64748b' }, markers: { radius: 12 } },
     dataLabels: { enabled: false },
-    grid: { borderColor: '#f1f5f9' },
+    grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
     tooltip: { y: { formatter: (v) => `${v}명` } },
   };
 
@@ -300,6 +398,20 @@ function ResultPage() {
 
   const isLoading = qLoading || aLoading;
   const hasData = !!surveyId && (!!questionData || !!answerData);
+
+  // ApexCharts computes its width on first paint, before the flex layout settles,
+  // which collapses the charts (hero/sparklines) until an interaction forces a reflow.
+  // Nudge a resize a few times after data mounts so every chart lays out correctly.
+  useEffect(() => {
+    if (!hasData || isLoading) return undefined;
+    const fire = () => window.dispatchEvent(new Event('resize'));
+    const raf = requestAnimationFrame(fire);
+    const timers = [80, 250, 600].map((ms) => setTimeout(fire, ms));
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
+    };
+  }, [hasData, isLoading, activeTab]);
 
   const handleExport = () => {
     setIsPrinting(true);
@@ -372,7 +484,7 @@ function ResultPage() {
   };
 
   return (
-    <div className="flex h-full bg-gray-50 overflow-hidden print:overflow-visible print:block print:h-auto">
+    <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 overflow-hidden print:overflow-visible print:block print:h-auto">
       {/* Mobile overlay backdrop */}
       {showSidebar && isMobile && (
         <div
@@ -439,24 +551,22 @@ function ResultPage() {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 print:overflow-visible print:block">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-4 md:px-6 bg-white border-b border-gray-100 flex-shrink-0 print:hidden">
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 lg:px-8 bg-white/70 backdrop-blur-md border-b border-slate-100 flex-shrink-0 print:hidden">
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-gray-100 rounded-lg">
+            <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500">
               <MenuIcon />
             </button>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                {questionData?.title || '분석'}
-              </h1>
-              {questionData?.createdAt && (
-                <p className="text-xs text-gray-400">{formatDate(questionData.createdAt)} 생성</p>
-              )}
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                <BarChartIcon />
+              </span>
+              <h1 className="text-base font-semibold text-slate-800">설문 분석</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => { setShowEmailModal(true); setEmailError(''); }}
-              className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl text-sm hover:bg-gray-50 text-gray-600"
+              className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-xl text-sm hover:bg-slate-50 text-slate-600 transition-colors"
               disabled={!hasData}
             >
               <MailIcon />
@@ -464,7 +574,8 @@ function ResultPage() {
             </button>
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-3 py-2 bg-indigo-500 text-white text-sm rounded-xl hover:bg-indigo-600"
+              className="flex items-center gap-2 px-3.5 py-2 text-white text-sm rounded-xl transition-all hover:brightness-110 shadow-sm"
+              style={{ background: 'linear-gradient(135deg,#6366f1,#818cf8)' }}
             >
               <DownloadIcon />
               <span className="hidden sm:inline">내보내기</span>
@@ -492,71 +603,6 @@ function ResultPage() {
 
         {hasData && !isLoading && (
           <>
-            {/* Stats Cards */}
-            <div className="w-full px-4 md:px-6 py-4 bg-white border-b border-gray-100">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-indigo-50 rounded-2xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center text-white">
-                    <UsersIcon />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{stats.totalResponses}</p>
-                    <p className="text-xs text-gray-500">총 응답</p>
-                  </div>
-                </div>
-                <div className="bg-purple-50 rounded-2xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center text-white">
-                    <QuestionIcon />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{stats.questionCount}</p>
-                    <p className="text-xs text-gray-500">질문 수</p>
-                  </div>
-                </div>
-                <div className="bg-cyan-50 rounded-2xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500 flex items-center justify-center text-white">
-                    <BarChartIcon />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{stats.avgChoiceResponses}</p>
-                    <p className="text-xs text-gray-500">평균 선택 응답</p>
-                  </div>
-                </div>
-                <div className="bg-amber-50 rounded-2xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white">
-                    <CalendarIcon />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">{stats.subjectiveCount}</p>
-                    <p className="text-xs text-gray-500">주관식 응답</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="w-full bg-white border-b border-gray-100 px-4 md:px-6 print:hidden">
-              <div className="flex gap-6">
-                {[
-                  { id: 'question' as const, label: '질문별 분석' },
-                  { id: 'response' as const, label: '응답별 보기' },
-                  { id: 'trend' as const, label: '트렌드' },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`py-3 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-indigo-500 text-indigo-600'
-                        : 'border-transparent text-gray-400 hover:text-gray-700'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Print-only header */}
             <div className="hidden print:block px-6 py-4 mb-2">
               <h1 className="text-xl font-bold text-gray-900">{questionData?.title || '설문 분석 결과'}</h1>
@@ -565,14 +611,107 @@ function ResultPage() {
 
             {/* Content */}
             <div ref={contentRef} className="flex-1 overflow-y-auto print:overflow-visible print:p-0">
-              <div className="w-full max-w-5xl mx-auto p-4 md:p-6 space-y-5">
+              <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+
+              {/* ── Greeting ── */}
+              <div className="flex flex-wrap items-end justify-between gap-2 print:hidden">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    {questionData?.title || '설문 분석'}
+                  </h2>
+                  <p className="text-sm text-slate-400 mt-1">
+                    {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
+                  </p>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                  stats.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${stats.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                  {stats.isActive ? '진행중' : '종료됨'}
+                </span>
+              </div>
+
+              {/* ── Hero: 응답 추이 (cashflow-style) ── */}
+              <div className="bg-white rounded-3xl ring-1 ring-slate-100 shadow-sm p-6 md:p-7">
+                <div className="flex flex-wrap items-start justify-between gap-4 mb-2">
+                  <div>
+                    <p className="text-sm font-medium text-slate-400">오늘 들어온 응답</p>
+                    <div className="flex items-end gap-3 mt-1">
+                      <span className="text-4xl font-extrabold text-slate-800 tabular-nums leading-none">
+                        {stats.todayCount}
+                        <span className="text-lg font-bold text-slate-400 ml-1">명</span>
+                      </span>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold mb-0.5 ${
+                        stats.todayDelta > 0 ? 'bg-emerald-50 text-emerald-600'
+                        : stats.todayDelta < 0 ? 'bg-red-50 text-red-500'
+                        : 'bg-slate-100 text-slate-400'
+                      }`}>
+                        {stats.todayDelta > 0 ? '▲' : stats.todayDelta < 0 ? '▼' : '—'}
+                        {Math.abs(stats.todayDelta)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1.5">전일 대비 · 전체 누적 {stats.totalResponses.toLocaleString()}명</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-50 text-slate-500 border border-slate-100">
+                    <CalendarIcon /> 최근 {trendData.labels.length}일
+                  </span>
+                </div>
+                <ReactApexChart options={trendOptions} series={[{ name: '응답수', data: trendData.values }]} type="area" height={260} />
+              </div>
+
+              {/* ── Sparkline Stat Cards ── */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
+                {[
+                  { label: '총 응답', value: stats.totalResponses.toLocaleString(), sub: '전체 누적', color: '#6366f1', icon: <UsersIcon />, ib: '#eef2ff', ic: '#6366f1' },
+                  { label: '질문 수', value: stats.questionCount, sub: '설문 문항', color: '#8b5cf6', icon: <QuestionIcon />, ib: '#f5f3ff', ic: '#8b5cf6' },
+                  { label: '평균 선택 응답', value: stats.avgChoiceResponses, sub: '객관식 평균', color: '#06b6d4', icon: <BarChartIcon />, ib: '#ecfeff', ic: '#06b6d4' },
+                  { label: '주관식 응답', value: stats.subjectiveCount, sub: '텍스트 응답', color: '#f59e0b', icon: <TextIcon />, ib: '#fffbeb', ic: '#f59e0b' },
+                ].map((card) => (
+                  <div key={card.label} className="bg-white rounded-2xl ring-1 ring-slate-100 shadow-sm p-5 transition-all hover:shadow-md hover:-translate-y-0.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: card.ib, color: card.ic }}>
+                        {card.icon}
+                      </span>
+                    </div>
+                    <p className="text-2xl font-extrabold text-slate-800 tabular-nums leading-none">{card.value}</p>
+                    <p className="text-xs text-slate-400 mt-1.5">{card.label}</p>
+                    <div className="-mx-1 mt-2 h-9">
+                      <ReactApexChart options={sparkOptions(card.color)} series={[{ data: sparkTrend }]} type="area" height={36} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Tabs (sticky) ── */}
+              <div className="sticky top-0 z-10 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 py-2 bg-gradient-to-b from-slate-50/95 to-transparent backdrop-blur-sm print:hidden">
+                <div className="inline-flex items-center gap-1 p-1 bg-white ring-1 ring-slate-100 shadow-sm rounded-xl">
+                  {[
+                    { id: 'question' as const, label: '질문별 분석' },
+                    { id: 'response' as const, label: '응답별 보기' },
+                    { id: 'trend' as const, label: '트렌드' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                        activeTab === tab.id
+                          ? 'text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                      style={activeTab === tab.id ? { background: 'linear-gradient(135deg,#6366f1,#818cf8)' } : undefined}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               {/* ── 질문별 탭 ── */}
               {(activeTab === 'question' || isPrinting) && (
                 <>
                   {/* Stacked summary (only if multiple choice questions) */}
                   {stackedSeries.length > 0 && choiceQuestions.length > 1 && (
-                    <div className="bg-white rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm ring-1 ring-slate-100">
                       <h3 className="font-semibold text-gray-800 mb-1">전체 선택 응답 요약</h3>
                       <p className="text-xs text-gray-400 mb-4">객관식 질문 전체 응답 분포</p>
                       <ReactApexChart options={stackedOptions} series={stackedSeries} type="bar" height={240} />
@@ -581,7 +720,7 @@ function ResultPage() {
 
                   {/* Per-question cards */}
                   {questionData?.questions?.map((question, index) => (
-                    <div key={question.questionId} className="bg-white rounded-2xl p-6 shadow-sm">
+                    <div key={question.questionId} className="bg-white rounded-3xl p-6 shadow-sm ring-1 ring-slate-100">
                       <div className="flex items-start gap-3 mb-4">
                         <span className="shrink-0 w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">
                           {index + 1}
@@ -622,7 +761,7 @@ function ResultPage() {
 
               {/* ── 응답별 탭 ── */}
               {(activeTab === 'response' || isPrinting) && (
-                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-gray-800">개별 응답 목록</h3>
@@ -666,27 +805,9 @@ function ResultPage() {
               {/* ── 트렌드 탭 ── */}
               {(activeTab === 'trend' || isPrinting) && (
                 <div className="space-y-5">
-                  {/* Daily trend */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
-                    <h3 className="font-semibold text-gray-800 mb-1">일별 응답 추이</h3>
-                    <p className="text-xs text-gray-400 mb-4">날짜별 응답 수</p>
-                    {trendData.labels.length > 0 ? (
-                      <ReactApexChart
-                        options={trendOptions}
-                        series={[{ name: '응답수', data: trendData.values }]}
-                        type="area"
-                        height={240}
-                      />
-                    ) : (
-                      <div className="h-40 flex items-center justify-center text-gray-400 text-sm">
-                        날짜별 데이터가 없습니다
-                      </div>
-                    )}
-                  </div>
-
                   {/* Radial per-question completion */}
                   {choiceQuestions.length > 0 && (
-                    <div className="bg-white rounded-2xl p-6 shadow-sm">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm ring-1 ring-slate-100">
                       <h3 className="font-semibold text-gray-800 mb-1">질문별 응답 비교</h3>
                       <p className="text-xs text-gray-400 mb-4">각 객관식 질문의 총 응답 수</p>
                       <ReactApexChart
@@ -722,7 +843,7 @@ function ResultPage() {
                   )}
 
                   {/* Summary table */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <div className="bg-white rounded-3xl p-6 shadow-sm ring-1 ring-slate-100">
                     <h3 className="font-semibold text-gray-800 mb-4">질문별 요약</h3>
                     <div className="space-y-3">
                       {questionData?.questions?.map((q, i) => {

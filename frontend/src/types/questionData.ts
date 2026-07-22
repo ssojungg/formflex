@@ -16,6 +16,9 @@ export type QuestionData = {
   imageUrl: string;
   choices?: Choice[];
   answers?: Answer[];
+  // Sub-format of a SUBJECTIVE_QUESTION (short_text/long_text/email/number/date/rating).
+  // Not yet returned by the backend — see Issue 5 backend notes.
+  format?: string;
 };
 
 export type ExtendedQuestionData = QuestionData & {

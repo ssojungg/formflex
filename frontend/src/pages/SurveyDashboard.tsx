@@ -1,10 +1,20 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { useAuthStore } from '../store/AuthStore';
 import Alert from '../components/common/Alert';
+import ShareMailModal from '../components/common/ShareMailModal';
 import useInfiniteList from '../hooks/useInfiniteList';
+import { deleteSurveyAPI } from '../api/deleteSurvey';
+import { ApiResponseError } from '../types/apiResponseError';
 import { Survey } from '../types/survey';
+import menuSee from '../assets/menuSee.svg';
+import menuLink from '../assets/menuLink.svg';
+import menuAnalysis from '../assets/menuAnalysis.svg';
+import menuEdit from '../assets/menuEdit.svg';
+import menuDel from '../assets/menuDel.svg';
 
 // ==================== ICONS ====================
 const SearchIcon = () => (
@@ -167,14 +177,137 @@ function StatCard({ label, value, icon, iconBg, iconColor, accentColor, trend, i
   );
 }
 
+// ==================== SURVEY CARD MENU ====================
+const dropdownVariants = {
+  open: { scaleY: 1, transition: { when: 'beforeChildren', staggerChildren: 0.06, duration: 0.03 } },
+  closed: { scaleY: 0, transition: { when: 'afterChildren', staggerChildren: 0.06, duration: 0.03 } },
+};
+
+const itemVariants = {
+  open: { opacity: 1, y: 0, transition: { duration: 0.1 } },
+  closed: { opacity: 0, y: -8, transition: { duration: 0.1 } },
+};
+
+interface SurveyCardMenuProps {
+  survey: Survey;
+  onDeleted: () => void;
+}
+
+function SurveyCardMenu({ survey, onDeleted }: SurveyCardMenuProps) {
+  const navigate = useNavigate();
+  const myId = useAuthStore((state) => state.userId) ?? 0;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const [showEditAlert, setShowEditAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const canEdit = survey.attendCount === 0;
+
+  const { mutate: deleteSurvey, isError: deleteError } = useMutation({
+    mutationFn: () => deleteSurveyAPI(survey.surveyId, myId),
+    onSuccess: onDeleted,
+    onError: (error: AxiosError) => {
+      const err = error as AxiosError<ApiResponseError>;
+      setErrorMessage(err.response?.data?.message || '설문 삭제에 실패했습니다.');
+    },
+  });
+
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) && !isShareModalVisible) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen, isShareModalVisible]);
+
+  const items = [
+    { label: '보기', icon: menuSee, onSelect: () => navigate(`/view?id=${survey.surveyId}`) },
+    {
+      label: '편집',
+      icon: menuEdit,
+      onSelect: () => (canEdit ? navigate(`/create?id=${survey.surveyId}`) : setShowEditAlert(true)),
+    },
+    { label: '공유', icon: menuLink, onSelect: () => setIsShareModalVisible(true) },
+    { label: '분석', icon: menuAnalysis, onSelect: () => navigate(`/result?id=${survey.surveyId}`) },
+    { label: '삭제', icon: menuDel, onSelect: () => deleteSurvey() },
+  ];
+
+  return (
+    <div className="absolute top-2 right-2 z-10" ref={menuRef} onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={() => setIsMenuOpen((v) => !v)}
+        className="w-7 h-7 rounded-lg bg-white/80 backdrop-blur-sm
+                   flex items-center justify-center text-[#6B6880]
+                   opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+      >
+        <DotsIcon />
+      </button>
+
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.ul
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={dropdownVariants}
+            className="absolute top-full right-0 mt-1 flex flex-col w-28 bg-white shadow-xl rounded-xl z-20 overflow-hidden border border-[#E8E6F0]"
+          >
+            {items.map(({ label, icon, onSelect }) => (
+              <motion.li
+                key={label}
+                variants={itemVariants}
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onSelect();
+                }}
+                className="flex items-center gap-2 w-full px-3 py-2.5 whitespace-nowrap hover:bg-[#F0EEFF] text-[#1A1A2A] transition-colors cursor-pointer"
+              >
+                <img src={icon} alt={label} className="w-4 h-4" />
+                <span className={`text-sm ${label === '삭제' ? 'text-[#D0021B]' : ''}`}>{label}</span>
+              </motion.li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+
+      {isShareModalVisible && (
+        <ShareMailModal
+          surveyId={survey.surveyId}
+          isVisible={isShareModalVisible}
+          onClose={() => {
+            setIsShareModalVisible(false);
+            setIsMenuOpen(false);
+          }}
+        />
+      )}
+      {deleteError && <Alert type="error" message={errorMessage} buttonText="확인" buttonClick={() => setErrorMessage('')} />}
+      {showEditAlert && (
+        <Alert
+          type="error"
+          message="참여자가 있는 설문은 편집할 수 없습니다."
+          buttonText="확인"
+          buttonClick={() => setShowEditAlert(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 // ==================== SURVEY CARD ====================
 interface SurveyCardProps {
   survey: Survey;
   index: number;
+  isOwner: boolean;
   onClick: () => void;
+  onDeleted: () => void;
 }
 
-function SurveyCard({ survey, index, onClick }: SurveyCardProps) {
+function SurveyCard({ survey, index, isOwner, onClick, onDeleted }: SurveyCardProps) {
   const status = surveyStatus(survey);
   const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
 
@@ -212,16 +345,8 @@ function SurveyCard({ survey, index, onClick }: SurveyCardProps) {
           {status === 'active' ? '● 진행중' : '■ 종료'}
         </span>
 
-        {/* 3-dot menu */}
-        <button
-          type="button"
-          onClick={(e) => e.stopPropagation()}
-          className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-white/80 backdrop-blur-sm
-                     flex items-center justify-center text-[#6B6880]
-                     opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-        >
-          <DotsIcon />
-        </button>
+        {/* 3-dot menu (only for the survey's owner) */}
+        {isOwner && <SurveyCardMenu survey={survey} onDeleted={onDeleted} />}
       </div>
 
       {/* Body */}
@@ -614,7 +739,9 @@ function SurveyDashboard() {
                 key={survey.surveyId}
                 survey={survey}
                 index={index}
+                isOwner={!!survey.ownerId && survey.ownerId === myUserId}
                 onClick={() => handleSurveyClick(survey)}
+                onDeleted={() => window.location.reload()}
               />
             ))}
           </div>
@@ -625,6 +752,7 @@ function SurveyDashboard() {
           <div className="flex flex-col gap-2">
             {surveys.map((survey, index) => {
               const status = surveyStatus(survey);
+              const isOwner = !!survey.ownerId && survey.ownerId === myUserId;
               return (
                 <motion.div
                   key={survey.surveyId}
@@ -632,7 +760,7 @@ function SurveyDashboard() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.4) }}
                   onClick={() => handleSurveyClick(survey)}
-                  className="bg-white rounded-2xl border border-[#E8E6F0] overflow-hidden
+                  className="relative bg-white rounded-2xl border border-[#E8E6F0] overflow-hidden
                              cursor-pointer hover:shadow-md transition-all flex group"
                 >
                   <div
@@ -664,7 +792,9 @@ function SurveyDashboard() {
                     <span className="hidden md:block text-xs text-[#9B97A8] shrink-0">
                       {formatDate(survey.createdAt)}
                     </span>
+                    {isOwner && <div className="w-7 shrink-0" />}
                   </div>
+                  {isOwner && <SurveyCardMenu survey={survey} onDeleted={() => window.location.reload()} />}
                 </motion.div>
               );
             })}

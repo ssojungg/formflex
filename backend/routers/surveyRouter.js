@@ -52,17 +52,29 @@ router.get('/:id/report-upload-url', async (req, res) => {
   }
 });
 
-// 3-b. POST /:id/report-email (s3Key를 받아 S3에서 PDF 읽고 이메일 발송)
-router.post('/:id/report-email', express.json(), async (req, res) => {
+// 3-b. POST /:id/report-email
+// PDF를 multipart('pdf')로 직접 받아 이메일 발송 (S3/버킷 CORS 불필요).
+// 레거시 클라이언트가 s3Key(JSON)만 보내는 경우 S3에서 읽어오는 경로도 유지.
+router.post('/:id/report-email', upload.single('pdf'), async (req, res) => {
   const { email, surveyTitle, s3Key } = req.body;
 
   if (!email) return res.status(400).json({ message: 'email 필드가 필요합니다' });
-  if (!s3Key) return res.status(400).json({ message: 's3Key 필드가 필요합니다' });
 
   try {
-    const pdfBuffer = await getFileFromS3(s3Key);
+    let pdfBuffer;
+    if (req.file) {
+      pdfBuffer = req.file.buffer; // 직접 업로드된 PDF (권장 경로)
+    } else if (s3Key) {
+      pdfBuffer = await getFileFromS3(s3Key); // 레거시 S3 경로 (하위 호환)
+    } else {
+      return res.status(400).json({ message: 'pdf 파일 또는 s3Key가 필요합니다' });
+    }
+
     const result = await sendReportEmail(email, pdfBuffer, surveyTitle);
-    deleteFileFromS3(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${s3Key}`).catch(() => {});
+
+    if (s3Key) {
+      deleteFileFromS3(`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${s3Key}`).catch(() => {});
+    }
     res.status(200).json(result);
   } catch (error) {
     console.error(error);

@@ -853,7 +853,10 @@ function SurveyEditor() {
         if (data.questions?.length > 0) {
           const mapped: Question[] = data.questions.map((q: any) => ({
             id: String(q.questionId),
-            type: (backendToFrontend[q.type] || 'short_text') as QuestionType,
+            // 이슈 5: SUBJECTIVE_QUESTION은 저장된 format(email/date/rating 등)으로 세부 타입 복원
+            type: (q.type === 'SUBJECTIVE_QUESTION' && q.format
+              ? q.format
+              : backendToFrontend[q.type] || 'short_text') as QuestionType,
             label: q.content || '',
             required: false,
             options: q.choices?.map((c: any) => ({
@@ -1094,6 +1097,9 @@ function SurveyEditor() {
         return {
           type: 'SUBJECTIVE_QUESTION' as const,
           content: q.label,
+          // Backend doesn't persist this field yet (see Issue 5 backend notes) —
+          // sending it now so the response UI can use it once that lands.
+          format: q.type,
         };
       });
 
