@@ -25,7 +25,10 @@ const getSurveyById = async (req, res) => {
         },
         {
           model: Question,
-          attributes: ['id', 'type', 'content', 'imageUrl'],
+          attributes: ['id', 'type', 'content', 'imageUrl', 'orderIndex', 'format'],
+          separate: true, // include에 order를 걸기 위해 별도 쿼리로 조회
+          // 이슈 4: 작성자 배치 순서대로. 기존 설문(orderIndex 전부 0)은 id 순=생성 순으로 폴백
+          order: [['orderIndex', 'ASC'], ['id', 'ASC']],
           include: {
             model: Choice,
             attributes: ['id', 'option'],
@@ -61,6 +64,7 @@ const getSurveyById = async (req, res) => {
           type: question.type,
           content: question.content,
           imageUrl: question.imageUrl,
+          format: question.format, // 이슈 5: 프론트의 날짜/평점/이메일 분기용
         };
         // 질문의 유형이 'SUBJECTIVE_QUESTION'가 아닐 경우에만 choices 추가
         if (question.type !== 'SUBJECTIVE_QUESTION') {

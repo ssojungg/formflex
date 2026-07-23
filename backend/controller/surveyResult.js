@@ -15,6 +15,9 @@ const surveyResult = async (req, res) => {
         {
           model: Question,
           as: 'Questions',
+          separate: true, // include에 order를 걸기 위해 별도 쿼리로 조회
+          // 이슈 4: 결과 화면도 작성자 배치 순서대로. 기존 설문은 id 순으로 폴백
+          order: [['orderIndex', 'ASC'], ['id', 'ASC']],
           include: [
             {
               model: Choice,

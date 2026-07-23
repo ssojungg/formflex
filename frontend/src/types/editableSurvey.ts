@@ -15,6 +15,9 @@ export type EditableSubjectiveQuestion = {
   type: 'SUBJECTIVE_QUESTION';
   content: string;
   imageUrl?: string;
+  // Sub-format of the subjective question (short_text/long_text/email/number/date/rating).
+  // Backend does not persist this yet — see Issue 5 backend notes.
+  format?: string;
 };
 
 export type EditableQuestions = EditableObjectiveQuestion | EditableSubjectiveQuestion;

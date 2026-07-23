@@ -24,6 +24,17 @@ module.exports = (sequelize, DataTypes) => {
         ),
         allowNull: false,
       },
+      // 작성자가 배치한 문항 순서 (이슈 4: 응답 화면에서 순서 보장)
+      orderIndex: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      // SUBJECTIVE_QUESTION의 세부 타입 (이슈 5: short_text/long_text/email/number/date/rating)
+      format: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+      },
       content: {
         type: DataTypes.STRING(100),
         allowNull: false,

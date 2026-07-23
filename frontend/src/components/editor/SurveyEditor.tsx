@@ -853,7 +853,10 @@ function SurveyEditor() {
         if (data.questions?.length > 0) {
           const mapped: Question[] = data.questions.map((q: any) => ({
             id: String(q.questionId),
-            type: (backendToFrontend[q.type] || 'short_text') as QuestionType,
+            // 이슈 5: SUBJECTIVE_QUESTION은 저장된 format(email/date/rating 등)으로 세부 타입 복원
+            type: (q.type === 'SUBJECTIVE_QUESTION' && q.format
+              ? q.format
+              : backendToFrontend[q.type] || 'short_text') as QuestionType,
             label: q.content || '',
             required: false,
             options: q.choices?.map((c: any) => ({
@@ -1094,6 +1097,9 @@ function SurveyEditor() {
         return {
           type: 'SUBJECTIVE_QUESTION' as const,
           content: q.label,
+          // Backend doesn't persist this field yet (see Issue 5 backend notes) —
+          // sending it now so the response UI can use it once that lands.
+          format: q.type,
         };
       });
 
@@ -1154,20 +1160,20 @@ function SurveyEditor() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-secondary-100">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0 mr-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 transition-colors"
+              className="p-2 rounded-xl text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 transition-colors flex-shrink-0"
             >
               <ArrowLeftIcon />
             </button>
-            <div className="h-6 w-px bg-secondary-200" />
+            <div className="h-6 w-px bg-secondary-200 flex-shrink-0" />
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="설문 제목을 입력하세요"
-              className="text-lg font-semibold text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-400 w-64"
+              className="text-lg font-semibold text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-400 flex-1 min-w-0"
             />
           </div>
           <div className="flex items-center gap-2">
