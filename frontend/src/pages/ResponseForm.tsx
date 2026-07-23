@@ -82,9 +82,12 @@ function ResponseForm() {
   const mutationOptions: UseMutationOptions<ResponseSubmit, Error, ResponseSubmit> = {
     mutationFn: (data) => responseSubmitAPI(surveyId, data),
     onSuccess: () => {
-      // Invalidate queries so dashboard & my-responses update immediately without refresh
-      queryClient.invalidateQueries({ queryKey: ['allForm'] });
-      queryClient.invalidateQueries({ queryKey: ['myResponse'] });
+      // Invalidate queries so dashboard & my-responses update immediately without refresh.
+      // Keys must match useInfiniteList's actual queryKey (`${path}_infinite`), not just `path`,
+      // or invalidateQueries silently matches nothing.
+      queryClient.invalidateQueries({ queryKey: ['allForm_infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['myForm_infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['myResponse_infinite'] });
       queryClient.invalidateQueries({ queryKey: ['surveyData', surveyId] });
       setShowSuccess(true);
     },

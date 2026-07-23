@@ -1160,20 +1160,20 @@ function SurveyEditor() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-secondary-100">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0 mr-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 transition-colors"
+              className="p-2 rounded-xl text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 transition-colors flex-shrink-0"
             >
               <ArrowLeftIcon />
             </button>
-            <div className="h-6 w-px bg-secondary-200" />
+            <div className="h-6 w-px bg-secondary-200 flex-shrink-0" />
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="설문 제목을 입력하세요"
-              className="text-lg font-semibold text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-400 w-64"
+              className="text-lg font-semibold text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-400 flex-1 min-w-0"
             />
           </div>
           <div className="flex items-center gap-2">

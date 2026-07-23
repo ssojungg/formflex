@@ -101,7 +101,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
   const { setUserId, setLoginStatus, userName, userEmail } = useAuthStore();
   const { activeItem, handleItem, isMobileSidebarOpen, setMobileSidebarOpen } = useNavbarStore();
   const { isMobile, isTablet } = useResponsive();
-  const { isInstallable, installApp } = usePWA();
+  const { isInstallable, installApp, isUpdateAvailable, updateApp } = usePWA();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -252,6 +252,20 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
             );
           })}
         </nav>
+
+        {/* New version available: prompt reload so users aren't stuck on a stale cached build */}
+        {isUpdateAvailable && (
+          <div className="px-3 py-2">
+            <button
+              onClick={updateApp}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-white
+                       bg-primary-500 rounded-lg hover:bg-primary-600 transition-colors animate-pulse"
+            >
+              <DownloadIcon />
+              <span>새 버전 사용 가능 - 새로고침</span>
+            </button>
+          </div>
+        )}
 
         {/* PWA Install Button */}
         {isInstallable && (

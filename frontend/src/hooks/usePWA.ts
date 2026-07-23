@@ -55,6 +55,7 @@ export function usePWA(): UsePWAReturn {
     window.addEventListener('offline', handleOffline);
 
     // Register service worker and check for updates
+    let updateCheckInterval: ReturnType<typeof setInterval> | undefined;
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((reg) => {
         setRegistration(reg);
@@ -70,10 +71,17 @@ export function usePWA(): UsePWAReturn {
             });
           }
         });
+
+        // Deploys don't push to open tabs; poll so long-lived sessions notice
+        // a new build without waiting for the browser's own SW update check.
+        updateCheckInterval = setInterval(() => {
+          reg.update();
+        }, 60_000);
       });
     }
 
     return () => {
+      if (updateCheckInterval) clearInterval(updateCheckInterval);
       window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('online', handleOnline);
