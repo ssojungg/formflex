@@ -42,7 +42,7 @@ app.get('/api/surveys/downloadExcel/:surveyId', createAndDownloadExcel);
 app.get('/api/images/search/:query', getImageByAPI);
 
 // 4. 데이터베이스 연결 및 서버 실행
-sequelize
+const dbReady = sequelize
   .sync({ alter: true })
   .then(() => {
     console.log('데이터베이스 테이블 생성 완료');
@@ -56,9 +56,16 @@ sequelize
   })
   .catch((err) => {
     console.error('데이터베이스 테이블 생성 실패:', err.stack);
+    throw err;
   });
 
 // 5. 람다 환경용 핸들러 (람다일 때만 작동)
+// 콜드 스타트 시 sync(alter)가 끝나기 전에 요청이 들어와 컬럼 미존재 에러가
+// 나는 걸 막기 위해, 매 invocation마다 dbReady를 기다린 뒤 위임한다.
 if (IS_LAMBDA) {
-  module.exports.handler = serverless(app);
+  const serverlessHandler = serverless(app);
+  module.exports.handler = async (event, context) => {
+    await dbReady;
+    return serverlessHandler(event, context);
+  };
 }
