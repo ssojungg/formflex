@@ -48,6 +48,8 @@ const usePaginationSurveyList = (path: PathType) => {
     // Auto-refresh: allForm every 30s (shows others' new responses), myForm/myResponse every 60s
     refetchInterval: path === 'allForm' ? 30_000 : 60_000,
     refetchIntervalInBackground: false, // only poll when tab is focused
+    // 전역 refetchOnMount:false 때문에 응답 제출 후 돌아와도 갱신되지 않던 문제 해결
+    refetchOnMount: true,
     meta: { errorMessage: '설문지 목록을 불러오는 중 오류가 발생했습니다.' },
   });
   return {

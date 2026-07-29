@@ -35,6 +35,9 @@ const useInfiniteList = (path: PathType) => {
     enabled: !!userId,
     refetchInterval: path === 'allForm' ? 30_000 : 60_000,
     refetchIntervalInBackground: false,
+    // 전역 기본값이 refetchOnMount:false라 stale 상태로 돌아와도 재조회가 안 된다.
+    // 목록은 응답수가 실시간으로 바뀌므로 마운트 시 stale이면 다시 불러오게 한다.
+    refetchOnMount: true,
   });
 
   const surveys: Survey[] = (result.data?.pages ?? []).flatMap(

@@ -82,13 +82,24 @@ function ResponseForm() {
   const mutationOptions: UseMutationOptions<ResponseSubmit, Error, ResponseSubmit> = {
     mutationFn: (data) => responseSubmitAPI(surveyId, data),
     onSuccess: () => {
-      // Invalidate queries so dashboard & my-responses update immediately without refresh.
-      // Keys must match useInfiniteList's actual queryKey (`${path}_infinite`), not just `path`,
-      // or invalidateQueries silently matches nothing.
-      queryClient.invalidateQueries({ queryKey: ['allForm_infinite'] });
-      queryClient.invalidateQueries({ queryKey: ['myForm_infinite'] });
-      queryClient.invalidateQueries({ queryKey: ['myResponse_infinite'] });
-      queryClient.invalidateQueries({ queryKey: ['surveyData', surveyId] });
+      // 응답 제출 후 새로고침 없이 대시보드 응답수가 갱신되도록 목록 캐시를 무효화한다.
+      // - 키는 두 가지 형태가 공존한다: useInfiniteList는 `${path}_infinite`,
+      //   usePaginationSurveyList는 `${path}` — 둘 다 무효화해야 한다.
+      // - refetchType: 'all'이 핵심. 제출 시점에 대시보드는 언마운트(inactive) 상태라
+      //   기본값 'active'로는 stale 표시만 되고 refetch가 일어나지 않는다.
+      //   ('refetchOnMount: false'가 전역 설정이라 되돌아와도 다시 안 불러옴 → F5해야만 갱신)
+      const listKeys = [
+        'allForm_infinite',
+        'myForm_infinite',
+        'myResponse_infinite',
+        'allForm',
+        'myForm',
+        'myResponse',
+      ];
+      listKeys.forEach((key) =>
+        queryClient.invalidateQueries({ queryKey: [key], refetchType: 'all' }),
+      );
+      queryClient.invalidateQueries({ queryKey: ['surveyData', surveyId], refetchType: 'all' });
       setShowSuccess(true);
     },
     onError: () => setShowError(true),
