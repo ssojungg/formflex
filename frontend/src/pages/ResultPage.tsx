@@ -13,8 +13,8 @@ import useInfiniteList from '../hooks/useInfiniteList';
 
 // ── Icons ──────────────────────────────────────────────────────────────
 const MenuIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <rect x="3" y="4" width="18" height="16" rx="2" /><line x1="9" y1="4" x2="9" y2="20" />
   </svg>
 );
 const MailIcon = () => (
@@ -27,86 +27,51 @@ const DownloadIcon = () => (
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
   </svg>
 );
-const ChevronRightIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="m9 18 6-6-6-6"/>
-  </svg>
-);
-const UsersIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-  </svg>
-);
-const QuestionIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-  </svg>
-);
-const CalendarIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-);
-const TextIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/>
-  </svg>
-);
 const BarChartIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
   </svg>
 );
 
-const INDIGO = '#3182F6';
+const PRIMARY = '#3182F6';
+const CHART_FONT =
+  '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+const CARD = 'bg-white rounded-2xl border border-secondary-200';
 
-// 대부분의 차트는 "크기 비교(단일 계열)"이므로 색의 역할은 sequential(한 가지 색조)이다.
-// 이전에 쓰던 8색 순환 팔레트는 색을 '순위'에 배정하는 안티패턴이었고,
-// 접근성 검증에서 명도 대역·CVD 분리·일반시야 분리 3개 항목이 FAIL이었다.
-// 막대 길이가 이미 크기를 인코딩하므로 한 색으로 통일하는 것이 가장 안전하고 깔끔하다.
-const SEQ_TRACK = '#EEF5FF'; // 미터 트랙(배경)
-
-// 공통 시각 토큰 — 카드 표면/미터 마크를 한곳에서 관리한다.
-const CARD =
-  'bg-white rounded-[26px] border border-[#F2F4F6] ' +
-  'shadow-[0_1px_2px_rgba(20,20,43,0.03),0_14px_32px_-22px_rgba(91,76,245,0.35)]';
-const FILL_GRADIENT = 'linear-gradient(90deg,#3182F6,#3182F6)';
-const DIM_FILL = '#BBD8FD';
-
-// 섹션 제목 앞의 액센트 룰
-function SectionHead({ title, desc }: { title: string; desc?: string }) {
+function CardHead({ title, desc, right }: { title: string; desc?: string; right?: React.ReactNode }) {
   return (
-    <>
-      <div className="flex items-center gap-2.5 mb-0.5">
-        <span
-          className="w-[3px] h-[15px] rounded-full shrink-0"
-          style={{ background: 'linear-gradient(180deg,#3182F6,#8CBEFB)' }}
-        />
-        <h3 className="text-[16.5px] font-bold tracking-[-0.01em] text-[#191F28]">{title}</h3>
+    <div className="flex items-start justify-between gap-3 mb-5">
+      <div>
+        <h3 className="text-[15px] font-bold tracking-tight text-secondary-900">{title}</h3>
+        {desc && <p className="mt-0.5 text-[13px] text-secondary-500">{desc}</p>}
       </div>
-      {desc && <p className="ml-3 mb-5 text-[12.5px] text-[#8B95A1]">{desc}</p>}
-    </>
+      {right}
+    </div>
   );
 }
 
-// 미터 한 줄 — 선택지/질문 목록이 같은 마크를 공유한다.
 function Meter({ pct, dim = false }: { pct: number; dim?: boolean }) {
   return (
-    <div className="h-2.5 w-full rounded-full overflow-hidden" style={{ backgroundColor: SEQ_TRACK }}>
+    <div className="h-2 w-full rounded-full overflow-hidden bg-secondary-100">
       <div
-        className="h-full rounded-full transition-[width] duration-500 ease-out"
-        style={{
-          width: `${pct}%`,
-          background: dim ? DIM_FILL : FILL_GRADIENT,
-          boxShadow: dim ? undefined : '0 1px 3px rgba(91,76,245,0.32)',
-        }}
+        className={`h-full rounded-full transition-[width] duration-700 ease-out ${dim ? 'bg-primary-200' : 'bg-primary-500'}`}
+        style={{ width: `${pct}%` }}
       />
     </div>
   );
 }
-const CHART_FONT =
-  'Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
+
+function EmptyBox({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-secondary-200 bg-secondary-50">
+      <span className="w-9 h-9 rounded-lg bg-white border border-secondary-200 text-secondary-400 flex items-center justify-center mb-2.5">
+        <BarChartIcon />
+      </span>
+      <p className="text-[13.5px] font-semibold text-secondary-700">{title}</p>
+      <p className="mt-1 text-xs text-secondary-500">{desc}</p>
+    </div>
+  );
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────
 function typeLabel(type: string) {
@@ -122,75 +87,42 @@ function formatDate(dateStr: string) {
 }
 
 // ── Choice distribution ────────────────────────────────────────────────
-// 단일 계열(하나의 질문에 대한 선택지 분포)이므로 크기 비교가 유일한 임무다.
-// 막대 + 도넛으로 같은 값을 두 번 그리던 구성을 하나의 미터 목록으로 합쳤다.
-// ApexCharts 대신 순수 HTML/CSS로 그려 라벨 겹침·초기 폭 계산 문제도 함께 사라진다.
+// 한 질문의 선택지 분포는 단일 계열 크기 비교라 한 가지 색의 미터 목록으로 그린다.
 function ChoiceChart({ question }: { question: QuestionData }) {
   const choices = question.choices || [];
   const total = choices.reduce((s, c) => s + (c.count || 0), 0);
   const max = choices.reduce((m, c) => Math.max(m, c.count || 0), 0);
 
-  if (choices.length === 0) {
+  if (choices.length === 0 || total === 0) {
     return (
-      <div className="mt-4 flex flex-col items-center justify-center py-11 text-center rounded-[18px] border border-dashed border-[#E5E8EB] bg-[#F9FAFB]">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center mb-2.5"
-          style={{ backgroundColor: SEQ_TRACK, color: INDIGO }}
-        >
-          <BarChartIcon />
-        </div>
-        <p className="text-[13.5px] font-semibold text-[#4E5968]">아직 응답 데이터가 없어요</p>
-        <p className="mt-1 text-xs text-[#8B95A1]">응답이 들어오면 분포가 여기에 표시됩니다</p>
+      <div className="mt-5">
+        <EmptyBox title="아직 응답이 없어요" desc="응답이 들어오면 선택지 분포가 여기에 표시돼요" />
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between mt-5 mb-4 pt-4 border-t border-[#F2F4F6]">
-        <span className="text-xs font-bold tracking-wide text-[#8B95A1]">응답 분포</span>
-        <span className="text-xs text-[#8B95A1]">{total}명 응답</span>
-      </div>
-
-      <ul className="flex flex-col gap-[17px]">
-        {choices.map((c) => {
-          const count = c.count || 0;
-          const pct = total > 0 ? (count / total) * 100 : 0;
-          const isTop = count > 0 && count === max;
-          return (
-            <li key={c.option}>
-              <div className="flex items-baseline justify-between gap-3.5 mb-2">
-                <span
-                  className={`text-sm leading-[1.4] break-words ${
-                    isTop ? 'text-[#191F28] font-bold' : 'text-[#4E5968] font-medium'
-                  }`}
-                >
-                  {isTop && (
-                    <span
-                      className="inline-flex items-center h-[18px] px-[7px] mr-[7px] rounded-md text-[10.5px] font-extrabold align-[1px]"
-                      style={{ backgroundColor: SEQ_TRACK, color: '#1B64DA' }}
-                    >
-                      1위
-                    </span>
-                  )}
-                  {c.option}
-                </span>
-                <span className="shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-[#8B95A1]">
-                  <span
-                    className="text-[15px] font-extrabold tracking-[-0.02em]"
-                    style={{ color: isTop ? '#1B64DA' : '#4E5968' }}
-                  >
-                    {Math.round(pct)}%
-                  </span>
-                  {` · ${count}명`}
-                </span>
-              </div>
-              <Meter pct={pct} dim={!isTop} />
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className="mt-5 flex flex-col gap-4">
+      {choices.map((c) => {
+        const count = c.count || 0;
+        const pct = total > 0 ? (count / total) * 100 : 0;
+        const isTop = count > 0 && count === max;
+        return (
+          <li key={c.option}>
+            <div className="flex items-baseline justify-between gap-3 mb-1.5">
+              <span className={`text-sm leading-snug break-words ${isTop ? 'text-secondary-900 font-semibold' : 'text-secondary-600'}`}>
+                {c.option}
+              </span>
+              <span className="shrink-0 whitespace-nowrap text-xs tabular-nums text-secondary-500">
+                <span className={`text-sm font-bold ${isTop ? 'text-primary-600' : 'text-secondary-700'}`}>{Math.round(pct)}%</span>
+                {` · ${count}명`}
+              </span>
+            </div>
+            <Meter pct={pct} dim={!isTop} />
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -200,9 +132,14 @@ function SubjectiveAnswers({ question }: { question: QuestionData }) {
   const answers = question.answers || [];
   const shown = showAll ? answers : answers.slice(0, 5);
 
-  if (answers.length === 0) return <p className="text-sm text-gray-400 text-center py-8">응답 데이터 없음</p>;
+  if (answers.length === 0) {
+    return (
+      <div className="mt-5">
+        <EmptyBox title="아직 응답이 없어요" desc="주관식 답변이 들어오면 여기에 모여요" />
+      </div>
+    );
+  }
 
-  // Word frequency (simple)
   const wordFreq: Record<string, number> = {};
   answers.forEach((a) => {
     a.content.split(/\s+/).filter((w) => w.length > 1).forEach((w) => {
@@ -212,39 +149,41 @@ function SubjectiveAnswers({ question }: { question: QuestionData }) {
   const topWords = Object.entries(wordFreq).sort((a, b) => b[1] - a[1]).slice(0, 8);
 
   return (
-    <div className="mt-2 space-y-4">
+    <div className="mt-5 space-y-5">
       {topWords.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-gray-500 mb-2">자주 등장한 키워드</p>
-          <div className="flex flex-wrap gap-2">
-            {topWords.map(([word, count]) => (
+          <p className="text-xs font-medium text-secondary-500 mb-2">자주 나온 단어</p>
+          <div className="flex flex-wrap gap-1.5">
+            {topWords.map(([word, count], i) => (
               <span
                 key={word}
-                className="px-3 py-1 rounded-full text-white text-xs font-medium"
-                style={{ backgroundColor: INDIGO, opacity: 0.4 + Math.min(count / topWords[0][1], 1) * 0.6 }}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] ${
+                  i === 0 ? 'bg-primary-50 text-primary-700 font-semibold' : 'bg-secondary-100 text-secondary-700'
+                }`}
               >
-                {word} ({count})
+                {word}
+                <span className={`text-[11px] tabular-nums ${i === 0 ? 'text-primary-500' : 'text-secondary-400'}`}>{count}</span>
               </span>
             ))}
           </div>
         </div>
       )}
       <div>
-        <p className="text-xs font-medium text-gray-500 mb-2">응답 목록 ({answers.length}개)</p>
-        <div className="space-y-2">
+        <p className="text-xs font-medium text-secondary-500 mb-2">답변 {answers.length}개</p>
+        <ul className="divide-y divide-secondary-100 rounded-xl border border-secondary-200">
           {shown.map((a, i) => (
-            <div key={a.answerId} className="flex gap-3 p-3 bg-gray-50 rounded-xl">
-              <span className="text-xs text-gray-400 mt-0.5 shrink-0">#{i + 1}</span>
-              <p className="text-sm text-gray-800">{a.content}</p>
-            </div>
+            <li key={a.answerId} className="flex gap-3 px-4 py-3">
+              <span className="text-xs text-secondary-400 mt-0.5 shrink-0 tabular-nums w-5">{i + 1}</span>
+              <p className="text-sm text-secondary-800 leading-relaxed">{a.content}</p>
+            </li>
           ))}
-        </div>
+        </ul>
         {answers.length > 5 && (
           <button
             onClick={() => setShowAll(!showAll)}
-            className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
+            className="mt-3 text-sm text-secondary-600 hover:text-secondary-900 font-medium"
           >
-            {showAll ? '접기' : `${answers.length - 5}개 더 보기 ▾`}
+            {showAll ? '접기' : `${answers.length - 5}개 더 보기`}
           </button>
         )}
       </div>
@@ -289,7 +228,6 @@ function ResultPage() {
     const questionCount = questionData?.questions?.length ?? 0;
     const isActive = questionData?.open ?? false;
 
-    // Choice questions total votes
     const choiceQuestions = (questionData?.questions || []).filter(
       (q) => q.type !== 'SUBJECTIVE_QUESTION'
     );
@@ -302,7 +240,6 @@ function ResultPage() {
         )
       : 0;
 
-    // Subjective answer count
     const subjectiveCount = (questionData?.questions || [])
       .filter((q) => q.type === 'SUBJECTIVE_QUESTION')
       .reduce((sum, q) => sum + (q.answers?.length || 0), 0);
@@ -337,55 +274,47 @@ function ResultPage() {
 
   // 응답 수 축 최대값을 정수 눈금으로 (작은 범위에서 소수점 눈금이 생기는 문제 방지)
   const trendYMax = Math.max(...trendData.values, 1);
-  // 작은 범위(<=8)에서는 1칸=1명으로 고정, 큰 범위는 Apex 기본 눈금 사용
   const trendTickAmount = trendYMax <= 8 ? trendYMax : undefined;
 
-  // 스탯 카드용 미니 스파크라인 옵션 (축·격자 없이 라인만)
-  const sparkOptions = (color: string, area = true): ApexCharts.ApexOptions => ({
-    chart: { type: area ? 'area' : 'line', sparkline: { enabled: true }, fontFamily: CHART_FONT },
-    colors: [color],
-    stroke: { curve: 'smooth', width: 2.5 },
-    fill: area
-      ? { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0, stops: [0, 100] } }
-      : { type: 'solid', opacity: 0 },
+  const sparkOptions: ApexCharts.ApexOptions = {
+    chart: { type: 'area', sparkline: { enabled: true }, fontFamily: CHART_FONT },
+    colors: [PRIMARY],
+    stroke: { curve: 'smooth', width: 2 },
+    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.25, opacityTo: 0, stops: [0, 100] } },
     tooltip: { enabled: false },
     markers: { size: 0 },
-  });
+  };
   const sparkTrend = trendData.values.slice(-8);
 
   const trendOptions: ApexCharts.ApexOptions = {
     chart: { type: 'area', toolbar: { show: false }, background: 'transparent', fontFamily: CHART_FONT, zoom: { enabled: false } },
-    colors: [INDIGO],
-    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.02, stops: [0, 95] } },
-    stroke: { curve: 'smooth', width: 3 },
-    markers: { size: 4, colors: ['#fff'], strokeColors: INDIGO, strokeWidth: 2, hover: { size: 6 } },
+    colors: [PRIMARY],
+    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.22, opacityTo: 0, stops: [0, 95] } },
+    stroke: { curve: 'smooth', width: 2.5 },
+    markers: { size: 0, colors: ['#fff'], strokeColors: PRIMARY, strokeWidth: 2, hover: { size: 5 } },
     xaxis: {
       categories: trendData.labels,
-      labels: { style: { fontSize: '11px', colors: '#94a3b8' } },
+      labels: { style: { fontSize: '11px', colors: '#8b95a1' } },
       axisBorder: { show: false },
       axisTicks: { show: false },
+      tooltip: { enabled: false },
     },
     yaxis: {
       min: 0,
-      // 응답 수는 정수이므로 축 눈금도 정수로만 표기 (희소 데이터의 소수점 눈금 방지)
       max: trendTickAmount ? trendYMax : undefined,
       tickAmount: trendTickAmount,
-      labels: { formatter: (v) => `${Math.round(v)}명`, style: { colors: '#94a3b8' } },
+      labels: { formatter: (v) => `${Math.round(v)}`, style: { colors: '#8b95a1' } },
     },
-    grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+    grid: { borderColor: '#f2f4f6', strokeDashArray: 0, padding: { left: 4, right: 8 } },
     dataLabels: { enabled: false },
     tooltip: { y: { formatter: (v) => `${Math.round(v)}명` } },
   };
 
-  // ── Per-question choice summary (stacked bar) ──────────────────────
+  // ── Per-question summary ───────────────────────────────────────────
+  // 서로 다른 질문의 선택지는 더할 수 없으므로, 질문별 "총 응답 수"만 비교한다.
   const choiceQuestions = (questionData?.questions || []).filter(
     (q) => q.type !== 'SUBJECTIVE_QUESTION' && (q.choices?.length || 0) > 0
   );
-
-  // 이전에는 서로 다른 질문의 선택지를 한 칸에 누적(stacked)했는데,
-  // Q1의 "기초"와 Q2의 "완전 처음이에요"는 같은 축으로 더할 수 있는 값이 아니라
-  // 차트가 의미를 갖지 못했고 범례 라벨도 서로 겹쳤다.
-  // 질문별 "총 응답 수" 비교(단일 계열 크기 비교)로 바꿔 의미와 가독성을 회복한다.
   const questionSummary = choiceQuestions.map((q, i) => {
     const optionTotal = (q.choices || []).reduce((sum, c) => sum + (c.count || 0), 0);
     const top = (q.choices || []).reduce<{ option: string; count: number } | null>(
@@ -400,8 +329,7 @@ function ResultPage() {
   const hasData = !!surveyId && (!!questionData || !!answerData);
 
   // ApexCharts computes its width on first paint, before the flex layout settles,
-  // which collapses the charts (hero/sparklines) until an interaction forces a reflow.
-  // Nudge a resize a few times after data mounts so every chart lays out correctly.
+  // which collapses the charts until an interaction forces a reflow.
   useEffect(() => {
     if (!hasData || isLoading) return undefined;
     const fire = () => window.dispatchEvent(new Event('resize'));
@@ -411,7 +339,7 @@ function ResultPage() {
       cancelAnimationFrame(raf);
       timers.forEach(clearTimeout);
     };
-  }, [hasData, isLoading, activeTab]);
+  }, [hasData, isLoading, activeTab, showSidebar]);
 
   const handleExport = () => {
     setIsPrinting(true);
@@ -483,30 +411,45 @@ function ResultPage() {
     }
   };
 
+  const kpis = [
+    { label: '총 응답', value: stats.totalResponses.toLocaleString(), unit: '명', spark: true },
+    { label: '오늘 응답', value: stats.todayCount, unit: '명', delta: stats.todayDelta },
+    { label: '질문 수', value: stats.questionCount, unit: '개' },
+    { label: '주관식 답변', value: stats.subjectiveCount, unit: '개' },
+  ];
+
+  const tabs = [
+    { id: 'question' as const, label: '질문별 분석' },
+    { id: 'response' as const, label: '응답 원본' },
+    { id: 'trend' as const, label: '질문 비교' },
+  ];
+
   return (
-    <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-primary-50/40 overflow-hidden print:overflow-visible print:block print:h-auto">
+    <div className="flex h-full bg-secondary-50 overflow-hidden print:overflow-visible print:block print:h-auto">
       {/* Mobile overlay backdrop */}
       {showSidebar && isMobile && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-40 bg-black/30"
           onClick={() => setShowSidebar(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Survey list */}
       {showSidebar && (
-        <div className={`
+        <aside className={`
           ${isMobile
             ? 'fixed inset-y-0 left-0 z-50 w-72 shadow-xl'
-            : 'w-64 border-r border-gray-100 flex-shrink-0'
+            : 'w-64 border-r border-secondary-200 flex-shrink-0'
           } bg-white flex flex-col print:hidden
         `}>
-          <div className="h-16 flex items-center justify-between px-4 border-b border-gray-100 flex-shrink-0">
-            <h2 className="text-sm font-semibold text-gray-800">내 설문</h2>
+          <div className="h-16 flex items-center justify-between px-5 flex-shrink-0">
+            <h2 className="text-sm font-semibold text-secondary-900">
+              내 설문 <span className="ml-1 font-normal text-secondary-400 tabular-nums">{mySurveys.length}</span>
+            </h2>
             {isMobile && (
               <button
                 onClick={() => setShowSidebar(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"
+                className="p-2 hover:bg-secondary-100 rounded-lg text-secondary-500"
                 aria-label="닫기"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -515,7 +458,10 @@ function ResultPage() {
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto px-2.5 pb-4 space-y-0.5">
+            {mySurveys.length === 0 && (
+              <p className="px-3 py-6 text-sm text-secondary-500">아직 만든 설문이 없어요.</p>
+            )}
             {mySurveys.map((survey) => {
               const isSelected = survey.surveyId === surveyId;
               const isActive = new Date(survey.deadline) > new Date();
@@ -523,81 +469,84 @@ function ResultPage() {
                 <button
                   key={survey.surveyId}
                   onClick={() => navigate(`/result?id=${survey.surveyId}`)}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-50 transition-colors ${
-                    isSelected ? 'bg-primary-50 border-l-2 border-l-primary-500' : 'hover:bg-gray-50'
+                  className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
+                    isSelected ? 'bg-secondary-100' : 'hover:bg-secondary-50'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <ChevronRightIcon />
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium truncate ${isSelected ? 'text-primary-600' : 'text-gray-800'}`}>
-                        {survey.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${isActive ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {isActive ? '진행중' : '종료'}
-                        </span>
-                        <span className="text-xs text-gray-400">{survey.attendCount || 0}명</span>
-                      </div>
-                    </div>
+                  <p className={`text-sm truncate ${isSelected ? 'font-semibold text-secondary-900' : 'text-secondary-700'}`}>
+                    {survey.title}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1 text-xs text-secondary-500">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-success' : 'bg-secondary-300'}`} />
+                    {isActive ? '진행중' : '종료'}
+                    <span className="text-secondary-300">·</span>
+                    <span className="tabular-nums">{survey.attendCount || 0}명</span>
                   </div>
                 </button>
               );
             })}
           </div>
-        </div>
+        </aside>
       )}
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0 print:overflow-visible print:block">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-4 md:px-6 lg:px-8 bg-white/70 backdrop-blur-md border-b border-slate-100 flex-shrink-0 print:hidden">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500">
+        <header className="h-16 flex items-center justify-between gap-3 px-4 md:px-6 bg-white border-b border-secondary-200 flex-shrink-0 print:hidden">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="p-2 hover:bg-secondary-100 rounded-lg text-secondary-500"
+              aria-label="설문 목록 열기/닫기"
+            >
               <MenuIcon />
             </button>
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
-                <BarChartIcon />
-              </span>
-              <h1 className="text-base font-semibold text-slate-800">설문 분석</h1>
+            <div className="flex items-center gap-1.5 text-sm min-w-0">
+              <span className="text-secondary-500 shrink-0">분석</span>
+              {questionData?.title && (
+                <>
+                  <span className="text-secondary-300">/</span>
+                  <span className="font-semibold text-secondary-900 truncate">{questionData.title}</span>
+                </>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => { setShowEmailModal(true); setEmailError(''); }}
-              className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-xl text-sm hover:bg-slate-50 text-slate-600 transition-colors"
+              className="flex items-center gap-2 h-9 px-3 border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors disabled:opacity-40"
               disabled={!hasData}
             >
               <MailIcon />
-              <span className="hidden sm:inline">이메일</span>
+              <span className="hidden sm:inline">메일로 보내기</span>
             </button>
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-3.5 py-2 text-white text-sm rounded-xl transition-all hover:brightness-110 shadow-sm"
-              style={{ background: 'linear-gradient(135deg,#3182F6,#5BA0F8)' }}
+              disabled={!hasData}
+              className="flex items-center gap-2 h-9 px-3.5 bg-secondary-900 text-white text-sm font-semibold rounded-lg hover:bg-secondary-800 transition-colors disabled:opacity-40"
             >
               <DownloadIcon />
-              <span className="hidden sm:inline">내보내기</span>
+              <span className="hidden sm:inline">PDF 저장</span>
             </button>
           </div>
         </header>
 
         {/* No survey selected */}
         {!surveyId && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="text-center max-w-xs">
+              <span className="w-12 h-12 rounded-xl bg-white border border-secondary-200 text-secondary-400 flex items-center justify-center mx-auto mb-4">
                 <BarChartIcon />
-              </div>
-              <p className="text-gray-500">왼쪽에서 분석할 설문을 선택하세요</p>
+              </span>
+              <p className="font-semibold text-secondary-900">분석할 설문을 골라 주세요</p>
+              <p className="mt-1 text-sm text-secondary-500">왼쪽 목록에서 설문을 선택하면 결과가 여기에 표시돼요.</p>
             </div>
           </div>
         )}
 
         {!!surveyId && isLoading && (
           <div className="flex-1 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-7 h-7 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
@@ -605,345 +554,287 @@ function ResultPage() {
           <>
             {/* Print-only header */}
             <div className="hidden print:block px-6 py-4 mb-2">
-              <h1 className="text-xl font-bold text-gray-900">{questionData?.title || '설문 분석 결과'}</h1>
-              <p className="text-xs text-gray-500 mt-1">생성일: {questionData?.createdAt ? formatDate(questionData.createdAt) : ''}</p>
+              <h1 className="text-xl font-bold text-secondary-900">{questionData?.title || '설문 분석 결과'}</h1>
+              <p className="text-xs text-secondary-500 mt-1">생성일: {questionData?.createdAt ? formatDate(questionData.createdAt) : ''}</p>
             </div>
 
-            {/* Content */}
             <div ref={contentRef} className="flex-1 overflow-y-auto print:overflow-visible print:p-0">
-              <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+              <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-5">
 
-              {/* ── Greeting ── */}
-              <div className="flex flex-wrap items-end justify-between gap-2 print:hidden">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">
-                    {questionData?.title || '설문 분석'}
-                  </h2>
-                  <p className="text-sm text-slate-400 mt-1">
-                    {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
-                  </p>
-                </div>
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                  stats.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${stats.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                  {stats.isActive ? '진행중' : '종료됨'}
-                </span>
-              </div>
-
-              {/* ── Hero: 응답 추이 ── */}
-              <div
-                className={`${CARD} relative overflow-hidden p-7 md:p-8`}
-                style={{
-                  background:
-                    'radial-gradient(120% 140% at 88% -20%, rgba(91,76,245,0.13), transparent 58%),' +
-                    'linear-gradient(158deg,#F9FAFB 0%,#FFFFFF 60%)',
-                }}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[12.5px] font-medium text-[#8B95A1]">오늘 들어온 응답</p>
-                    <div className="flex items-end gap-3 mt-2.5">
-                      <span className="text-[52px] font-extrabold text-[#191F28] tabular-nums leading-none tracking-[-0.035em]">
-                        {stats.todayCount}
-                        <span className="text-[19px] font-bold text-[#8B95A1] ml-1.5 tracking-normal">명</span>
+                {/* ── Title ── */}
+                <div className="flex flex-wrap items-end justify-between gap-3 print:hidden">
+                  <div className="min-w-0">
+                    <h1 className="text-[24px] lg:text-[26px] font-bold tracking-[-0.02em] text-secondary-900 break-keep">
+                      {questionData?.title || '설문 분석'}
+                    </h1>
+                    <div className="mt-1.5 flex items-center gap-2 text-[13px] text-secondary-500">
+                      <span className={`inline-flex items-center gap-1.5 font-medium ${stats.isActive ? 'text-emerald-600' : 'text-secondary-500'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${stats.isActive ? 'bg-success' : 'bg-secondary-300'}`} />
+                        {stats.isActive ? '진행중' : '종료'}
                       </span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[9px] text-xs font-bold mb-[7px] ${
-                          stats.todayDelta > 0
-                            ? 'bg-[#E8FAF0] text-[#0E9F6E]'
-                            : stats.todayDelta < 0
-                            ? 'bg-[#FDECEC] text-[#E14747]'
-                            : 'bg-[#F2F4F6] text-[#8B95A1]'
+                      {questionData?.createdAt && (
+                        <>
+                          <span className="text-secondary-300">·</span>
+                          <span>{formatDate(questionData.createdAt)} 생성</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── KPI strip ── */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-secondary-200 rounded-2xl border border-secondary-200 overflow-hidden [&>*]:bg-white">
+                  {kpis.map((k) => (
+                    <div key={k.label} className="px-5 py-4 min-h-[104px] flex flex-col">
+                      <p className="text-[13px] text-secondary-500">{k.label}</p>
+                      <div className="mt-1.5 flex items-baseline gap-2">
+                        <span className="text-[26px] font-bold tracking-[-0.03em] text-secondary-900 tabular-nums leading-none">
+                          {k.value}
+                        </span>
+                        <span className="text-sm text-secondary-500">{k.unit}</span>
+                        {k.delta !== undefined && (
+                          <span
+                            className={`ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold tabular-nums ${
+                              k.delta > 0
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : k.delta < 0
+                                ? 'bg-red-50 text-red-500'
+                                : 'bg-secondary-100 text-secondary-500'
+                            }`}
+                            title="어제 대비"
+                          >
+                            {k.delta > 0 ? `+${k.delta}` : k.delta}
+                          </span>
+                        )}
+                      </div>
+                      {k.spark && sparkTrend.length >= 2 ? (
+                        <div className="mt-auto -mx-1 h-8 print:hidden">
+                          <ReactApexChart options={sparkOptions} series={[{ data: sparkTrend }]} type="area" height={32} />
+                        </div>
+                      ) : k.delta !== undefined ? (
+                        <p className="mt-auto pt-2 text-xs text-secondary-400">어제 {stats.yesterdayCount}명</p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── Trend + summary ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                  <div className={`${CARD} p-5 lg:p-6 lg:col-span-2 min-w-0`}>
+                    <CardHead
+                      title="일자별 응답"
+                      desc={`누적 ${stats.totalResponses.toLocaleString()}명`}
+                      right={
+                        trendData.labels.length > 0 ? (
+                          <span className="shrink-0 px-2.5 py-1 rounded-md bg-secondary-100 text-xs font-medium text-secondary-600">
+                            {trendData.labels.length}일
+                          </span>
+                        ) : undefined
+                      }
+                    />
+                    {trendData.values.length >= 2 ? (
+                      <div className="-mx-2">
+                        <ReactApexChart
+                          options={trendOptions}
+                          series={[{ name: '응답', data: trendData.values }]}
+                          type="area"
+                          height={240}
+                        />
+                      </div>
+                    ) : (
+                      <EmptyBox
+                        title={stats.totalResponses > 0 ? '이틀 이상 응답이 쌓이면 추이가 보여요' : '아직 응답이 없어요'}
+                        desc="응답이 들어오는 날마다 그래프가 이어져요"
+                      />
+                    )}
+                  </div>
+
+                  <div className={`${CARD} p-5 lg:p-6 min-w-0`}>
+                    <CardHead title="가장 많이 고른 답" desc="객관식 질문별 1위 선택지" />
+                    {questionSummary.length === 0 ? (
+                      <EmptyBox title="객관식 질문이 없어요" desc="선택형 질문을 추가하면 여기에 요약돼요" />
+                    ) : (
+                      <ul className="space-y-3.5">
+                        {questionSummary.slice(0, 6).map((q) => {
+                          const share = q.top && q.total > 0 ? Math.round((q.top.count / q.total) * 100) : 0;
+                          return (
+                            <li key={q.key} className="flex items-start gap-3">
+                              <span className="mt-0.5 shrink-0 w-7 text-[11px] font-bold text-secondary-400 tabular-nums">{q.label}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] text-secondary-500 truncate">{q.content}</p>
+                                <div className="mt-0.5 flex items-baseline justify-between gap-2">
+                                  <p className="text-sm font-semibold text-secondary-900 truncate">
+                                    {q.top && q.top.count > 0 ? q.top.option : '응답 없음'}
+                                  </p>
+                                  {q.top && q.top.count > 0 && (
+                                    <span className="shrink-0 text-xs font-semibold text-primary-600 tabular-nums">{share}%</span>
+                                  )}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Tabs ── */}
+                <div className="sticky top-0 z-10 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 bg-secondary-50/90 backdrop-blur print:hidden">
+                  <div className="flex gap-6 border-b border-secondary-200">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`relative py-3 text-sm font-medium transition-colors ${
+                          activeTab === tab.id ? 'text-secondary-900' : 'text-secondary-500 hover:text-secondary-800'
                         }`}
                       >
-                        {stats.todayDelta > 0 ? '▲' : stats.todayDelta < 0 ? '▼' : '—'}
-                        {Math.abs(stats.todayDelta)}
-                      </span>
-                    </div>
-                    <p className="mt-3 text-[12.5px] text-[#8B95A1]">
-                      전일 대비 · 전체 누적{' '}
-                      <b className="font-semibold text-[#4E5968]">{stats.totalResponses.toLocaleString()}명</b>
-                    </p>
+                        {tab.label}
+                        {activeTab === tab.id && <span className="absolute inset-x-0 -bottom-px h-0.5 bg-secondary-900 rounded-full" />}
+                      </button>
+                    ))}
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/75 text-[#4E5968] border border-[#F2F4F6] backdrop-blur-sm">
-                    <CalendarIcon /> 최근 {trendData.labels.length}일
-                  </span>
                 </div>
 
-                {trendData.values.length >= 2 ? (
-                  <div className="mt-4">
-                    <ReactApexChart
-                      options={trendOptions}
-                      series={[{ name: '응답수', data: trendData.values }]}
-                      type="area"
-                      height={260}
-                    />
-                  </div>
-                ) : (
-                  // 데이터 포인트가 1개 이하면 추이선이 성립하지 않는다.
-                  // 260px 빈 격자를 그리는 대신 상태를 문장으로 알린다.
-                  <div className="mt-6 rounded-[18px] border border-dashed border-[#E5E8EB] bg-white/60 py-8 text-center">
-                    <div
-                      className="w-[38px] h-[38px] rounded-xl flex items-center justify-center mx-auto mb-2.5"
-                      style={{ backgroundColor: SEQ_TRACK, color: INDIGO }}
-                    >
-                      <BarChartIcon />
-                    </div>
-                    <p className="text-[13.5px] font-semibold text-[#4E5968]">
-                      {stats.totalResponses > 0 ? '추이를 그리려면 이틀 이상의 응답이 필요해요' : '아직 응답이 없어요'}
-                    </p>
-                    <p className="mt-1 text-xs text-[#8B95A1]">응답이 쌓이면 일자별 추이가 여기에 표시됩니다</p>
+                {/* ── 질문별 탭 ── */}
+                {(activeTab === 'question' || isPrinting) && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    {questionData?.questions?.map((question, index) => {
+                      const isSubjective = question.type === 'SUBJECTIVE_QUESTION';
+                      const count = isSubjective
+                        ? question.answers?.length || 0
+                        : (question.choices || []).reduce((s, c) => s + (c.count || 0), 0);
+                      return (
+                        <div
+                          key={question.questionId}
+                          className={`${CARD} p-5 lg:p-6 min-w-0 ${isSubjective ? 'lg:col-span-2' : ''}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="shrink-0 w-7 h-7 rounded-lg bg-secondary-100 text-secondary-700 text-xs font-bold flex items-center justify-center tabular-nums">
+                              {index + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[15px] font-semibold text-secondary-900 leading-snug break-keep">
+                                {question.content}
+                              </p>
+                              <p className="mt-1 text-xs text-secondary-500">
+                                {typeLabel(question.type)}
+                                <span className="mx-1.5 text-secondary-300">·</span>
+                                <span className="tabular-nums">{count}{isSubjective ? '개 답변' : '명 응답'}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          {isSubjective
+                            ? <SubjectiveAnswers question={question} />
+                            : <ChoiceChart question={question} />}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
-              </div>
 
-              {/* ── Stat Cards ── */}
-              {/* 이전에는 네 카드 모두 같은 '일자별 응답수' 스파크라인을 그렸다.
-                  '질문 수'나 '주관식 응답'의 추세가 아닌데 추세처럼 보여 오해를 준다.
-                  실제로 시간에 따라 변하는 '총 응답'에만 스파크라인을 남긴다. */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 print:hidden">
-                {[
-                  { label: '총 응답', value: stats.totalResponses.toLocaleString(), icon: <UsersIcon />, trend: true },
-                  { label: '질문 수', value: stats.questionCount, icon: <QuestionIcon />, trend: false },
-                  { label: '평균 선택 응답', value: stats.avgChoiceResponses, icon: <BarChartIcon />, trend: false },
-                  { label: '주관식 응답', value: stats.subjectiveCount, icon: <TextIcon />, trend: false },
-                ].map((card) => (
-                  <div
-                    key={card.label}
-                    className="relative overflow-hidden bg-white rounded-[20px] border border-[#F2F4F6] p-[19px] shadow-[0_1px_2px_rgba(20,20,43,0.03)] transition-shadow hover:shadow-[0_10px_24px_-16px_rgba(91,76,245,0.5)]"
-                  >
-                    <span
-                      className="absolute inset-x-0 top-0 h-[2.5px] opacity-90"
-                      style={{ background: 'linear-gradient(90deg,#3182F6,#8CBEFB)' }}
-                    />
-                    <span
-                      className="w-[34px] h-[34px] rounded-[11px] flex items-center justify-center mb-3.5"
-                      style={{ backgroundColor: SEQ_TRACK, color: INDIGO }}
-                    >
-                      {card.icon}
-                    </span>
-                    <p className="text-[27px] font-extrabold text-[#191F28] tabular-nums leading-none tracking-[-0.03em]">
-                      {card.value}
-                    </p>
-                    <p className="text-xs font-medium text-[#8B95A1] mt-[7px]">{card.label}</p>
-                    {card.trend && sparkTrend.length >= 2 && (
-                      <div className="-mx-1 mt-2 h-9">
-                        <ReactApexChart options={sparkOptions(INDIGO)} series={[{ data: sparkTrend }]} type="area" height={36} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* ── Tabs (sticky) ── */}
-              <div className="sticky top-0 z-10 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 py-2 bg-gradient-to-b from-slate-50/95 to-transparent backdrop-blur-sm print:hidden">
-                <div className="inline-flex items-center gap-1 p-1 bg-white ring-1 ring-slate-100 shadow-sm rounded-xl">
-                  {[
-                    { id: 'question' as const, label: '질문별 분석' },
-                    { id: 'response' as const, label: '응답별 보기' },
-                    { id: 'trend' as const, label: '트렌드' },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                        activeTab === tab.id
-                          ? 'text-white shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                      style={activeTab === tab.id ? { background: 'linear-gradient(135deg,#3182F6,#5BA0F8)' } : undefined}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── 질문별 탭 ── */}
-              {(activeTab === 'question' || isPrinting) && (
-                <>
-                  {/* 질문별 응답 요약 (단일 계열 크기 비교) */}
-                  {questionSummary.length > 1 && (
-                    <div className={`${CARD} p-7`}>
-                      <SectionHead title="질문별 응답 요약" desc="객관식 질문별 총 응답 수와 최다 선택지" />
-                      <ul className="flex flex-col gap-[19px]">
-                        {questionSummary.map((q) => {
-                          const pct = questionSummaryMax > 0 ? (q.total / questionSummaryMax) * 100 : 0;
-                          return (
-                            <li key={q.key}>
-                              <div className="flex items-center justify-between gap-3.5 mb-2">
-                                <span className="flex items-center gap-2.5 min-w-0">
-                                  <span
-                                    className="inline-flex items-center justify-center min-w-[26px] h-5 px-1.5 rounded-[7px] text-[11px] font-extrabold shrink-0"
-                                    style={{ backgroundColor: SEQ_TRACK, color: '#1B64DA' }}
-                                  >
-                                    {q.label}
-                                  </span>
-                                  <span className="text-sm font-medium text-[#4E5968] truncate">{q.content}</span>
-                                </span>
-                                <span className="shrink-0 text-[12.5px] tabular-nums text-[#8B95A1]">
-                                  <b className="text-[15px] font-extrabold text-[#4E5968] tracking-[-0.02em]">{q.total}</b>명
-                                </span>
-                              </div>
-                              <Meter pct={pct} />
-                              {q.top && q.top.count > 0 && (
-                                <p className="mt-2 text-xs text-[#8B95A1] truncate">
-                                  최다 · <b className="font-semibold text-[#4E5968]">{q.top.option}</b> ({q.top.count}명)
-                                </p>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
+                {/* ── 응답 원본 탭 ── */}
+                {(activeTab === 'response' || isPrinting) && (
+                  <div className={`${CARD} overflow-hidden`}>
+                    <div className="px-5 lg:px-6 py-4 border-b border-secondary-100">
+                      <h3 className="text-[15px] font-bold tracking-tight text-secondary-900">응답 원본</h3>
+                      <p className="text-[13px] text-secondary-500 mt-0.5">응답 {answerData?.list?.rows?.length || 0}건</p>
                     </div>
-                  )}
-
-                  {/* Per-question cards */}
-                  {questionData?.questions?.map((question, index) => (
-                    <div key={question.questionId} className={`${CARD} p-7`}>
-                      <div className="flex items-start gap-3">
-                        <span
-                          className="shrink-0 w-[27px] h-[27px] rounded-[9px] text-white text-xs font-extrabold flex items-center justify-center"
-                          style={{
-                            background: 'linear-gradient(140deg,#3182F6,#5BA0F8)',
-                            boxShadow: '0 3px 8px -2px rgba(91,76,245,0.5)',
-                          }}
-                        >
-                          {index + 1}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-base font-bold text-[#191F28] leading-[1.35] tracking-[-0.01em]">
-                            {question.content}
-                          </p>
-                          <span className="inline-block mt-1.5 px-2.5 py-[3px] rounded-[7px] bg-[#F9FAFB] text-[11px] font-semibold text-[#8B95A1]">
-                            {typeLabel(question.type)}
-                          </span>
-                        </div>
-                        <span className="shrink-0 text-xs text-[#8B95A1]">
-                          {question.type === 'SUBJECTIVE_QUESTION'
-                            ? `${question.answers?.length || 0}개 응답`
-                            : `${(question.choices || []).reduce((s, c) => s + (c.count || 0), 0)}명 응답`}
-                        </span>
-                      </div>
-
-                      {question.type === 'SUBJECTIVE_QUESTION'
-                        ? <SubjectiveAnswers question={question} />
-                        : <ChoiceChart question={question} />}
-                    </div>
-                  ))}
-                </>
-              )}
-
-              {/* ── 응답별 탭 ── */}
-              {(activeTab === 'response' || isPrinting) && (
-                <div className="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-800">개별 응답 목록</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">총 {answerData?.list?.rows?.length || 0}개 응답</p>
-                    </div>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-100">
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap">#</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap">응답 일시</th>
-                          {answerData?.list?.head?.map((h) => (
-                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap max-w-[180px]">
-                              <span className="block truncate">{h}</span>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {answerData?.list?.rows?.map((row, i) => (
-                          <tr key={row.userId} className={`border-b border-gray-50 ${i % 2 === 0 ? '' : 'bg-gray-50/50'} hover:bg-primary-50/40 transition-colors`}>
-                            <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
-                            <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{formatDate(row.createdAt)}</td>
-                            {row.responses.map((resp, j) => (
-                              <td key={j} className="px-4 py-3 text-gray-700 text-xs max-w-[180px]">
-                                <span className="block truncate" title={resp}>{resp || '—'}</span>
-                              </td>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-secondary-50 border-b border-secondary-100">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 whitespace-nowrap">#</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 whitespace-nowrap">응답 일시</th>
+                            {answerData?.list?.head?.map((h) => (
+                              <th key={h} className="px-4 py-3 text-left text-xs font-medium text-secondary-500 whitespace-nowrap max-w-[180px]">
+                                <span className="block truncate">{h}</span>
+                              </th>
                             ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {(!answerData?.list?.rows?.length) && (
-                      <div className="text-center py-12 text-gray-400 text-sm">응답 데이터가 없습니다</div>
-                    )}
+                        </thead>
+                        <tbody className="divide-y divide-secondary-100">
+                          {answerData?.list?.rows?.map((row, i) => (
+                            <tr key={row.userId} className="hover:bg-secondary-50 transition-colors">
+                              <td className="px-4 py-3 text-secondary-400 text-xs tabular-nums">{i + 1}</td>
+                              <td className="px-4 py-3 text-secondary-500 text-xs whitespace-nowrap">{formatDate(row.createdAt)}</td>
+                              {row.responses.map((resp, j) => (
+                                // eslint-disable-next-line react/no-array-index-key
+                                <td key={j} className="px-4 py-3 text-secondary-800 text-[13px] max-w-[180px]">
+                                  <span className="block truncate" title={resp}>{resp || '—'}</span>
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {(!answerData?.list?.rows?.length) && (
+                        <div className="p-6">
+                          <EmptyBox title="아직 응답이 없어요" desc="응답이 들어오면 한 줄씩 쌓여요" />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* ── 트렌드 탭 ── */}
-              {(activeTab === 'trend' || isPrinting) && (
-                <div className="space-y-5">
-                  {/* 질문별 응답 비교 — radialBar는 각도로 크기를 인코딩해 비교가 어렵고
-                      순위별로 색을 순환시키는 문제도 있어 공통 미터 목록으로 통일했다. */}
-                  {questionSummary.length > 0 && (
-                    <div className={`${CARD} p-7`}>
-                      <SectionHead title="질문별 응답 비교" desc="각 객관식 질문의 총 응답 수" />
-                      <ul className="flex flex-col gap-[19px]">
-                        {questionSummary.map((q) => {
-                          const pct = questionSummaryMax > 0 ? (q.total / questionSummaryMax) * 100 : 0;
-                          return (
-                            <li key={q.key}>
-                              <div className="flex items-center justify-between gap-3.5 mb-2">
-                                <span className="flex items-center gap-2.5 min-w-0">
-                                  <span
-                                    className="inline-flex items-center justify-center min-w-[26px] h-5 px-1.5 rounded-[7px] text-[11px] font-extrabold shrink-0"
-                                    style={{ backgroundColor: SEQ_TRACK, color: '#1B64DA' }}
-                                  >
-                                    {q.label}
+                {/* ── 질문 비교 탭 ── */}
+                {(activeTab === 'trend' || isPrinting) && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className={`${CARD} p-5 lg:p-6`}>
+                      <CardHead title="질문별 응답 수" desc="객관식 질문마다 몇 명이 답했는지" />
+                      {questionSummary.length === 0 ? (
+                        <EmptyBox title="객관식 질문이 없어요" desc="선택형 질문이 있어야 비교할 수 있어요" />
+                      ) : (
+                        <ul className="flex flex-col gap-4">
+                          {questionSummary.map((q) => {
+                            const pct = questionSummaryMax > 0 ? (q.total / questionSummaryMax) * 100 : 0;
+                            return (
+                              <li key={q.key}>
+                                <div className="flex items-center justify-between gap-3 mb-1.5">
+                                  <span className="flex items-center gap-2 min-w-0">
+                                    <span className="shrink-0 text-[11px] font-bold text-secondary-400 tabular-nums w-6">{q.label}</span>
+                                    <span className="text-sm text-secondary-700 truncate">{q.content}</span>
                                   </span>
-                                  <span className="text-sm font-medium text-[#4E5968] truncate">{q.content}</span>
-                                </span>
-                                <span className="shrink-0 text-[12.5px] tabular-nums text-[#8B95A1]">
-                                  <b className="text-[15px] font-extrabold text-[#4E5968] tracking-[-0.02em]">{q.total}</b>명
-                                </span>
+                                  <span className="shrink-0 text-sm font-semibold text-secondary-900 tabular-nums">{q.total}명</span>
+                                </div>
+                                <Meter pct={pct} />
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+
+                    <div className={`${CARD} p-5 lg:p-6`}>
+                      <CardHead title="질문 요약" desc="유형, 응답 수, 가장 많이 고른 답" />
+                      <ul className="divide-y divide-secondary-100">
+                        {questionData?.questions?.map((q, i) => {
+                          const total = q.type === 'SUBJECTIVE_QUESTION'
+                            ? q.answers?.length || 0
+                            : (q.choices || []).reduce((s, c) => s + (c.count || 0), 0);
+                          const topChoice = q.type !== 'SUBJECTIVE_QUESTION'
+                            ? (q.choices || []).reduce((prev, cur) => (cur.count || 0) > (prev.count || 0) ? cur : prev, q.choices?.[0] || { option: '-', count: 0 })
+                            : null;
+                          return (
+                            <li key={q.questionId} className="flex items-center gap-3 py-3">
+                              <span className="w-6 text-[11px] font-bold text-secondary-400 tabular-nums shrink-0">Q{i + 1}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-secondary-800 truncate">{q.content}</p>
+                                <p className="text-xs text-secondary-500 truncate">
+                                  {typeLabel(q.type)}
+                                  {topChoice && topChoice.count ? ` · 1위 ${topChoice.option}` : ''}
+                                </p>
                               </div>
-                              <Meter pct={pct} />
+                              <span className="text-sm font-semibold text-secondary-900 shrink-0 tabular-nums">{total}</span>
                             </li>
                           );
                         })}
                       </ul>
                     </div>
-                  )}
-
-                  {/* Summary table */}
-                  <div className="bg-white rounded-3xl p-6 shadow-sm ring-1 ring-slate-100">
-                    <h3 className="font-semibold text-gray-800 mb-4">질문별 요약</h3>
-                    <div className="space-y-3">
-                      {questionData?.questions?.map((q, i) => {
-                        const total = q.type === 'SUBJECTIVE_QUESTION'
-                          ? q.answers?.length || 0
-                          : (q.choices || []).reduce((s, c) => s + (c.count || 0), 0);
-                        const topChoice = q.type !== 'SUBJECTIVE_QUESTION'
-                          ? (q.choices || []).reduce((prev, cur) => (cur.count || 0) > (prev.count || 0) ? cur : prev, q.choices?.[0] || { option: '-', count: 0 })
-                          : null;
-                        return (
-                          <div key={q.questionId} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                            <span className="w-6 h-6 rounded-lg bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center shrink-0">
-                              {i + 1}
-                            </span>
-                            <p className="flex-1 text-sm text-gray-700 truncate">{q.content}</p>
-                            <span className="text-xs text-gray-400 shrink-0">{typeLabel(q.type)}</span>
-                            <span className="text-sm font-semibold text-primary-600 shrink-0 w-16 text-right">{total}명</span>
-                            {topChoice && (
-                              <span className="hidden sm:block text-xs text-gray-500 shrink-0 max-w-[120px] truncate">
-                                최다: {topChoice.option}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
                   </div>
-                </div>
-              )}
+                )}
               </div>
             </div>
           </>
@@ -952,46 +843,43 @@ function ResultPage() {
 
       {/* Email Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-1">리포트 이메일 발송</h2>
-            <p className="text-xs text-gray-400 mb-4">분석 결과 PDF를 이메일로 전송합니다</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+          <div className="bg-white rounded-2xl shadow-modal w-full max-w-sm p-6">
+            <h2 className="text-base font-bold text-secondary-900">리포트 메일로 보내기</h2>
+            <p className="mt-1 text-[13px] text-secondary-500 mb-5">분석 결과를 PDF로 만들어 보내드려요.</p>
 
-            <label className="block text-xs font-medium text-gray-600 mb-1">받는 이메일</label>
+            <label className="block text-xs font-medium text-secondary-700 mb-1.5">받는 사람</label>
             <input
               type="email"
               value={reportEmail}
               onChange={(e) => setReportEmail(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendEmail()}
-              placeholder="example@email.com"
+              placeholder="name@example.com"
               disabled={isSending}
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-50"
+              className="w-full h-11 px-3.5 text-sm bg-secondary-50 border border-secondary-200 rounded-xl focus:outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 disabled:opacity-50"
             />
-            {emailError && <p className="mt-1.5 text-xs text-red-500">{emailError}</p>}
+            {emailError && <p className="mt-1.5 text-xs text-error">{emailError}</p>}
 
-            <div className="flex gap-2 mt-5">
+            <div className="flex gap-2 mt-6">
               <button
                 onClick={() => { setShowEmailModal(false); setReportEmail(''); setEmailError(''); }}
                 disabled={isSending}
-                className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 h-11 text-sm font-medium border border-secondary-200 rounded-xl hover:bg-secondary-50 disabled:opacity-50"
               >
                 취소
               </button>
               <button
                 onClick={handleSendEmail}
                 disabled={isSending}
-                className="flex-1 px-4 py-2.5 text-sm bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 h-11 text-sm font-semibold bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSending ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    전송 중…
+                    보내는 중
                   </>
                 ) : (
-                  <>
-                    <MailIcon />
-                    전송
-                  </>
+                  '보내기'
                 )}
               </button>
             </div>

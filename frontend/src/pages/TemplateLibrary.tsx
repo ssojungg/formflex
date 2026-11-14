@@ -5,6 +5,7 @@ import { useSurveyStore, Template } from '../store/SurveyStore';
 import { useAuthStore } from '../store/AuthStore';
 import useInfiniteList from '../hooks/useInfiniteList';
 import Alert from '../components/common/Alert';
+import CoverArt from '../components/common/CoverArt';
 
 // Icons
 const SearchIcon = () => (
@@ -260,12 +261,17 @@ function TemplateLibrary() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-xl overflow-hidden cursor-pointer group hover:shadow-card-hover transition-all"
+                className="bg-white rounded-2xl border border-secondary-200 overflow-hidden cursor-pointer group hover:border-secondary-300 hover:shadow-card-hover transition-all"
               >
                 {/* Image */}
-                <div className="relative aspect-[16/10] bg-gradient-to-br from-primary-100 to-primary-200">
-                  <span className="absolute top-3 left-3 px-2 py-1 text-xs font-semibold bg-primary-500 text-white rounded">
-                    FEATURED
+                <div className="relative aspect-[16/10] overflow-hidden border-b border-secondary-100">
+                  <CoverArt
+                    title={template.title}
+                    category={template.category}
+                    className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                  <span className="absolute top-3 left-3 px-2 py-0.5 text-[11px] font-semibold bg-secondary-900/85 text-white rounded-md backdrop-blur">
+                    추천
                   </span>
                   <button
                     onClick={(e) => {
@@ -349,10 +355,15 @@ function TemplateLibrary() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: (index % 6) * 0.05 }}
-                className="bg-white rounded-xl overflow-hidden cursor-pointer group hover:shadow-card-hover transition-all"
+                className="bg-white rounded-2xl border border-secondary-200 overflow-hidden cursor-pointer group hover:border-secondary-300 hover:shadow-card-hover transition-all"
               >
                 {/* Image */}
-                <div className="relative aspect-[16/9] bg-gradient-to-br from-secondary-100 to-secondary-200 overflow-hidden">
+                <div className="relative aspect-[16/9] overflow-hidden border-b border-secondary-100">
+                  <CoverArt
+                    title={template.title}
+                    category={template.category}
+                    className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

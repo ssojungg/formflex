@@ -6,6 +6,7 @@ import { AxiosError } from 'axios';
 import { useAuthStore } from '../store/AuthStore';
 import Alert from '../components/common/Alert';
 import ShareMailModal from '../components/common/ShareMailModal';
+import CoverArt from '../components/common/CoverArt';
 import useInfiniteList from '../hooks/useInfiniteList';
 import { deleteSurveyAPI } from '../api/deleteSurvey';
 import { ApiResponseError } from '../types/apiResponseError';
@@ -271,9 +272,7 @@ function SurveyCard({ survey, index, isOwner, onClick, onDeleted }: SurveyCardPr
         {survey.mainImageUrl ? (
           <img src={survey.mainImageUrl} alt={survey.title} className="w-full h-full object-cover" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-secondary-300">
-            <DocumentIcon />
-          </div>
+          <CoverArt title={survey.title} className="transition-transform duration-500 group-hover:scale-[1.03]" />
         )}
 
         {/* 3-dot menu (only for the survey's owner) */}
