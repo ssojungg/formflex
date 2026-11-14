@@ -77,7 +77,7 @@ function Response({ list }: ResponseProps) {
         <div>
           <button
             type="button"
-            className="absolute top-[8.25rem] right-[7.5rem] w-[6.25rem] h-9 leading-4 bg-darkPurple rounded-[0.625rem] text-base text-white cltext-base focus:outline-none hover:bg-[#403B82] transition duration-300 ease-in-out"
+            className="absolute top-[8.25rem] right-[7.5rem] w-[6.25rem] h-9 leading-4 bg-primary-600 rounded-[0.625rem] text-base text-white cltext-base focus:outline-none hover:bg-[#1A3F80] transition duration-300 ease-in-out"
             onClick={handleDownload}
           >
             저장하기

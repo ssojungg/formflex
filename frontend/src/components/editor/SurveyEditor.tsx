@@ -379,7 +379,7 @@ const QUESTION_TYPES: { type: QuestionType; label: string; icon: React.FC }[] = 
   },
 ];
 
-const THEME_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6'];
+const THEME_COLORS = ['#3182F6', '#191F28', '#10b981', '#06b6d4', '#f59e0b', '#f43f5e', '#ec4899', '#6b7684'];
 const FONTS = ['Pretendard', 'Noto Sans KR', 'Nanum Gothic', 'Gothic A1', 'Spoqa Han Sans'];
 const CARD_SHAPES = [
   { id: 'rounded', label: '둥근 모서리', radius: '16px' },
@@ -779,7 +779,7 @@ function SurveyEditor() {
   const [title, setTitle] = useState(existingSurvey?.title || '');
   const [description, setDescription] = useState(existingSurvey?.description || '');
   const [questions, setQuestions] = useState<Question[]>(existingSurvey?.questions || []);
-  const [themeColor, setThemeColor] = useState(existingSurvey?.themeColor || '#6366f1');
+  const [themeColor, setThemeColor] = useState(existingSurvey?.themeColor || '#3182F6');
   const [selectedFont, setSelectedFont] = useState('Pretendard');
   const [cardShape, setCardShape] = useState('rounded');
   const [coverImage, setCoverImage] = useState<string | null>(null);

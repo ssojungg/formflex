@@ -199,7 +199,7 @@ function ResponseForm() {
     );
   }
 
-  const accentColor = surveyData.color || '#6366f1';
+  const accentColor = surveyData.color || '#3182F6';
 
   return (
     <div

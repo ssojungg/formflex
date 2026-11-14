@@ -93,13 +93,13 @@ function Navbar({ children }: NavbarProps) {
                         : {}
                     }
                   />
-                  <p className={`text-base font-semibold leading-4 ${isActive ? 'text-darkPurple' : 'text-darkGray'}`}>
+                  <p className={`text-base font-semibold leading-4 ${isActive ? 'text-primary-600' : 'text-darkGray'}`}>
                     {item.text}
                   </p>
 
                   {activeItem === item.id && (
-                    <div className="absolute left-0 w-2 h-[3rem] bg-darkPurple ">
-                      <div className="w-52 h-[3rem] bg-purple opacity-40 rounded-tr-xl rounded-br-xl" />
+                    <div className="absolute left-0 w-2 h-[3rem] bg-primary-600 ">
+                      <div className="w-52 h-[3rem] bg-primary-500 opacity-40 rounded-tr-xl rounded-br-xl" />
                     </div>
                   )}
                 </div>

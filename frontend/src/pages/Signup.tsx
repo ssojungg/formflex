@@ -82,80 +82,27 @@ function Signup() {
   const isSignupButtonEnabled = isCheckedEmail && signupInfo.name !== '' && signupInfo.password !== '';
 
   return (
-    <div className="min-h-screen bg-background-secondary flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 right-20 w-64 h-64 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-40 left-20 w-96 h-96 bg-white rounded-full blur-3xl" />
-        </div>
+    <div className="min-h-screen bg-white flex flex-col">
+      <header className="h-16 px-5 sm:px-8 flex items-center">
+        <button onClick={() => navigate('/')} className="flex items-center gap-2">
+          <img src={logo} alt="" className="w-7 h-7" />
+          <span className="text-[17px] font-bold tracking-tight text-secondary-900">FormFlex</span>
+        </button>
+      </header>
 
-        <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="FormFlex" className="w-10 h-10 brightness-0 invert" />
-            <span className="text-2xl font-bold text-white">FormFlex</span>
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-            쉽고 빠른
-            <br />
-            설문 생성의 시작
-          </h1>
-          <p className="text-primary-100 text-lg mb-8">
-            AI가 도와주는 스마트한 설문 조사 플랫폼에 오신 것을 환영합니다.
-          </p>
-
-          {/* Features */}
-          <div className="space-y-4">
-            {[
-              'AI 기반 설문 자동 생성',
-              '실시간 응답 분석 대시보드',
-              '템플릿 공유 커뮤니티',
-            ].map((feature) => (
-              <div key={feature} className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-white/90">{feature}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <p className="text-primary-200 text-sm">
-            이미 계정이 있으신가요?{' '}
-            <button onClick={() => navigate('/login')} className="text-white font-semibold hover:underline">
-              로그인
-            </button>
-          </p>
-        </div>
-      </div>
-
-      {/* Right Side - Signup Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <img src={logo} alt="FormFlex" className="w-10 h-10" />
-            <span className="text-2xl font-bold text-secondary-900">FormFlex</span>
-          </div>
-
+      <div className="flex-1 flex items-start sm:items-center justify-center px-5 pt-8 pb-16 sm:py-12">
+        <div className="w-full max-w-[400px]">
           {/* Header */}
-          <div className="mb-8">
-            <h2 className="text-2xl lg:text-3xl font-bold text-secondary-900 mb-2">회원가입</h2>
-            <p className="text-secondary-600">몇 초 만에 계정을 만들고 시작하세요.</p>
+          <div className="mb-9">
+            <h1 className="text-[28px] font-bold tracking-[-0.025em] text-secondary-900">회원가입</h1>
+            <p className="mt-2 text-secondary-600">계정을 만들고 첫 설문을 시작해보세요.</p>
           </div>
 
           {/* Signup Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name Input */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-secondary-700 mb-1.5">
                 이름
               </label>
               <input
@@ -166,13 +113,13 @@ function Signup() {
                 onChange={handleInputChange}
                 required
                 placeholder="홍길동"
-                className="w-full px-4 py-3 bg-white border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
+                className="w-full h-12 px-4 bg-secondary-50 border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-colors"
               />
             </div>
 
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-1.5">
                 이메일
               </label>
               <div className="relative">
@@ -184,40 +131,40 @@ function Signup() {
                   onChange={handleInputChange}
                   required
                   placeholder="name@example.com"
-                  className={`w-full px-4 py-3 pr-24 bg-white border rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none transition-all ${
+                  className={`w-full h-12 px-4 pr-24 bg-secondary-50 border rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:bg-white focus:ring-4 transition-colors ${
                     isCheckedEmail
-                      ? 'border-indigo-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
+                      ? 'border-success focus:border-success focus:ring-success/10'
                       : isCheckEmailErrorMessage
-                        ? 'border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
-                        : 'border-secondary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20'
+                        ? 'border-error focus:border-error focus:ring-error/10'
+                        : 'border-secondary-200 focus:border-primary-500 focus:ring-primary-500/10'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={handleCheckEmailClick}
                   disabled={isCheckedEmail || signupInfo.email === ''}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                     isCheckedEmail
-                      ? 'bg-indigo-100 text-indigo-600 cursor-default'
+                      ? 'bg-emerald-50 text-emerald-600 cursor-default'
                       : signupInfo.email === ''
                         ? 'bg-secondary-100 text-secondary-400 cursor-not-allowed'
-                        : 'bg-primary-100 text-primary-600 hover:bg-primary-200'
+                        : 'bg-secondary-900 text-white hover:bg-secondary-800'
                   }`}
                 >
                   {isCheckedEmail ? '확인됨' : '중복확인'}
                 </button>
               </div>
               {isCheckEmailErrorMessage && (
-                <p className="mt-2 text-sm text-red-500">{isCheckEmailErrorMessage}</p>
+                <p className="mt-1.5 text-sm text-error">{isCheckEmailErrorMessage}</p>
               )}
               {isCheckedEmail && (
-                <p className="mt-2 text-sm text-indigo-500">사용 가능한 이메일입니다.</p>
+                <p className="mt-1.5 text-sm text-emerald-600">사용 가능한 이메일입니다.</p>
               )}
             </div>
 
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-secondary-700 mb-1.5">
                 비밀번호
               </label>
               <div className="relative">
@@ -229,7 +176,7 @@ function Signup() {
                   onChange={handleInputChange}
                   required
                   placeholder="8자 이상 입력하세요"
-                  className="w-full px-4 py-3 bg-white border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all pr-12"
+                  className="w-full h-12 px-4 pr-12 bg-secondary-50 border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-colors"
                 />
                 <button
                   type="button"
@@ -251,16 +198,16 @@ function Signup() {
             </div>
 
             {/* Terms */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2.5 pt-1">
               <input
                 type="checkbox"
                 id="terms"
                 required
-                className="mt-1 w-4 h-4 rounded border-secondary-300 text-primary-500 focus:ring-primary-500"
+                className="mt-0.5 w-4 h-4 rounded border-secondary-300 accent-primary-500"
               />
               <label htmlFor="terms" className="text-sm text-secondary-600">
-                <span className="text-primary-600 font-medium cursor-pointer hover:underline">이용약관</span> 및{' '}
-                <span className="text-primary-600 font-medium cursor-pointer hover:underline">개인정보처리방침</span>에 동의합니다.
+                <span className="text-secondary-800 font-medium underline underline-offset-2 cursor-pointer">이용약관</span> 및{' '}
+                <span className="text-secondary-800 font-medium underline underline-offset-2 cursor-pointer">개인정보처리방침</span>에 동의합니다.
               </label>
             </div>
 
@@ -268,10 +215,10 @@ function Signup() {
             <button
               type="submit"
               disabled={!isSignupButtonEnabled}
-              className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${
+              className={`w-full h-12 mt-2 rounded-xl font-semibold transition-colors ${
                 isSignupButtonEnabled
-                  ? 'bg-primary-500 hover:bg-primary-600 active:scale-[0.98]'
-                  : 'bg-secondary-300 cursor-not-allowed'
+                  ? 'bg-primary-500 text-white hover:bg-primary-600'
+                  : 'bg-secondary-100 text-secondary-400 cursor-not-allowed'
               }`}
             >
               회원가입
@@ -279,14 +226,14 @@ function Signup() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
+          <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-secondary-200" />
-            <span className="text-sm text-secondary-500">또는</span>
+            <span className="text-xs text-secondary-400">또는</span>
             <div className="flex-1 h-px bg-secondary-200" />
           </div>
 
           {/* Google Signup */}
-          <button className="w-full py-3.5 rounded-xl font-medium border border-secondary-200 bg-white text-secondary-700 hover:bg-secondary-50 transition-all flex items-center justify-center gap-3">
+          <button className="w-full h-12 rounded-xl font-medium border border-secondary-200 bg-white text-secondary-800 hover:bg-secondary-50 transition-colors flex items-center justify-center gap-2.5">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -297,9 +244,9 @@ function Signup() {
           </button>
 
           {/* Login Link */}
-          <p className="text-center mt-8 text-secondary-600 lg:hidden">
+          <p className="text-center mt-8 text-sm text-secondary-600">
             이미 계정이 있으신가요?{' '}
-            <button onClick={() => navigate('/login')} className="text-primary-600 hover:text-primary-700 font-semibold">
+            <button onClick={() => navigate('/login')} className="text-primary-500 hover:text-primary-600 font-semibold">
               로그인
             </button>
           </p>

@@ -250,8 +250,7 @@ function TemplateLibrary() {
         {/* Featured Templates */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-amber-500"><StarIcon /></span>
-            <h2 className="text-lg font-semibold text-text-primary">Featured Templates</h2>
+            <h2 className="text-lg font-bold tracking-tight text-text-primary">인기 템플릿</h2>
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -11,7 +11,7 @@ interface SubjectQuestionProps {
 function SubjectQuestion({ index, question }: SubjectQuestionProps) {
   return (
     <div
-      className="flex flex-col items-center justify-center rounded-[1.25rem] bg-white border border-purple"
+      className="flex flex-col items-center justify-center rounded-[1.25rem] bg-white border border-primary-500"
       style={{ boxShadow: '0 0 0.25rem 0.25rem rgba(145,141,202,0.25)' }}
     >
       <div className="flex flex-col items-center justify-center w-[50rem]">

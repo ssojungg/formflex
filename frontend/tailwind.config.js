@@ -12,83 +12,87 @@ export default {
       '2xl': '1536px',    // Extra large desktop
     },
     extend: {
-      // Modern Indigo/Blue color system (2025-2026 트렌드)
       colors: {
-        // Primary colors - Modern Indigo
         primary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',  // Main primary
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          50: '#eef5ff',
+          100: '#dcebfe',
+          200: '#bbd8fd',
+          300: '#8cbefb',
+          400: '#5ba0f8',
+          500: '#3182f6',
+          600: '#1b64da',
+          700: '#1957c2',
+          800: '#194aa0',
+          900: '#1a3f80',
+          DEFAULT: '#3182f6',
+          hover: '#1b64da',
+          foreground: '#ffffff',
         },
-        // Secondary - Cool Gray
+        foreground: '#191f28',
+        card: '#ffffff',
+        muted: {
+          DEFAULT: '#f2f4f6',
+          foreground: '#6b7684',
+        },
+        surface: {
+          primary: '#ffffff',
+          secondary: '#f9fafb',
+          tertiary: '#f2f4f6',
+        },
+        destructive: '#f04452',
         secondary: {
           50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
+          100: '#f2f4f6',
+          200: '#e5e8eb',
+          300: '#d1d6db',
+          400: '#b0b8c1',
+          500: '#8b95a1',
+          600: '#6b7684',
+          700: '#4e5968',
+          800: '#333d4b',
+          900: '#191f28',
         },
-        // Accent colors
         accent: {
-          violet: '#8b5cf6',
           cyan: '#06b6d4',
           rose: '#f43f5e',
           amber: '#f59e0b',
         },
-        // Semantic colors
         success: '#10b981',
         warning: '#f59e0b',
-        error: '#ef4444',
-        info: '#3b82f6',
-        
-        // Status colors (for survey states)
+        error: '#f04452',
+        info: '#3182f6',
+
         status: {
           active: '#10b981',
-          closed: '#ef4444',
-          draft: '#9ca3af',
+          closed: '#f04452',
+          draft: '#b0b8c1',
         },
-        
-        // Background colors
+
         background: {
+          DEFAULT: '#f9fafb',
           primary: '#ffffff',
           secondary: '#f9fafb',
-          tertiary: '#f3f4f6',
-          sidebar: '#111827',
+          tertiary: '#f2f4f6',
+          sidebar: '#ffffff',
           card: '#ffffff',
         },
-        
-        // Text colors
+
         text: {
-          primary: '#111827',
-          secondary: '#4b5563',
-          tertiary: '#6b7280',
-          muted: '#9ca3af',
+          primary: '#191f28',
+          secondary: '#4e5968',
+          tertiary: '#6b7684',
+          muted: '#8b95a1',
           inverse: '#ffffff',
         },
-        
-        // Border colors
+
         border: {
-          light: '#e5e7eb',
-          DEFAULT: '#d1d5db',
-          dark: '#9ca3af',
+          light: '#f2f4f6',
+          DEFAULT: '#e5e8eb',
+          medium: '#d1d6db',
+          dark: '#b0b8c1',
         },
 
         // Legacy colors (for backward compatibility)
-        darkPurple: '#66629F',
-        purple: '#918DCA',
-        skyBlue: '#A3C9F0',
         darkGray: '#8E8E8E',
         gray: '#B4B4B4',
         lightGray: '#D9D9D9',
@@ -96,14 +100,8 @@ export default {
         green: '#10b981',
         darkGreen: '#059669',
       },
-      backgroundImage: {
-        'custom-gradient': 'linear-gradient(135deg, #f9fafb 0%, #eef2ff 50%, #e0e7ff 100%)',
-        'custom-gradient-re': 'linear-gradient(135deg, #e0e7ff 0%, #eef2ff 50%, #f9fafb 100%)',
-        'card-gradient': 'linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)',
-        'sidebar-gradient': 'linear-gradient(180deg, #111827 0%, #1f2937 100%)',
-      },
       fontFamily: {
-        sans: ['Pretendard-Regular', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Pretendard Variable"', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
         pretendardFont: ['Pretendard-Regular', 'Pretendard-Regular'],
         tMoney: ['TmoneyRoundWindExtraBold', 'TmoneyRoundWindExtraBold'],
         npsFontBold: ['NPSfontBold', 'NPSfontBold'],
@@ -124,11 +122,11 @@ export default {
         '4xl': '2rem',
       },
       boxShadow: {
-        'card': '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 10px 40px rgba(0, 0, 0, 0.08)',
-        'sidebar': '4px 0 24px rgba(0, 0, 0, 0.08)',
-        'dropdown': '0 4px 20px rgba(0, 0, 0, 0.12)',
-        'modal': '0 20px 60px rgba(0, 0, 0, 0.15)',
+        'card': '0 1px 2px rgba(25, 31, 40, 0.04)',
+        'card-hover': '0 4px 16px rgba(25, 31, 40, 0.06)',
+        'sidebar': 'none',
+        'dropdown': '0 4px 16px rgba(25, 31, 40, 0.08)',
+        'modal': '0 16px 48px rgba(25, 31, 40, 0.12)',
       },
       animation: {
         'slide-in': 'slideIn 0.3s ease-out',

@@ -96,7 +96,7 @@ function MyProfileModal({ isVisible, onClose }: MyProfileModalProps) {
               type="button"
               onClick={handleSubmit}
               className={`${
-                password ? 'bg-purple cursor-pointer' : 'bg-lightGray cursor-not-allowed'
+                password ? 'bg-primary-500 cursor-pointer' : 'bg-lightGray cursor-not-allowed'
               } text-white text-base leading-4 flex items-center justify-center rounded-[0.625rem] w-[3.75rem] h-8`}
             >
               변경

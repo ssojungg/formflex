@@ -157,10 +157,10 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
     <div className="flex h-screen bg-background-secondary print:block print:h-auto">
       {/* Mobile Header */}
       {showMobileView && (
-        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-background-sidebar border-b border-secondary-800 print:hidden">
+        <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-14 px-3 bg-white/90 backdrop-blur border-b border-secondary-200 print:hidden">
           <button
             onClick={() => setMobileSidebarOpen(true)}
-            className="p-2 text-text-inverse rounded-lg hover:bg-secondary-800 transition-colors"
+            className="p-2 text-secondary-700 rounded-lg hover:bg-secondary-100 transition-colors"
             aria-label="메뉴 열기"
           >
             <MenuIcon />
@@ -170,8 +170,8 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src={logo} alt="FormFlex" className="w-8 h-8 object-contain" />
-            <span className="text-text-inverse font-semibold text-lg">FormFlex</span>
+            <img src={logo} alt="FormFlex" className="w-7 h-7 object-contain" />
+            <span className="text-secondary-900 font-bold text-[17px] tracking-tight">FormFlex</span>
           </button>
 
           <div className="w-10" />
@@ -194,23 +194,23 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
                ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
             : 'fixed inset-y-0 left-0 w-[200px]'
           }
-          flex flex-col bg-background-sidebar print:hidden
+          flex flex-col bg-white border-r border-secondary-200 print:hidden
         `}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-secondary-800">
+        <div className="flex items-center justify-between h-16 px-5">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src={logo} alt="FormFlex" className="w-8 h-8 object-contain" />
-            <span className="text-text-inverse font-semibold">FormFlex</span>
+            <img src={logo} alt="FormFlex" className="w-7 h-7 object-contain" />
+            <span className="text-secondary-900 font-bold text-[17px] tracking-tight">FormFlex</span>
           </button>
 
           {showMobileView && (
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="p-2 text-text-inverse rounded-lg hover:bg-secondary-800 transition-colors"
+              className="p-2 text-secondary-500 rounded-lg hover:bg-secondary-100 transition-colors"
               aria-label="메뉴 닫기"
             >
               <CloseIcon />
@@ -218,15 +218,8 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           )}
         </div>
 
-        {/* Navigation Label */}
-        <div className="px-4 py-3">
-          <span className="text-xs font-medium text-secondary-500 uppercase tracking-wider">
-            Navigation
-          </span>
-        </div>
-
         {/* Navigation Items */}
-        <nav className="flex-1 px-3 space-y-1">
+        <nav className="flex-1 px-3 pt-2 space-y-0.5">
           {NAV_ITEMS.map((item) => {
             const isActive = activeItem === item.id;
             const Icon = item.icon;
@@ -237,17 +230,17 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
                 onClick={() => handleNavClick(item)}
                 className={`
                   w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left
-                  transition-all duration-200 group
+                  transition-colors duration-150 group
                   ${isActive
-                    ? 'bg-primary-500 text-white'
-                    : 'text-secondary-400 hover:bg-secondary-800 hover:text-text-inverse'
+                    ? 'bg-secondary-100 text-secondary-900'
+                    : 'text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900'
                   }
                 `}
               >
-                <span className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-secondary-400 group-hover:text-text-inverse'}`}>
+                <span className={`flex-shrink-0 ${isActive ? 'text-primary-500' : 'text-secondary-400 group-hover:text-secondary-600'}`}>
                   <Icon />
                 </span>
-                <span className="text-sm font-medium truncate">{item.text}</span>
+                <span className={`text-[15px] truncate ${isActive ? 'font-semibold' : 'font-medium'}`}>{item.text}</span>
               </button>
             );
           })}
@@ -272,8 +265,8 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           <div className="px-3 py-2">
             <button
               onClick={installApp}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-primary-400
-                       bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-primary-600
+                       bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
             >
               <DownloadIcon />
               <span>앱 설치하기</span>
@@ -282,17 +275,17 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
         )}
 
         {/* User Profile Section */}
-        <div className="p-3 mt-auto border-t border-secondary-800">
+        <div className="p-3 mt-auto border-t border-secondary-100">
           <div className="flex items-center gap-3 p-2 rounded-lg">
-            <div className="w-9 h-9 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 font-semibold text-sm flex-shrink-0">
               {displayInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-text-inverse truncate">{displayName}</p>
+              <p className="text-sm font-medium text-secondary-800 truncate">{displayName}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 text-secondary-400 hover:text-error hover:bg-secondary-800 rounded-lg transition-colors flex-shrink-0"
+              className="p-2 text-secondary-400 hover:text-error hover:bg-secondary-100 rounded-lg transition-colors flex-shrink-0"
               title="로그아웃"
             >
               <LogoutIcon />
@@ -305,7 +298,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
       <main
         className={`
           flex-1 overflow-auto print:ml-0 print:pt-0
-          ${showMobileView ? 'pt-16' : 'ml-[200px]'}
+          ${showMobileView ? 'pt-14' : 'ml-[200px]'}
         `}
       >
         <div>{children}</div>

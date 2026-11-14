@@ -304,7 +304,7 @@ function MyPage() {
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-medium text-text-primary truncate">{survey.title}</h3>
                                 <span className={`shrink-0 px-2 py-0.5 text-xs rounded ${
-                                  isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-secondary-100 text-secondary-600'
+                                  isActive ? 'bg-primary-100 text-primary-700' : 'bg-secondary-100 text-secondary-600'
                                 }`}>
                                   {isActive ? '진행중' : '종료'}
                                 </span>

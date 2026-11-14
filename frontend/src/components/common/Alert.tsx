@@ -91,9 +91,9 @@ function Alert({
       case 'success':
         return {
           icon: <SuccessIcon />,
-          iconBg: 'bg-indigo-100',
-          iconColor: 'text-indigo-600',
-          buttonBg: 'bg-indigo-500 hover:bg-indigo-600',
+          iconBg: 'bg-primary-100',
+          iconColor: 'text-primary-600',
+          buttonBg: 'bg-primary-500 hover:bg-primary-600',
         };
       case 'error':
         return {

@@ -20,7 +20,7 @@ function TrendAnalytics({ surveyId }: TrendAnalyticsProps) {
 
   const areaOptions: ApexCharts.ApexOptions = {
     chart: { type: 'area', toolbar: { show: false }, sparkline: { enabled: false } },
-    colors: ['#6366f1'],
+    colors: ['#3182F6'],
     stroke: { curve: 'smooth', width: 2 },
     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
     dataLabels: { enabled: false },
@@ -32,7 +32,7 @@ function TrendAnalytics({ surveyId }: TrendAnalyticsProps) {
 
   const barOptions: ApexCharts.ApexOptions = {
     chart: { type: 'bar', toolbar: { show: false } },
-    colors: ['#818cf8'],
+    colors: ['#5BA0F8'],
     plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
     dataLabels: { enabled: false },
     xaxis: { categories: days, tickAmount: 6, labels: { style: { fontSize: '11px' } } },
@@ -70,7 +70,7 @@ function TrendAnalytics({ surveyId }: TrendAnalyticsProps) {
           { label: '총 응답 (30일)', value: responseData.reduce((a, b) => a + b, 0), unit: '건' },
         ].map((item) => (
           <div key={item.label} className="bg-white rounded-xl p-4 border border-gray-100 text-center">
-            <p className="text-2xl font-bold text-indigo-600">{item.value.toLocaleString()}{item.unit}</p>
+            <p className="text-2xl font-bold text-primary-600">{item.value.toLocaleString()}{item.unit}</p>
             <p className="text-xs text-gray-500 mt-1">{item.label}</p>
           </div>
         ))}

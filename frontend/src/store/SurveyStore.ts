@@ -350,7 +350,7 @@ export const useSurveyStore = create<SurveyStore>()(
           title: `${template.title} (복사본)`,
           description: template.description,
           questions,
-          themeColor: '#6366f1',
+          themeColor: '#3182F6',
           status: 'draft',
           isPublic: false,
           createdAt: new Date(),

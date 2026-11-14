@@ -66,98 +66,44 @@ function Login() {
   const isLoginButtonEnabled = loginInfo.email !== '' && loginInfo.password !== '';
 
   return (
-    <div className="min-h-screen bg-background-secondary flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 p-12 flex-col justify-between relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl" />
-        </div>
+    <div className="min-h-screen bg-white flex flex-col">
+      <header className="h-16 px-5 sm:px-8 flex items-center">
+        <button onClick={() => navigate('/')} className="flex items-center gap-2">
+          <img src={logo} alt="" className="w-7 h-7" />
+          <span className="text-[17px] font-bold tracking-tight text-secondary-900">FormFlex</span>
+        </button>
+      </header>
 
-        <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="FormFlex" className="w-10 h-10 brightness-0 invert" />
-            <span className="text-2xl font-bold text-white">FormFlex</span>
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
-            설문을 만들고,
-            <br />
-            분석하고,
-            <br />
-            공유하세요
-          </h1>
-          <p className="text-primary-100 text-lg">
-            FormFlex와 함께 데이터 기반의 의사결정을 시작하세요.
-          </p>
-        </div>
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-10 h-10 rounded-full bg-primary-300 border-2 border-primary-500 flex items-center justify-center text-primary-700 font-medium text-sm"
-                >
-                  {String.fromCharCode(64 + i)}
-                </div>
-              ))}
-            </div>
-            <p className="text-primary-100 text-sm">
-              <span className="text-white font-semibold">1,000+</span> 사용자가 함께하고 있습니다
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <img src={logo} alt="FormFlex" className="w-10 h-10" />
-            <span className="text-2xl font-bold text-secondary-900">FormFlex</span>
-          </div>
-
+      <div className="flex-1 flex items-start sm:items-center justify-center px-5 pt-8 pb-16 sm:py-12">
+        <div className="w-full max-w-[400px]">
           {/* Header */}
-          <div className="mb-8">
-            <h2 className="text-2xl lg:text-3xl font-bold text-secondary-900 mb-2">로그인</h2>
-            <p className="text-secondary-600">계정에 로그인하여 설문을 관리하세요.</p>
+          <div className="mb-9">
+            <h1 className="text-[28px] font-bold tracking-[-0.025em] text-secondary-900">로그인</h1>
+            <p className="mt-2 text-secondary-600">FormFlex 계정으로 계속하세요.</p>
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-1.5">
                 이메일
               </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={loginInfo.email}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="name@example.com"
-                  className="w-full px-4 py-3 bg-white border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary-400">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              </div>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={loginInfo.email}
+                onChange={handleInputChange}
+                required
+                placeholder="name@example.com"
+                className="w-full h-12 px-4 bg-secondary-50 border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-colors"
+              />
             </div>
 
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-secondary-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-secondary-700 mb-1.5">
                 비밀번호
               </label>
               <div className="relative">
@@ -169,7 +115,7 @@ function Login() {
                   onChange={handleInputChange}
                   required
                   placeholder="비밀번호를 입력하세요"
-                  className="w-full px-4 py-3 bg-white border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all pr-12"
+                  className="w-full h-12 px-4 pr-12 bg-secondary-50 border border-secondary-200 rounded-xl text-secondary-900 placeholder:text-secondary-400 focus:outline-none focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-colors"
                 />
                 <button
                   type="button"
@@ -191,12 +137,12 @@ function Login() {
             </div>
 
             {/* Remember & Forgot */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-secondary-300 text-primary-500 focus:ring-primary-500" />
+                <input type="checkbox" className="w-4 h-4 rounded border-secondary-300 accent-primary-500" />
                 <span className="text-sm text-secondary-600">로그인 상태 유지</span>
               </label>
-              <button type="button" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+              <button type="button" className="text-sm text-secondary-500 hover:text-secondary-800">
                 비밀번호 찾기
               </button>
             </div>
@@ -205,10 +151,10 @@ function Login() {
             <button
               type="submit"
               disabled={!isLoginButtonEnabled}
-              className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all ${
+              className={`w-full h-12 mt-2 rounded-xl font-semibold transition-colors ${
                 isLoginButtonEnabled
-                  ? 'bg-primary-500 hover:bg-primary-600 active:scale-[0.98]'
-                  : 'bg-secondary-300 cursor-not-allowed'
+                  ? 'bg-primary-500 text-white hover:bg-primary-600'
+                  : 'bg-secondary-100 text-secondary-400 cursor-not-allowed'
               }`}
             >
               로그인
@@ -216,14 +162,14 @@ function Login() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-4 my-6">
+          <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-secondary-200" />
-            <span className="text-sm text-secondary-500">또는</span>
+            <span className="text-xs text-secondary-400">또는</span>
             <div className="flex-1 h-px bg-secondary-200" />
           </div>
 
           {/* Google Login */}
-          <button className="w-full py-3.5 rounded-xl font-medium border border-secondary-200 bg-white text-secondary-700 hover:bg-secondary-50 transition-all flex items-center justify-center gap-3">
+          <button className="w-full h-12 rounded-xl font-medium border border-secondary-200 bg-white text-secondary-800 hover:bg-secondary-50 transition-colors flex items-center justify-center gap-2.5">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -234,11 +180,11 @@ function Login() {
           </button>
 
           {/* Signup Link */}
-          <p className="text-center mt-8 text-secondary-600">
+          <p className="text-center mt-8 text-sm text-secondary-600">
             계정이 없으신가요?{' '}
             <button
               onClick={() => navigate('/signup')}
-              className="text-primary-600 hover:text-primary-700 font-semibold"
+              className="text-primary-500 hover:text-primary-600 font-semibold"
             >
               회원가입
             </button>

@@ -9,7 +9,7 @@ function ResultTypeSwitch<T extends string>({ switchType, currentState, labels, 
   return (
     <div
       onClick={onChange}
-      className="relative w-[11.125rem] h-[2.625rem] flex items-center bg-darkPurple rounded-[1.875rem] p-1 cursor-pointer"
+      className="relative w-[11.125rem] h-[2.625rem] flex items-center bg-primary-600 rounded-[1.875rem] p-1 cursor-pointer"
     >
       <div
         className={`absolute w-[5.25rem] h-[2.125rem] rounded-[1.875rem] flex items-center justify-center bg-white shadow-md transform duration-300 ease-in-out 

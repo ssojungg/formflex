@@ -59,20 +59,20 @@ const BarChartIcon = () => (
   </svg>
 );
 
-const INDIGO = '#5B4CF5';
+const INDIGO = '#3182F6';
 
 // 대부분의 차트는 "크기 비교(단일 계열)"이므로 색의 역할은 sequential(한 가지 색조)이다.
 // 이전에 쓰던 8색 순환 팔레트는 색을 '순위'에 배정하는 안티패턴이었고,
 // 접근성 검증에서 명도 대역·CVD 분리·일반시야 분리 3개 항목이 FAIL이었다.
 // 막대 길이가 이미 크기를 인코딩하므로 한 색으로 통일하는 것이 가장 안전하고 깔끔하다.
-const SEQ_TRACK = '#F0EDFE'; // 미터 트랙(배경)
+const SEQ_TRACK = '#EEF5FF'; // 미터 트랙(배경)
 
 // 공통 시각 토큰 — 카드 표면/미터 마크를 한곳에서 관리한다.
 const CARD =
-  'bg-white rounded-[26px] border border-[#EEECF7] ' +
+  'bg-white rounded-[26px] border border-[#F2F4F6] ' +
   'shadow-[0_1px_2px_rgba(20,20,43,0.03),0_14px_32px_-22px_rgba(91,76,245,0.35)]';
-const FILL_GRADIENT = 'linear-gradient(90deg,#6E5FF7,#5B4CF5)';
-const DIM_FILL = '#C9C2FB';
+const FILL_GRADIENT = 'linear-gradient(90deg,#3182F6,#3182F6)';
+const DIM_FILL = '#BBD8FD';
 
 // 섹션 제목 앞의 액센트 룰
 function SectionHead({ title, desc }: { title: string; desc?: string }) {
@@ -81,11 +81,11 @@ function SectionHead({ title, desc }: { title: string; desc?: string }) {
       <div className="flex items-center gap-2.5 mb-0.5">
         <span
           className="w-[3px] h-[15px] rounded-full shrink-0"
-          style={{ background: 'linear-gradient(180deg,#5B4CF5,#A79EFB)' }}
+          style={{ background: 'linear-gradient(180deg,#3182F6,#8CBEFB)' }}
         />
-        <h3 className="text-[16.5px] font-bold tracking-[-0.01em] text-[#14142B]">{title}</h3>
+        <h3 className="text-[16.5px] font-bold tracking-[-0.01em] text-[#191F28]">{title}</h3>
       </div>
-      {desc && <p className="ml-3 mb-5 text-[12.5px] text-[#8E8CA8]">{desc}</p>}
+      {desc && <p className="ml-3 mb-5 text-[12.5px] text-[#8B95A1]">{desc}</p>}
     </>
   );
 }
@@ -132,24 +132,24 @@ function ChoiceChart({ question }: { question: QuestionData }) {
 
   if (choices.length === 0) {
     return (
-      <div className="mt-4 flex flex-col items-center justify-center py-11 text-center rounded-[18px] border border-dashed border-[#DEDAF4] bg-[#FBFAFF]">
+      <div className="mt-4 flex flex-col items-center justify-center py-11 text-center rounded-[18px] border border-dashed border-[#E5E8EB] bg-[#F9FAFB]">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center mb-2.5"
           style={{ backgroundColor: SEQ_TRACK, color: INDIGO }}
         >
           <BarChartIcon />
         </div>
-        <p className="text-[13.5px] font-semibold text-[#4A4A68]">아직 응답 데이터가 없어요</p>
-        <p className="mt-1 text-xs text-[#8E8CA8]">응답이 들어오면 분포가 여기에 표시됩니다</p>
+        <p className="text-[13.5px] font-semibold text-[#4E5968]">아직 응답 데이터가 없어요</p>
+        <p className="mt-1 text-xs text-[#8B95A1]">응답이 들어오면 분포가 여기에 표시됩니다</p>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mt-5 mb-4 pt-4 border-t border-[#EEECF7]">
-        <span className="text-xs font-bold tracking-wide text-[#8E8CA8]">응답 분포</span>
-        <span className="text-xs text-[#8E8CA8]">{total}명 응답</span>
+      <div className="flex items-baseline justify-between mt-5 mb-4 pt-4 border-t border-[#F2F4F6]">
+        <span className="text-xs font-bold tracking-wide text-[#8B95A1]">응답 분포</span>
+        <span className="text-xs text-[#8B95A1]">{total}명 응답</span>
       </div>
 
       <ul className="flex flex-col gap-[17px]">
@@ -162,23 +162,23 @@ function ChoiceChart({ question }: { question: QuestionData }) {
               <div className="flex items-baseline justify-between gap-3.5 mb-2">
                 <span
                   className={`text-sm leading-[1.4] break-words ${
-                    isTop ? 'text-[#14142B] font-bold' : 'text-[#4A4A68] font-medium'
+                    isTop ? 'text-[#191F28] font-bold' : 'text-[#4E5968] font-medium'
                   }`}
                 >
                   {isTop && (
                     <span
                       className="inline-flex items-center h-[18px] px-[7px] mr-[7px] rounded-md text-[10.5px] font-extrabold align-[1px]"
-                      style={{ backgroundColor: SEQ_TRACK, color: '#4C3DE8' }}
+                      style={{ backgroundColor: SEQ_TRACK, color: '#1B64DA' }}
                     >
                       1위
                     </span>
                   )}
                   {c.option}
                 </span>
-                <span className="shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-[#8E8CA8]">
+                <span className="shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-[#8B95A1]">
                   <span
                     className="text-[15px] font-extrabold tracking-[-0.02em]"
-                    style={{ color: isTop ? '#4C3DE8' : '#4A4A68' }}
+                    style={{ color: isTop ? '#1B64DA' : '#4E5968' }}
                   >
                     {Math.round(pct)}%
                   </span>
@@ -242,7 +242,7 @@ function SubjectiveAnswers({ question }: { question: QuestionData }) {
         {answers.length > 5 && (
           <button
             onClick={() => setShowAll(!showAll)}
-            className="mt-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+            className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
           >
             {showAll ? '접기' : `${answers.length - 5}개 더 보기 ▾`}
           </button>
@@ -484,7 +484,7 @@ function ResultPage() {
   };
 
   return (
-    <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 overflow-hidden print:overflow-visible print:block print:h-auto">
+    <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-primary-50/40 overflow-hidden print:overflow-visible print:block print:h-auto">
       {/* Mobile overlay backdrop */}
       {showSidebar && isMobile && (
         <div
@@ -524,17 +524,17 @@ function ResultPage() {
                   key={survey.surveyId}
                   onClick={() => navigate(`/result?id=${survey.surveyId}`)}
                   className={`w-full text-left px-4 py-3 border-b border-gray-50 transition-colors ${
-                    isSelected ? 'bg-indigo-50 border-l-2 border-l-indigo-500' : 'hover:bg-gray-50'
+                    isSelected ? 'bg-primary-50 border-l-2 border-l-primary-500' : 'hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <ChevronRightIcon />
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium truncate ${isSelected ? 'text-indigo-600' : 'text-gray-800'}`}>
+                      <p className={`text-sm font-medium truncate ${isSelected ? 'text-primary-600' : 'text-gray-800'}`}>
                         {survey.title}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'}`}>
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${isActive ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}`}>
                           {isActive ? '진행중' : '종료'}
                         </span>
                         <span className="text-xs text-gray-400">{survey.attendCount || 0}명</span>
@@ -557,7 +557,7 @@ function ResultPage() {
               <MenuIcon />
             </button>
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+              <span className="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
                 <BarChartIcon />
               </span>
               <h1 className="text-base font-semibold text-slate-800">설문 분석</h1>
@@ -575,7 +575,7 @@ function ResultPage() {
             <button
               onClick={handleExport}
               className="flex items-center gap-2 px-3.5 py-2 text-white text-sm rounded-xl transition-all hover:brightness-110 shadow-sm"
-              style={{ background: 'linear-gradient(135deg,#6366f1,#818cf8)' }}
+              style={{ background: 'linear-gradient(135deg,#3182F6,#5BA0F8)' }}
             >
               <DownloadIcon />
               <span className="hidden sm:inline">내보내기</span>
@@ -587,7 +587,7 @@ function ResultPage() {
         {!surveyId && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <BarChartIcon />
               </div>
               <p className="text-gray-500">왼쪽에서 분석할 설문을 선택하세요</p>
@@ -597,7 +597,7 @@ function ResultPage() {
 
         {!!surveyId && isLoading && (
           <div className="flex-1 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
@@ -637,16 +637,16 @@ function ResultPage() {
                 style={{
                   background:
                     'radial-gradient(120% 140% at 88% -20%, rgba(91,76,245,0.13), transparent 58%),' +
-                    'linear-gradient(158deg,#FBFAFF 0%,#FFFFFF 60%)',
+                    'linear-gradient(158deg,#F9FAFB 0%,#FFFFFF 60%)',
                 }}
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-[12.5px] font-medium text-[#8E8CA8]">오늘 들어온 응답</p>
+                    <p className="text-[12.5px] font-medium text-[#8B95A1]">오늘 들어온 응답</p>
                     <div className="flex items-end gap-3 mt-2.5">
-                      <span className="text-[52px] font-extrabold text-[#14142B] tabular-nums leading-none tracking-[-0.035em]">
+                      <span className="text-[52px] font-extrabold text-[#191F28] tabular-nums leading-none tracking-[-0.035em]">
                         {stats.todayCount}
-                        <span className="text-[19px] font-bold text-[#8E8CA8] ml-1.5 tracking-normal">명</span>
+                        <span className="text-[19px] font-bold text-[#8B95A1] ml-1.5 tracking-normal">명</span>
                       </span>
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[9px] text-xs font-bold mb-[7px] ${
@@ -654,19 +654,19 @@ function ResultPage() {
                             ? 'bg-[#E8FAF0] text-[#0E9F6E]'
                             : stats.todayDelta < 0
                             ? 'bg-[#FDECEC] text-[#E14747]'
-                            : 'bg-[#F2F1F7] text-[#9795AC]'
+                            : 'bg-[#F2F4F6] text-[#8B95A1]'
                         }`}
                       >
                         {stats.todayDelta > 0 ? '▲' : stats.todayDelta < 0 ? '▼' : '—'}
                         {Math.abs(stats.todayDelta)}
                       </span>
                     </div>
-                    <p className="mt-3 text-[12.5px] text-[#8E8CA8]">
+                    <p className="mt-3 text-[12.5px] text-[#8B95A1]">
                       전일 대비 · 전체 누적{' '}
-                      <b className="font-semibold text-[#4A4A68]">{stats.totalResponses.toLocaleString()}명</b>
+                      <b className="font-semibold text-[#4E5968]">{stats.totalResponses.toLocaleString()}명</b>
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/75 text-[#4A4A68] border border-[#EEECF7] backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/75 text-[#4E5968] border border-[#F2F4F6] backdrop-blur-sm">
                     <CalendarIcon /> 최근 {trendData.labels.length}일
                   </span>
                 </div>
@@ -683,17 +683,17 @@ function ResultPage() {
                 ) : (
                   // 데이터 포인트가 1개 이하면 추이선이 성립하지 않는다.
                   // 260px 빈 격자를 그리는 대신 상태를 문장으로 알린다.
-                  <div className="mt-6 rounded-[18px] border border-dashed border-[#DEDAF4] bg-white/60 py-8 text-center">
+                  <div className="mt-6 rounded-[18px] border border-dashed border-[#E5E8EB] bg-white/60 py-8 text-center">
                     <div
                       className="w-[38px] h-[38px] rounded-xl flex items-center justify-center mx-auto mb-2.5"
                       style={{ backgroundColor: SEQ_TRACK, color: INDIGO }}
                     >
                       <BarChartIcon />
                     </div>
-                    <p className="text-[13.5px] font-semibold text-[#4A4A68]">
+                    <p className="text-[13.5px] font-semibold text-[#4E5968]">
                       {stats.totalResponses > 0 ? '추이를 그리려면 이틀 이상의 응답이 필요해요' : '아직 응답이 없어요'}
                     </p>
-                    <p className="mt-1 text-xs text-[#8E8CA8]">응답이 쌓이면 일자별 추이가 여기에 표시됩니다</p>
+                    <p className="mt-1 text-xs text-[#8B95A1]">응답이 쌓이면 일자별 추이가 여기에 표시됩니다</p>
                   </div>
                 )}
               </div>
@@ -711,11 +711,11 @@ function ResultPage() {
                 ].map((card) => (
                   <div
                     key={card.label}
-                    className="relative overflow-hidden bg-white rounded-[20px] border border-[#EEECF7] p-[19px] shadow-[0_1px_2px_rgba(20,20,43,0.03)] transition-shadow hover:shadow-[0_10px_24px_-16px_rgba(91,76,245,0.5)]"
+                    className="relative overflow-hidden bg-white rounded-[20px] border border-[#F2F4F6] p-[19px] shadow-[0_1px_2px_rgba(20,20,43,0.03)] transition-shadow hover:shadow-[0_10px_24px_-16px_rgba(91,76,245,0.5)]"
                   >
                     <span
                       className="absolute inset-x-0 top-0 h-[2.5px] opacity-90"
-                      style={{ background: 'linear-gradient(90deg,#5B4CF5,#A79EFB)' }}
+                      style={{ background: 'linear-gradient(90deg,#3182F6,#8CBEFB)' }}
                     />
                     <span
                       className="w-[34px] h-[34px] rounded-[11px] flex items-center justify-center mb-3.5"
@@ -723,10 +723,10 @@ function ResultPage() {
                     >
                       {card.icon}
                     </span>
-                    <p className="text-[27px] font-extrabold text-[#14142B] tabular-nums leading-none tracking-[-0.03em]">
+                    <p className="text-[27px] font-extrabold text-[#191F28] tabular-nums leading-none tracking-[-0.03em]">
                       {card.value}
                     </p>
-                    <p className="text-xs font-medium text-[#8E8CA8] mt-[7px]">{card.label}</p>
+                    <p className="text-xs font-medium text-[#8B95A1] mt-[7px]">{card.label}</p>
                     {card.trend && sparkTrend.length >= 2 && (
                       <div className="-mx-1 mt-2 h-9">
                         <ReactApexChart options={sparkOptions(INDIGO)} series={[{ data: sparkTrend }]} type="area" height={36} />
@@ -752,7 +752,7 @@ function ResultPage() {
                           ? 'text-white shadow-sm'
                           : 'text-slate-500 hover:text-slate-700'
                       }`}
-                      style={activeTab === tab.id ? { background: 'linear-gradient(135deg,#6366f1,#818cf8)' } : undefined}
+                      style={activeTab === tab.id ? { background: 'linear-gradient(135deg,#3182F6,#5BA0F8)' } : undefined}
                     >
                       {tab.label}
                     </button>
@@ -776,20 +776,20 @@ function ResultPage() {
                                 <span className="flex items-center gap-2.5 min-w-0">
                                   <span
                                     className="inline-flex items-center justify-center min-w-[26px] h-5 px-1.5 rounded-[7px] text-[11px] font-extrabold shrink-0"
-                                    style={{ backgroundColor: SEQ_TRACK, color: '#4C3DE8' }}
+                                    style={{ backgroundColor: SEQ_TRACK, color: '#1B64DA' }}
                                   >
                                     {q.label}
                                   </span>
-                                  <span className="text-sm font-medium text-[#4A4A68] truncate">{q.content}</span>
+                                  <span className="text-sm font-medium text-[#4E5968] truncate">{q.content}</span>
                                 </span>
-                                <span className="shrink-0 text-[12.5px] tabular-nums text-[#8E8CA8]">
-                                  <b className="text-[15px] font-extrabold text-[#4A4A68] tracking-[-0.02em]">{q.total}</b>명
+                                <span className="shrink-0 text-[12.5px] tabular-nums text-[#8B95A1]">
+                                  <b className="text-[15px] font-extrabold text-[#4E5968] tracking-[-0.02em]">{q.total}</b>명
                                 </span>
                               </div>
                               <Meter pct={pct} />
                               {q.top && q.top.count > 0 && (
-                                <p className="mt-2 text-xs text-[#8E8CA8] truncate">
-                                  최다 · <b className="font-semibold text-[#4A4A68]">{q.top.option}</b> ({q.top.count}명)
+                                <p className="mt-2 text-xs text-[#8B95A1] truncate">
+                                  최다 · <b className="font-semibold text-[#4E5968]">{q.top.option}</b> ({q.top.count}명)
                                 </p>
                               )}
                             </li>
@@ -806,21 +806,21 @@ function ResultPage() {
                         <span
                           className="shrink-0 w-[27px] h-[27px] rounded-[9px] text-white text-xs font-extrabold flex items-center justify-center"
                           style={{
-                            background: 'linear-gradient(140deg,#5B4CF5,#7C6EF8)',
+                            background: 'linear-gradient(140deg,#3182F6,#5BA0F8)',
                             boxShadow: '0 3px 8px -2px rgba(91,76,245,0.5)',
                           }}
                         >
                           {index + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-base font-bold text-[#14142B] leading-[1.35] tracking-[-0.01em]">
+                          <p className="text-base font-bold text-[#191F28] leading-[1.35] tracking-[-0.01em]">
                             {question.content}
                           </p>
-                          <span className="inline-block mt-1.5 px-2.5 py-[3px] rounded-[7px] bg-[#F5F4FB] text-[11px] font-semibold text-[#8E8CA8]">
+                          <span className="inline-block mt-1.5 px-2.5 py-[3px] rounded-[7px] bg-[#F9FAFB] text-[11px] font-semibold text-[#8B95A1]">
                             {typeLabel(question.type)}
                           </span>
                         </div>
-                        <span className="shrink-0 text-xs text-[#8E8CA8]">
+                        <span className="shrink-0 text-xs text-[#8B95A1]">
                           {question.type === 'SUBJECTIVE_QUESTION'
                             ? `${question.answers?.length || 0}개 응답`
                             : `${(question.choices || []).reduce((s, c) => s + (c.count || 0), 0)}명 응답`}
@@ -859,7 +859,7 @@ function ResultPage() {
                       </thead>
                       <tbody>
                         {answerData?.list?.rows?.map((row, i) => (
-                          <tr key={row.userId} className={`border-b border-gray-50 ${i % 2 === 0 ? '' : 'bg-gray-50/50'} hover:bg-indigo-50/40 transition-colors`}>
+                          <tr key={row.userId} className={`border-b border-gray-50 ${i % 2 === 0 ? '' : 'bg-gray-50/50'} hover:bg-primary-50/40 transition-colors`}>
                             <td className="px-4 py-3 text-gray-400 text-xs">{i + 1}</td>
                             <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{formatDate(row.createdAt)}</td>
                             {row.responses.map((resp, j) => (
@@ -895,14 +895,14 @@ function ResultPage() {
                                 <span className="flex items-center gap-2.5 min-w-0">
                                   <span
                                     className="inline-flex items-center justify-center min-w-[26px] h-5 px-1.5 rounded-[7px] text-[11px] font-extrabold shrink-0"
-                                    style={{ backgroundColor: SEQ_TRACK, color: '#4C3DE8' }}
+                                    style={{ backgroundColor: SEQ_TRACK, color: '#1B64DA' }}
                                   >
                                     {q.label}
                                   </span>
-                                  <span className="text-sm font-medium text-[#4A4A68] truncate">{q.content}</span>
+                                  <span className="text-sm font-medium text-[#4E5968] truncate">{q.content}</span>
                                 </span>
-                                <span className="shrink-0 text-[12.5px] tabular-nums text-[#8E8CA8]">
-                                  <b className="text-[15px] font-extrabold text-[#4A4A68] tracking-[-0.02em]">{q.total}</b>명
+                                <span className="shrink-0 text-[12.5px] tabular-nums text-[#8B95A1]">
+                                  <b className="text-[15px] font-extrabold text-[#4E5968] tracking-[-0.02em]">{q.total}</b>명
                                 </span>
                               </div>
                               <Meter pct={pct} />
@@ -926,12 +926,12 @@ function ResultPage() {
                           : null;
                         return (
                           <div key={q.questionId} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-                            <span className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">
+                            <span className="w-6 h-6 rounded-lg bg-primary-100 text-primary-700 text-xs font-bold flex items-center justify-center shrink-0">
                               {i + 1}
                             </span>
                             <p className="flex-1 text-sm text-gray-700 truncate">{q.content}</p>
                             <span className="text-xs text-gray-400 shrink-0">{typeLabel(q.type)}</span>
-                            <span className="text-sm font-semibold text-indigo-600 shrink-0 w-16 text-right">{total}명</span>
+                            <span className="text-sm font-semibold text-primary-600 shrink-0 w-16 text-right">{total}명</span>
                             {topChoice && (
                               <span className="hidden sm:block text-xs text-gray-500 shrink-0 max-w-[120px] truncate">
                                 최다: {topChoice.option}
@@ -965,7 +965,7 @@ function ResultPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSendEmail()}
               placeholder="example@email.com"
               disabled={isSending}
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-50"
             />
             {emailError && <p className="mt-1.5 text-xs text-red-500">{emailError}</p>}
 
@@ -980,7 +980,7 @@ function ResultPage() {
               <button
                 onClick={handleSendEmail}
                 disabled={isSending}
-                className="flex-1 px-4 py-2.5 text-sm bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 text-sm bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSending ? (
                   <>

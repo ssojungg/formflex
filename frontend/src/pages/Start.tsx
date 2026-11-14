@@ -2,36 +2,97 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import logo from '../assets/logo.svg';
 
-// Feature icons as simple SVG components
-const AIIcon = () => (
-  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+const ArrowRight = () => (
+  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12h14M13 6l6 6-6 6" />
   </svg>
 );
 
-const ChartIcon = () => (
-  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M18 20V10M12 20V4M6 20v-6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+const features = [
+  {
+    title: 'AI가 질문 초안을 잡아줘요',
+    description: '주제만 입력하면 질문 구성과 응답 유형까지 한 번에 만들어져요. 마음에 들지 않는 부분만 고치면 돼요.',
+  },
+  {
+    title: '응답은 들어오는 즉시 차트로',
+    description: '객관식은 비율로, 별점은 평균으로, 주관식은 모아서. 따로 엑셀을 열 필요가 없어요.',
+  },
+  {
+    title: '링크 하나로 공유',
+    description: '설문 링크를 복사해 어디든 붙여넣으세요. 목표 응답 수에 도달하면 리포트를 받아볼 수 있어요.',
+  },
+  {
+    title: '검증된 템플릿에서 시작',
+    description: '고객 만족도, UX 리서치, 행사 신청 등 다른 사용자들이 공유한 템플릿을 그대로 가져다 쓰세요.',
+  },
+];
 
-const ShareIcon = () => (
-  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="18" cy="5" r="3" />
-    <circle cx="6" cy="12" r="3" />
-    <circle cx="18" cy="19" r="3" />
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-  </svg>
-);
+const mockQuestions = [
+  { no: 1, text: '신메뉴를 얼마나 자주 주문하시나요?', type: '객관식' },
+  { no: 2, text: '맛에 대한 만족도를 알려주세요', type: '별점' },
+  { no: 3, text: '개선되었으면 하는 점이 있다면?', type: '주관식' },
+];
 
-const TemplateIcon = () => (
-  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <line x1="3" y1="9" x2="21" y2="9" />
-    <line x1="9" y1="21" x2="9" y2="9" />
-  </svg>
-);
+const mockResults = [
+  { label: '주 1회 이상', value: 42 },
+  { label: '월 2~3회', value: 31 },
+  { label: '월 1회 이하', value: 18 },
+  { label: '처음 주문', value: 9 },
+];
+
+function ProductPreview() {
+  return (
+    <div className="relative">
+      {/* Builder card */}
+      <div className="lg:mr-14 bg-white rounded-2xl border border-secondary-200 shadow-[0_8px_32px_rgba(25,31,40,0.06)] overflow-hidden">
+        <div className="px-5 pt-5 pb-4 border-b border-secondary-100">
+          <p className="text-xs font-medium text-secondary-500 mb-2">AI로 설문 만들기</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 px-3.5 py-2.5 bg-secondary-50 rounded-lg text-sm text-secondary-800">
+              카페 신메뉴 만족도 조사
+            </div>
+            <div className="px-3.5 py-2.5 bg-primary-500 text-white text-sm font-semibold rounded-lg">생성</div>
+          </div>
+        </div>
+        <ul className="divide-y divide-secondary-100">
+          {mockQuestions.map((q) => (
+            <li key={q.no} className="flex items-center gap-3 px-5 py-3.5">
+              <span className="w-6 h-6 flex items-center justify-center rounded-md bg-secondary-100 text-xs font-semibold text-secondary-600 tabular-nums">
+                {q.no}
+              </span>
+              <span className="flex-1 text-sm text-secondary-800 truncate">{q.text}</span>
+              <span className="text-xs text-secondary-500">{q.type}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Result card */}
+      <div className="relative mt-4 lg:-mt-5 lg:ml-24 bg-white rounded-2xl border border-secondary-200 shadow-[0_12px_40px_rgba(25,31,40,0.10)] p-5">
+        <div className="flex items-baseline justify-between mb-4">
+          <p className="text-sm font-semibold text-secondary-900">Q1 응답 결과</p>
+          <p className="text-xs text-secondary-500 tabular-nums">128명 응답</p>
+        </div>
+        <div className="space-y-3">
+          {mockResults.map((r, i) => (
+            <div key={r.label}>
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-secondary-700">{r.label}</span>
+                <span className="font-semibold text-secondary-900 tabular-nums">{r.value}%</span>
+              </div>
+              <div className="h-2 bg-secondary-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${i === 0 ? 'bg-primary-500' : 'bg-primary-200'}`}
+                  style={{ width: `${r.value}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Start() {
   const navigate = useNavigate();
@@ -40,394 +101,189 @@ function Start() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 8);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const features = [
-    {
-      icon: <AIIcon />,
-      title: 'AI 설문 자동 생성',
-      description: '프롬프트만 입력하면 AI가 질문 구조를 자동으로 생성해드립니다.',
-    },
-    {
-      icon: <ChartIcon />,
-      title: '실시간 분석 대시보드',
-      description: '응답 데이터를 다양한 차트와 그래프로 시각화하여 인사이트를 얻으세요.',
-    },
-    {
-      icon: <ShareIcon />,
-      title: '간편한 공유',
-      description: '링크 하나로 설문을 공유하고, 응답자 N명 달성 시 자동 리포트를 받아보세요.',
-    },
-    {
-      icon: <TemplateIcon />,
-      title: '템플릿 라이브러리',
-      description: '다른 사용자들이 공유한 템플릿을 검색하고 바로 사용해보세요.',
-    },
-  ];
+  const go = (path: string) => {
+    setIsMobileMenuOpen(false);
+    navigate(path);
+  };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white text-secondary-900">
       {/* Navigation */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md transition-[border-color] ${
+          isScrolled ? 'border-b border-secondary-200' : 'border-b border-transparent'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="FormFlex" className="w-8 h-8 lg:w-10 lg:h-10" />
-              <span className="text-xl lg:text-2xl font-bold text-secondary-900">FormFlex</span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-secondary-600 hover:text-secondary-900 transition-colors">
-                기능
-              </a>
-              <button
-                onClick={() => navigate('/all')}
-                className="text-secondary-600 hover:text-secondary-900 transition-colors"
-              >
-                템플릿
+        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-10">
+              <button onClick={() => navigate('/')} className="flex items-center gap-2">
+                <img src={logo} alt="" className="w-7 h-7" />
+                <span className="text-[17px] font-bold tracking-tight">FormFlex</span>
               </button>
+              <div className="hidden md:flex items-center gap-7 text-[15px]">
+                <a href="#features" className="text-secondary-600 hover:text-secondary-900 transition-colors">
+                  기능
+                </a>
+                <button onClick={() => navigate('/surveys')} className="text-secondary-600 hover:text-secondary-900 transition-colors">
+                  설문 둘러보기
+                </button>
+                <button onClick={() => navigate('/templates')} className="text-secondary-600 hover:text-secondary-900 transition-colors">
+                  템플릿
+                </button>
+              </div>
             </div>
 
-            {/* Desktop CTA Buttons */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={() => navigate('/login')}
-                className="px-4 py-2 text-secondary-700 hover:text-secondary-900 font-medium transition-colors"
+                className="px-3.5 py-2 text-[15px] text-secondary-700 font-medium rounded-lg hover:bg-secondary-100 transition-colors"
               >
                 로그인
               </button>
               <button
                 onClick={() => navigate('/signup')}
-                className="px-5 py-2.5 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors"
+                className="px-4 py-2 text-[15px] bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-colors"
               >
                 무료로 시작하기
               </button>
             </div>
 
-            {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-secondary-600"
+              className="md:hidden p-2 -mr-2 text-secondary-700"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="메뉴"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isMobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h16" />
                 )}
               </svg>
             </button>
           </div>
-
-          {/* Mobile Menu - Full screen overlay */}
-          {isMobileMenuOpen && (
-            <>
-              {/* Backdrop */}
-              <div 
-                className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                onClick={() => setIsMobileMenuOpen(false)}
-              />
-              {/* Menu Panel */}
-              <div className="fixed top-0 right-0 bottom-0 w-72 bg-white z-50 md:hidden shadow-2xl transform transition-transform duration-300 ease-out">
-                <div className="flex items-center justify-between p-4 border-b border-secondary-100">
-                  <span className="font-semibold text-secondary-900">메뉴</span>
-                  <button 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 hover:bg-secondary-100 rounded-lg"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex flex-col p-4 gap-2">
-                  <a 
-                    href="#features" 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-4 py-3 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-xl"
-                  >
-                    기능
-                  </a>
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      navigate('/surveys');
-                    }}
-                    className="px-4 py-3 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-xl text-left"
-                  >
-                    설문 둘러보기
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      navigate('/templates');
-                    }}
-                    className="px-4 py-3 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 rounded-xl text-left"
-                  >
-                    템플릿
-                  </button>
-                  <hr className="my-2 border-secondary-100" />
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      navigate('/login');
-                    }}
-                    className="px-4 py-3 text-secondary-700 font-medium hover:bg-secondary-50 rounded-xl text-left"
-                  >
-                    로그인
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      navigate('/signup');
-                    }}
-                    className="mt-2 w-full py-3 bg-primary-500 text-white font-medium rounded-xl hover:bg-primary-600 transition-colors"
-                  >
-                    무료로 시작하기
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
         </div>
+
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-secondary-100 bg-white px-5 pb-5 pt-2">
+            <div className="flex flex-col">
+              <a
+                href="#features"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-3 text-[15px] text-secondary-700"
+              >
+                기능
+              </a>
+              <button onClick={() => go('/surveys')} className="py-3 text-[15px] text-secondary-700 text-left">
+                설문 둘러보기
+              </button>
+              <button onClick={() => go('/templates')} className="py-3 text-[15px] text-secondary-700 text-left">
+                템플릿
+              </button>
+              <button onClick={() => go('/login')} className="py-3 text-[15px] text-secondary-700 text-left">
+                로그인
+              </button>
+              <button
+                onClick={() => go('/signup')}
+                className="mt-3 w-full py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-colors"
+              >
+                무료로 시작하기
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* Hero Section */}
-      <section className="pt-24 lg:pt-32 pb-16 lg:pb-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
-              AI 기반 설문 플랫폼
-            </div>
-
-            {/* Main Title */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-secondary-900 leading-tight mb-6">
-              설문을 만들고, 분석하고,
+      {/* Hero */}
+      <section className="pt-28 lg:pt-40 pb-20 lg:pb-28 px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-14 lg:gap-16 items-center">
+          <div>
+            <h1 className="text-[40px] leading-[1.2] sm:text-5xl lg:text-[56px] lg:leading-[1.18] font-bold tracking-[-0.03em]">
+              설문은 쉽게,
               <br />
-              <span className="text-primary-500">공유하세요</span>
+              결과는 바로.
             </h1>
-
-            {/* Subtitle */}
-            <p className="text-lg lg:text-xl text-secondary-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-              FormFlex로 몇 분 만에 전문적인 설문을 만들고, 실시간으로 응답을 분석하세요. AI가 설문 작성을 도와드립니다.
+            <p className="mt-6 text-[17px] lg:text-lg text-secondary-600 leading-relaxed max-w-md">
+              AI가 질문 초안을 잡아주고, 응답이 들어오는 즉시 차트로 정리해드려요. 링크 하나만 공유하면 끝이에요.
             </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-9 flex flex-col sm:flex-row sm:items-center gap-3">
               <button
                 onClick={() => navigate('/signup')}
-                className="w-full sm:w-auto px-8 py-4 bg-primary-500 text-white font-semibold rounded-2xl hover:bg-primary-600 transition-all hover:shadow-lg hover:-translate-y-0.5"
+                className="px-6 py-3.5 bg-primary-500 text-white text-base font-semibold rounded-xl hover:bg-primary-600 transition-colors"
               >
                 무료로 시작하기
               </button>
               <button
                 onClick={() => navigate('/surveys')}
-                className="w-full sm:w-auto px-8 py-4 bg-white text-secondary-700 font-semibold rounded-2xl border border-secondary-200 hover:border-secondary-300 hover:bg-secondary-50 transition-all"
+                className="group inline-flex items-center justify-center gap-1.5 px-5 py-3.5 text-base font-semibold text-secondary-700 rounded-xl hover:bg-secondary-100 transition-colors"
               >
                 설문 둘러보기
+                <span className="transition-transform group-hover:translate-x-0.5">
+                  <ArrowRight />
+                </span>
               </button>
             </div>
-
-            {/* Trust Badge */}
-            <p className="mt-8 text-sm text-secondary-500">
-              무제한 설문 생성
-            </p>
+            <p className="mt-5 text-sm text-secondary-500">가입하지 않아도 공개 설문과 템플릿을 볼 수 있어요.</p>
           </div>
 
-          {/* Hero Image / Preview */}
-          <div className="mt-16 lg:mt-20 relative">
-            <div className="bg-gradient-to-br from-primary-100 via-primary-50 to-white rounded-3xl lg:rounded-[2rem] p-4 lg:p-8 shadow-2xl shadow-primary-500/10">
-              <div className="bg-white rounded-2xl lg:rounded-3xl shadow-card overflow-hidden">
-                {/* Browser Chrome */}
-                <div className="flex items-center gap-2 px-4 py-3 bg-secondary-50 border-b border-secondary-100">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-400" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                    <div className="w-3 h-3 rounded-full bg-indigo-400" />
-                  </div>
-                  <div className="flex-1 ml-4">
-                    <div className="max-w-xs mx-auto bg-white rounded-lg px-4 py-1.5 text-sm text-secondary-400 border border-secondary-200">
-                      formflex.io/dashboard
-                    </div>
-                  </div>
-                </div>
+          <ProductPreview />
+        </div>
+      </section>
 
-                {/* Dashboard Preview */}
-                <div className="p-6 lg:p-8 bg-background-secondary min-h-[300px] lg:min-h-[400px]">
-                  <div className="flex gap-6">
-                    {/* Sidebar Preview */}
-                    <div className="hidden lg:block w-60 bg-secondary-900 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-6">
-                        <div className="w-8 h-8 bg-primary-500 rounded-lg" />
-                        <span className="text-white font-semibold">FormFlex</span>
-                      </div>
-                      <div className="space-y-2">
-                        {['대시보드', '템플릿 라이브러리', '분석', '내 정보'].map((item, i) => (
-                          <div
-                            key={item}
-                            className={`px-3 py-2 rounded-lg text-sm ${
-                              i === 0 ? 'bg-primary-500 text-white' : 'text-secondary-400'
-                            }`}
-                          >
-                            {item}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+      {/* Features */}
+      <section id="features" className="py-20 lg:py-28 px-5 sm:px-8 bg-secondary-50 border-y border-secondary-100">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-[28px] lg:text-4xl font-bold tracking-[-0.025em] leading-snug max-w-xl">
+            만들고, 모으고, 읽는 것까지
+            <br />
+            한 곳에서 끝내세요
+          </h2>
 
-                    {/* Main Content Preview */}
-                    <div className="flex-1 space-y-4">
-                      {/* Stats Cards */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                        {[
-                          { label: '전체 설문', value: '24', change: '+12.5%' },
-                          { label: '총 응답 수', value: '18,432', change: '+28.4%' },
-                          { label: '평균 완료율', value: '74.3%', change: '+3.2pp' },
-                          { label: '활성 설문', value: '8', change: '+2' },
-                        ].map((stat) => (
-                          <div key={stat.label} className="bg-white rounded-xl p-3 lg:p-4">
-                            <p className="text-xs lg:text-sm text-secondary-500">{stat.label}</p>
-                            <p className="text-lg lg:text-2xl font-bold text-secondary-900 mt-1">{stat.value}</p>
-                            <p className="text-xs text-primary-500 mt-1">{stat.change}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Form Cards Grid */}
-                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="bg-white rounded-xl overflow-hidden">
-                            <div className="h-20 lg:h-28 bg-gradient-to-br from-primary-200 to-primary-100" />
-                            <div className="p-3 lg:p-4">
-                              <div className="h-3 bg-secondary-200 rounded w-3/4 mb-2" />
-                              <div className="h-2 bg-secondary-100 rounded w-1/2" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+          <div className="mt-14 grid sm:grid-cols-2 gap-x-12 gap-y-10">
+            {features.map((feature, i) => (
+              <div key={feature.title} className="pt-6 border-t border-secondary-200">
+                <p className="text-sm font-semibold text-primary-500 tabular-nums">0{i + 1}</p>
+                <h3 className="mt-2 text-xl font-bold tracking-tight">{feature.title}</h3>
+                <p className="mt-2.5 text-[15px] text-secondary-600 leading-relaxed">{feature.description}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8 bg-background-secondary">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">
-              설문 조사의 모든 것을 한 곳에서
+      {/* CTA */}
+      <section className="py-20 lg:py-28 px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+          <div>
+            <h2 className="text-[28px] lg:text-4xl font-bold tracking-[-0.025em] leading-snug">
+              첫 설문, 지금 3분이면 충분해요
             </h2>
-            <p className="text-lg text-secondary-600">
-              복잡한 설문 도구는 그만. FormFlex로 쉽고 빠르게 인사이트를 얻으세요.
-            </p>
+            <p className="mt-3 text-[17px] text-secondary-600">무료로 시작하고, 설문 개수 제한 없이 만들어보세요.</p>
           </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="bg-white rounded-2xl p-6 lg:p-8 hover:shadow-card-hover transition-shadow"
-              >
-                <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mb-5">
-                  {feature.icon}
-                </div>
-                <h3 className="text-lg font-semibold text-secondary-900 mb-2">{feature.title}</h3>
-                <p className="text-secondary-600 leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-secondary-900 mb-4">3단계로 완성하는 설문</h2>
-            <p className="text-lg text-secondary-600">복잡한 과정 없이 간단하게 시작하세요.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            {[
-              {
-                step: '01',
-                title: '설문 작성',
-                description: '직접 작성하거나 AI에게 맡기세요. 다양한 질문 유형과 이미지 첨부를 지원합니다.',
-              },
-              {
-                step: '02',
-                title: '공유 & 수집',
-                description: '링크 하나로 간편하게 공유하고 응답을 실시간으로 수집하세요.',
-              },
-              {
-                step: '03',
-                title: '분석 & 리포트',
-                description: '자동 생성된 차트와 통계로 인사이트를 얻고 PDF로 내보내세요.',
-              },
-            ].map((item, index) => (
-              <div key={item.step} className="text-center">
-                <div className="relative inline-flex">
-                  <div className="w-16 h-16 bg-primary-500 text-white rounded-2xl flex items-center justify-center text-2xl font-bold mb-6">
-                    {item.step}
-                  </div>
-                  {index < 2 && (
-                    <div className="hidden md:block absolute top-8 left-full w-full">
-                      <div className="h-0.5 bg-primary-200 w-full" />
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-xl font-semibold text-secondary-900 mb-3">{item.title}</h3>
-                <p className="text-secondary-600 leading-relaxed">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-3xl p-8 lg:p-16 text-center text-white">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">지금 바로 시작하세요</h2>
-            <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
-              무료로 시작하고 필요할 때 업그레이드하세요. 복잡한 설정 없이 바로 설문을 만들 수 있습니다.
-            </p>
-            <button
-              onClick={() => navigate('/signup')}
-              className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-2xl hover:bg-indigo-50 transition-colors"
-            >
-              무료로 시작하기
-            </button>
-          </div>
+          <button
+            onClick={() => navigate('/signup')}
+            className="self-start md:self-auto px-6 py-3.5 bg-secondary-900 text-white text-base font-semibold rounded-xl hover:bg-secondary-800 transition-colors"
+          >
+            무료로 시작하기
+          </button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-secondary-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="FormFlex" className="w-8 h-8" />
-              <span className="text-xl font-bold text-secondary-900">FormFlex</span>
-            </div>
-            <p className="text-secondary-500 text-sm">2024 FormFlex. All rights reserved.</p>
+      <footer className="py-10 px-5 sm:px-8 border-t border-secondary-100">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <img src={logo} alt="" className="w-6 h-6" />
+            <span className="font-bold tracking-tight">FormFlex</span>
           </div>
+          <p className="text-secondary-500 text-sm">© FormFlex</p>
         </div>
       </footer>
     </div>

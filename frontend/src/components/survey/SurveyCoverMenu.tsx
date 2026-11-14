@@ -178,7 +178,7 @@ function SurveyCoverMenu({ surveyId, open, attendCount, isDropdownOpen, setIsDro
           {items.map((itemName, index) => (
             <motion.li
               key={index}
-              className="flex items-center justify-center gap-2 w-full p-3 whitespace-nowrap rounded-md hover:bg-indigo-100 text-slate-700 hover:text-[#918DCA] transition-colors"
+              className="flex items-center justify-center gap-2 w-full p-3 whitespace-nowrap rounded-md hover:bg-primary-100 text-slate-700 hover:text-[#5BA0F8] transition-colors"
               onClick={(event) => handleItemClick(itemName, surveyId, event)} // 이벤트 객체 전달
               variants={itemVariants}
             >

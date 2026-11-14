@@ -61,8 +61,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: stats.totalResponses.toLocaleString(),
       change: '+28.4%',
       changeType: 'positive' as const,
-      iconBg: 'bg-indigo-50',
-      iconColor: 'text-indigo-500',
+      iconBg: 'bg-primary-50',
+      iconColor: 'text-primary-500',
     },
     {
       icon: ChartIcon,
@@ -70,8 +70,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
       value: `${stats.avgCompletion}%`,
       change: '+3.2pp',
       changeType: 'positive' as const,
-      iconBg: 'bg-purple-50',
-      iconColor: 'text-purple-500',
+      iconBg: 'bg-primary-50',
+      iconColor: 'text-primary-500',
     },
     {
       icon: TrendingIcon,
@@ -109,7 +109,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
                   {item.label}
                 </p>
                 <span className={`text-xs font-medium hidden sm:inline
-                  ${item.changeType === 'positive' ? 'text-indigo-500' : 'text-red-500'}`}>
+                  ${item.changeType === 'positive' ? 'text-primary-500' : 'text-red-500'}`}>
                   {item.change}
                 </span>
               </div>
