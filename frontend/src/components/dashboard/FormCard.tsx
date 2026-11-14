@@ -7,19 +7,13 @@ import { useAuthStore } from '../../store/AuthStore';
 import noImage from '../../assets/noImage.png';
 import SurveyCoverMenu from '../survey/SurveyCoverMenu';
 import Alert from '../common/Alert';
+import CoverArt from '../common/CoverArt';
 
 const MoreIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="1" />
     <circle cx="19" cy="12" r="1" />
     <circle cx="5" cy="12" r="1" />
-  </svg>
-);
-
-const DocumentIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-    <path d="M14 2v6h6" />
   </svg>
 );
 
@@ -30,13 +24,6 @@ const UsersIcon = () => (
   </svg>
 );
 
-const PercentIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="19" y1="5" x2="5" y2="19" />
-    <circle cx="6.5" cy="6.5" r="2.5" />
-    <circle cx="17.5" cy="17.5" r="2.5" />
-  </svg>
-);
 
 interface FormCardProps {
   survey: Survey;
@@ -50,13 +37,9 @@ export function FormCard({ survey, index }: FormCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const { textLabel, textColor } = calculateRemainingDays(survey.deadline);
+  const { textLabel } = calculateRemainingDays(survey.deadline);
   const isActive = new Date(survey.deadline) > new Date();
   const isMyFormPage = location.pathname.includes('/myform');
-  const surveyIdCode = `D-${survey.surveyId}`;
-
-  // Mock completion rate (since it's not in the API)
-  const completionRate = Math.floor(Math.random() * 30) + 70;
 
   const handleCardClick = () => {
     if (location.pathname.includes('/all')) {
@@ -81,28 +64,17 @@ export function FormCard({ survey, index }: FormCardProps) {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Generate category tag based on title (mock data)
-  const getCategory = () => {
-    const title = survey.title.toLowerCase();
-    if (title.includes('고객') || title.includes('만족')) return '고객 만족';
-    if (title.includes('시장')) return '시장 조사';
-    if (title.includes('직원') || title.includes('내부')) return '내부 조사';
-    if (title.includes('이벤트')) return '이벤트';
-    if (title.includes('마케팅') || title.includes('브랜드')) return '마케팅';
-    return '일반';
-  };
-
   return (
     <>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: (index + 1) * 0.05 }}
-        className="card overflow-hidden cursor-pointer group hover:shadow-card-hover transition-all duration-300"
+        className="bg-white rounded-2xl border border-secondary-200 overflow-hidden cursor-pointer group hover:border-secondary-300 hover:shadow-card-hover transition-[border-color,box-shadow] duration-200"
         onClick={handleCardClick}
       >
         {/* Image Section */}
-        <div className="relative aspect-[16/10] bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
+        <div className="relative aspect-[16/10] bg-secondary-50 border-b border-secondary-100 overflow-hidden">
           {survey.mainImageUrl ? (
             <img
               src={survey.mainImageUrl}
@@ -113,27 +85,13 @@ export function FormCard({ survey, index }: FormCardProps) {
               }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-24 h-20 bg-white/30 rounded-lg flex items-center justify-center">
-                <div className="space-y-2">
-                  <div className="h-2 w-16 bg-white/50 rounded" />
-                  <div className="h-2 w-12 bg-white/50 rounded" />
-                  <div className="h-2 w-14 bg-white/50 rounded" />
-                </div>
-              </div>
-            </div>
+            <CoverArt title={survey.title} className="transition-transform duration-500 group-hover:scale-[1.03]" />
           )}
 
           {/* Status Badge */}
-          <div className={`absolute top-3 left-3 px-2.5 py-1 text-xs font-medium rounded-md
-            ${isActive ? 'bg-primary-500 text-white' : 'bg-red-500 text-white'}`}>
-            {isActive ? 'Active' : 'Closed'}
-          </div>
-
-          {/* Category Tag */}
-          <div className="absolute bottom-3 right-3 px-2 py-1 text-xs font-medium rounded-md 
-                        bg-black/60 text-white backdrop-blur-sm">
-            {getCategory()}
+          <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 h-6 px-2 rounded-md bg-white/90 text-xs font-medium text-secondary-800 backdrop-blur">
+            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-success' : 'bg-secondary-300'}`} />
+            {isActive ? '진행중' : '종료'}
           </div>
         </div>
 
@@ -163,21 +121,12 @@ export function FormCard({ survey, index }: FormCardProps) {
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
-            <div className="flex items-center gap-1.5">
-              <DocumentIcon />
-              <span>{surveyIdCode}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-4 text-[13px] text-text-secondary">
+            <div className="flex items-center gap-1.5 tabular-nums">
               <UsersIcon />
-              <span>{survey.attendCount?.toLocaleString() || 0}</span>
+              <span>{(survey.attendCount || 0).toLocaleString()}명 응답</span>
             </div>
-            {isMyFormPage && (
-              <div className="flex items-center gap-1.5">
-                <PercentIcon />
-                <span>{completionRate}%</span>
-              </div>
-            )}
+            <span className="tabular-nums">{textLabel === '마감' ? '마감됨' : `마감 ${textLabel.replace(' - ', '-')}`}</span>
           </div>
         </div>
 

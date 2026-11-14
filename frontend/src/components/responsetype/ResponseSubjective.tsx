@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { QuestionData } from '../../types/questionData';
+import QuestionShell, { tint } from './QuestionShell';
 
 interface ResponseSubjectiveProps {
   question: QuestionData;
@@ -20,54 +21,28 @@ function ResponseSubjective({ question, color, index, onSubChange, isViewPage }:
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Question Header */}
-      <div className="flex items-center gap-3 px-6 pt-6 pb-4">
-        <span
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold text-white"
-          style={{ backgroundColor: color }}
-        >
-          {index}
-        </span>
-        <div className="flex-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">주관식</span>
-          <p className="text-base font-semibold text-gray-900 mt-0.5 leading-snug">{question.content}</p>
-        </div>
-      </div>
-
-      {question.imageUrl && (
-        <div className="px-6 pb-4">
-          <img
-            src={question.imageUrl}
-            alt="질문 이미지"
-            className="rounded-xl max-w-full max-h-64 object-contain"
-          />
-        </div>
-      )}
-
-      {/* Textarea */}
-      <div className="px-6 pb-6">
-        <textarea
-          value={userResponse}
-          onChange={handleChange}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          readOnly={isViewPage}
-          rows={4}
-          placeholder={isViewPage ? '미리보기 모드입니다.' : '답변을 입력해주세요...'}
-          className="w-full px-4 py-3 rounded-xl text-sm text-gray-700 placeholder-gray-300
-                     border-2 resize-none outline-none transition-all duration-150"
-          style={{
-            borderColor: isFocused ? color : '#E5E7EB',
-            backgroundColor: isViewPage ? '#F9FAFB' : 'white',
-            cursor: isViewPage ? 'not-allowed' : 'text',
-          }}
-        />
-        {!isViewPage && (
-          <p className="text-right text-xs text-gray-400 mt-1">{userResponse.length}자</p>
-        )}
-      </div>
-    </div>
+    <QuestionShell
+      index={index}
+      color={color}
+      typeLabel="자유롭게 적어 주세요"
+      content={question.content}
+      imageUrl={question.imageUrl}
+    >
+      <textarea
+        value={userResponse}
+        onChange={handleChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        readOnly={isViewPage}
+        rows={4}
+        placeholder={isViewPage ? '미리보기에서는 입력할 수 없어요' : '답변을 입력해 주세요'}
+        className={`w-full px-4 py-3 rounded-xl border text-[15px] leading-relaxed text-gray-900 placeholder:text-gray-400 resize-none outline-none transition-[border-color,box-shadow] ${
+          isViewPage ? 'bg-gray-50 cursor-not-allowed border-gray-200' : 'bg-white'
+        } ${isFocused ? '' : 'border-gray-200'}`}
+        style={isFocused ? { borderColor: color, boxShadow: `0 0 0 4px ${tint(color, 15)}` } : undefined}
+      />
+      {!isViewPage && <p className="mt-1.5 text-right text-xs text-gray-400 tabular-nums">{userResponse.length}자</p>}
+    </QuestionShell>
   );
 }
 

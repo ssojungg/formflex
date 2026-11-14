@@ -94,7 +94,19 @@ export default {
 
         // Legacy colors (for backward compatibility)
         darkGray: '#8E8E8E',
-        gray: '#B4B4B4',
+        gray: {
+          DEFAULT: '#B4B4B4',
+          50: '#f9fafb',
+          100: '#f2f4f6',
+          200: '#e5e8eb',
+          300: '#d1d6db',
+          400: '#b0b8c1',
+          500: '#8b95a1',
+          600: '#6b7684',
+          700: '#4e5968',
+          800: '#333d4b',
+          900: '#191f28',
+        },
         lightGray: '#D9D9D9',
         white: '#FFFFFF',
         green: '#10b981',

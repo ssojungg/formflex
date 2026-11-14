@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
@@ -50,13 +50,30 @@ function CardHead({ title, desc, right }: { title: string; desc?: string; right?
   );
 }
 
-function Meter({ pct, dim = false }: { pct: number; dim?: boolean }) {
+function Meter({ pct, dim = false, warn = false }: { pct: number; dim?: boolean; warn?: boolean }) {
+  const fill = warn ? 'bg-amber-400' : dim ? 'bg-primary-200' : 'bg-primary-500';
   return (
     <div className="h-2 w-full rounded-full overflow-hidden bg-secondary-100">
-      <div
-        className={`h-full rounded-full transition-[width] duration-700 ease-out ${dim ? 'bg-primary-200' : 'bg-primary-500'}`}
-        style={{ width: `${pct}%` }}
-      />
+      <div className={`h-full rounded-full transition-[width] duration-700 ease-out ${fill}`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+function KpiValue({ value, unit, delta }: { value: string | number; unit?: string; delta?: number }) {
+  return (
+    <div className="mt-1.5 flex items-baseline gap-2">
+      <span className="text-[26px] font-bold tracking-[-0.03em] text-secondary-900 tabular-nums leading-none">{value}</span>
+      {unit && <span className="text-sm text-secondary-500">{unit}</span>}
+      {delta !== undefined && (
+        <span
+          className={`ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold tabular-nums ${
+            delta > 0 ? 'bg-emerald-50 text-emerald-600' : delta < 0 ? 'bg-red-50 text-red-500' : 'bg-secondary-100 text-secondary-500'
+          }`}
+          title="어제 대비"
+        >
+          {delta > 0 ? `+${delta}` : delta}
+        </span>
+      )}
     </div>
   );
 }
@@ -84,6 +101,40 @@ function typeLabel(type: string) {
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+}
+
+// 응답 원본의 칸은 무응답이면 '', 답이 있으면 문자열 배열(복수 선택은 여러 개)로 온다.
+type Cell = string | string[] | null | undefined;
+
+function cellValues(cell: Cell): string[] {
+  if (Array.isArray(cell)) return cell.filter((v) => v != null && String(v).trim() !== '').map(String);
+  if (cell == null) return [];
+  const text = String(cell).trim();
+  return text ? [text] : [];
+}
+
+const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+
+function objectParticle(word: string) {
+  const code = word.trim().slice(-1).charCodeAt(0);
+  if (code >= 0xac00 && code <= 0xd7a3) return (code - 0xac00) % 28 === 0 ? '를' : '을';
+  return '을(를)';
+}
+
+function hourLabel(hour: number) {
+  const h = hour % 12 === 0 ? 12 : hour % 12;
+  return `${hour < 12 ? '오전' : '오후'} ${h}시`;
+}
+
+function relativeTime(dateStr: string) {
+  const minutes = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  if (minutes < 1) return '방금';
+  if (minutes < 60) return `${minutes}분 전`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}일 전`;
+  return formatDate(dateStr);
 }
 
 // ── Choice distribution ────────────────────────────────────────────────
@@ -198,7 +249,9 @@ function ResultPage() {
   const navigate = useNavigate();
   const { isMobile, isTablet } = useResponsive();
 
-  const [activeTab, setActiveTab] = useState<'question' | 'response' | 'trend'>('question');
+  const [activeTab, setActiveTab] = useState<'question' | 'cross' | 'rate' | 'response'>('question');
+  const [crossRowId, setCrossRowId] = useState<number | null>(null);
+  const [crossColId, setCrossColId] = useState<number | null>(null);
   const [showSidebar, setShowSidebar] = useState(!isMobile && !isTablet);
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -315,15 +368,135 @@ function ResultPage() {
   const choiceQuestions = (questionData?.questions || []).filter(
     (q) => q.type !== 'SUBJECTIVE_QUESTION' && (q.choices?.length || 0) > 0
   );
-  const questionSummary = choiceQuestions.map((q, i) => {
+  const allQuestions = questionData?.questions || [];
+  const qNumber = new Map(allQuestions.map((q, i) => [q.questionId, i + 1]));
+
+  const questionSummary = choiceQuestions.map((q) => {
     const optionTotal = (q.choices || []).reduce((sum, c) => sum + (c.count || 0), 0);
     const top = (q.choices || []).reduce<{ option: string; count: number } | null>(
       (best, c) => (!best || (c.count || 0) > best.count ? { option: c.option, count: c.count || 0 } : best),
       null,
     );
-    return { key: q.questionId, label: `Q${i + 1}`, content: q.content, total: optionTotal, top };
+    return { key: q.questionId, label: `Q${qNumber.get(q.questionId)}`, content: q.content, total: optionTotal, top };
   });
-  const questionSummaryMax = questionSummary.reduce((m, q) => Math.max(m, q.total), 0);
+
+  // ── Deeper analytics from raw response rows ────────────────────────
+  const rows = answerData?.list?.rows || [];
+  const head = answerData?.list?.head || [];
+  // 응답 원본의 열 순서는 질문 순서와 같지만, 어긋날 때를 대비해 질문 내용으로 다시 맞춘다.
+  const columnOf = (q: QuestionData) => {
+    const i = allQuestions.indexOf(q);
+    return head[i] === q.content ? i : head.indexOf(q.content);
+  };
+  const cellsOf = (row: (typeof rows)[number]) => row.responses as unknown as Cell[];
+
+  const responseRates = allQuestions.map((q) => {
+    const col = columnOf(q);
+    const answered = col < 0 ? 0 : rows.filter((r) => cellValues(cellsOf(r)[col]).length > 0).length;
+    return {
+      key: q.questionId,
+      label: `Q${qNumber.get(q.questionId)}`,
+      content: q.content,
+      answered,
+      rate: rows.length > 0 ? Math.round((answered / rows.length) * 100) : 0,
+    };
+  });
+  const avgResponseRate =
+    rows.length > 0 && responseRates.length > 0
+      ? Math.round(responseRates.reduce((s, r) => s + r.rate, 0) / responseRates.length)
+      : null;
+  const lowestRate =
+    rows.length > 0 && responseRates.length > 0
+      ? responseRates.reduce((low, r) => (r.rate < low.rate ? r : low))
+      : null;
+
+  const heatmap = useMemo(() => {
+    const grid = Array.from({ length: 7 }, () => new Array<number>(24).fill(0));
+    (answerData?.list?.rows || []).forEach((r) => {
+      const d = new Date(r.createdAt);
+      grid[(d.getDay() + 6) % 7][d.getHours()] += 1;
+    });
+    let max = 0;
+    let peakDay = -1;
+    let peakHour = -1;
+    for (let day = 0; day < 7; day += 1) {
+      for (let hour = 0; hour < 24; hour += 1) {
+        if (grid[day][hour] > max) {
+          max = grid[day][hour];
+          peakDay = day;
+          peakHour = hour;
+        }
+      }
+    }
+    return { grid, max, peakDay, peakHour };
+  }, [answerData]);
+
+  const deadlineInfo = useMemo(() => {
+    if (!questionData?.deadline) return null;
+    const end = new Date(questionData.deadline);
+    if (Number.isNaN(end.getTime())) return null;
+    const dayMs = 86400000;
+    const now = new Date();
+    const toDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const daysLeft = Math.round((toDay(end) - toDay(now)) / dayMs);
+    const start = questionData.createdAt ? new Date(questionData.createdAt) : now;
+    const totalDays = Math.max(1, Math.round((toDay(end) - toDay(start)) / dayMs));
+    const elapsed = Math.min(totalDays, Math.max(0, Math.round((toDay(now) - toDay(start)) / dayMs)));
+    return {
+      label: daysLeft > 0 ? `D-${daysLeft}` : daysLeft === 0 ? 'D-Day' : '마감',
+      endText: end.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }),
+      pct: Math.round((elapsed / totalDays) * 100),
+      closed: daysLeft < 0,
+    };
+  }, [questionData]);
+
+  const chronological = [...rows].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const recentResponses = chronological
+    .map((row, i) => {
+      const first = cellsOf(row).map(cellValues).find((v) => v.length > 0);
+      return { key: `${row.userId}-${i}`, no: i + 1, time: row.createdAt, preview: first ? first.join(', ') : '' };
+    })
+    .slice(-5)
+    .reverse();
+
+  // ── Crosstab between two choice questions ──────────────────────────
+  const crossRowQ = choiceQuestions.find((q) => q.questionId === crossRowId) || choiceQuestions[0];
+  const crossColQ =
+    choiceQuestions.find((q) => q.questionId === crossColId && q !== crossRowQ) ||
+    choiceQuestions.find((q) => q !== crossRowQ);
+  const crosstab = (() => {
+    if (!crossRowQ || !crossColQ) return null;
+    const rowOpts = (crossRowQ.choices || []).map((c) => c.option);
+    const colOpts = (crossColQ.choices || []).map((c) => c.option);
+    const counts = rowOpts.map(() => colOpts.map(() => 0));
+    const ra = columnOf(crossRowQ);
+    const cb = columnOf(crossColQ);
+    if (ra >= 0 && cb >= 0) {
+      rows.forEach((r) => {
+        const cells = cellsOf(r);
+        const bv = cellValues(cells[cb]);
+        cellValues(cells[ra]).forEach((a) => {
+          const ai = rowOpts.indexOf(a);
+          if (ai < 0) return;
+          bv.forEach((b) => {
+            const bi = colOpts.indexOf(b);
+            if (bi >= 0) counts[ai][bi] += 1;
+          });
+        });
+      });
+    }
+    const rowTotals = counts.map((line) => line.reduce((s, v) => s + v, 0));
+    let best: { a: string; b: string; share: number; ai: number; bi: number } | null = null;
+    for (let ai = 0; ai < rowOpts.length; ai += 1) {
+      for (let bi = 0; bi < colOpts.length; bi += 1) {
+        if (rowTotals[ai] >= 3) {
+          const share = Math.round((counts[ai][bi] / rowTotals[ai]) * 100);
+          if (!best || share > best.share) best = { a: rowOpts[ai], b: colOpts[bi], share, ai, bi };
+        }
+      }
+    }
+    return { rowOpts, colOpts, counts, rowTotals, best };
+  })();
 
   const isLoading = qLoading || aLoading;
   const hasData = !!surveyId && (!!questionData || !!answerData);
@@ -411,18 +584,18 @@ function ResultPage() {
     }
   };
 
-  const kpis = [
-    { label: '총 응답', value: stats.totalResponses.toLocaleString(), unit: '명', spark: true },
-    { label: '오늘 응답', value: stats.todayCount, unit: '명', delta: stats.todayDelta },
-    { label: '질문 수', value: stats.questionCount, unit: '개' },
-    { label: '주관식 답변', value: stats.subjectiveCount, unit: '개' },
-  ];
-
   const tabs = [
     { id: 'question' as const, label: '질문별 분석' },
+    { id: 'cross' as const, label: '교차 분석' },
+    { id: 'rate' as const, label: '응답률' },
     { id: 'response' as const, label: '응답 원본' },
-    { id: 'trend' as const, label: '질문 비교' },
   ];
+
+  const kpiCell = 'px-5 py-4 min-h-[112px] flex flex-col';
+  const kpiLabel = 'text-[13px] text-secondary-500';
+  const kpiFoot = 'mt-auto pt-2 text-xs text-secondary-400 truncate';
+  const selectClass =
+    'h-10 w-full sm:flex-1 min-w-0 px-3 rounded-lg border border-secondary-200 bg-white text-sm text-secondary-800 outline-none focus:border-primary-500';
 
   return (
     <div className="flex h-full bg-secondary-50 overflow-hidden print:overflow-visible print:block print:h-auto">
@@ -584,38 +757,48 @@ function ResultPage() {
 
                 {/* ── KPI strip ── */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-secondary-200 rounded-2xl border border-secondary-200 overflow-hidden [&>*]:bg-white">
-                  {kpis.map((k) => (
-                    <div key={k.label} className="px-5 py-4 min-h-[104px] flex flex-col">
-                      <p className="text-[13px] text-secondary-500">{k.label}</p>
-                      <div className="mt-1.5 flex items-baseline gap-2">
-                        <span className="text-[26px] font-bold tracking-[-0.03em] text-secondary-900 tabular-nums leading-none">
-                          {k.value}
-                        </span>
-                        <span className="text-sm text-secondary-500">{k.unit}</span>
-                        {k.delta !== undefined && (
-                          <span
-                            className={`ml-1 inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-semibold tabular-nums ${
-                              k.delta > 0
-                                ? 'bg-emerald-50 text-emerald-600'
-                                : k.delta < 0
-                                ? 'bg-red-50 text-red-500'
-                                : 'bg-secondary-100 text-secondary-500'
-                            }`}
-                            title="어제 대비"
-                          >
-                            {k.delta > 0 ? `+${k.delta}` : k.delta}
-                          </span>
-                        )}
+                  <div className={kpiCell}>
+                    <p className={kpiLabel}>총 응답</p>
+                    <KpiValue value={stats.totalResponses.toLocaleString()} unit="명" />
+                    {sparkTrend.length >= 2 ? (
+                      <div className="mt-auto -mx-1 h-8 print:hidden">
+                        <ReactApexChart options={sparkOptions} series={[{ data: sparkTrend }]} type="area" height={32} />
                       </div>
-                      {k.spark && sparkTrend.length >= 2 ? (
-                        <div className="mt-auto -mx-1 h-8 print:hidden">
-                          <ReactApexChart options={sparkOptions} series={[{ data: sparkTrend }]} type="area" height={32} />
+                    ) : (
+                      <p className={kpiFoot}>질문 {stats.questionCount}개</p>
+                    )}
+                  </div>
+                  <div className={kpiCell}>
+                    <p className={kpiLabel}>오늘 응답</p>
+                    <KpiValue value={stats.todayCount} unit="명" delta={stats.todayDelta} />
+                    <p className={kpiFoot}>어제 {stats.yesterdayCount}명</p>
+                  </div>
+                  <div className={kpiCell}>
+                    <p className={kpiLabel}>평균 응답률</p>
+                    <KpiValue value={avgResponseRate ?? '—'} unit={avgResponseRate === null ? undefined : '%'} />
+                    <p className={kpiFoot}>
+                      {lowestRate && lowestRate.rate < 100
+                        ? `가장 낮은 질문 ${lowestRate.label} · ${lowestRate.rate}%`
+                        : `질문 ${stats.questionCount}개 기준`}
+                    </p>
+                  </div>
+                  <div className={kpiCell}>
+                    <p className={kpiLabel}>마감까지</p>
+                    <KpiValue value={deadlineInfo?.label ?? '—'} />
+                    {deadlineInfo ? (
+                      <div className="mt-auto pt-2">
+                        <div className="h-1.5 rounded-full bg-secondary-100 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${deadlineInfo.closed ? 'bg-secondary-300' : 'bg-primary-500'}`}
+                            style={{ width: `${deadlineInfo.closed ? 100 : deadlineInfo.pct}%` }}
+                          />
                         </div>
-                      ) : k.delta !== undefined ? (
-                        <p className="mt-auto pt-2 text-xs text-secondary-400">어제 {stats.yesterdayCount}명</p>
-                      ) : null}
-                    </div>
-                  ))}
+                        <p className="mt-1.5 text-xs text-secondary-400">{deadlineInfo.endText} 마감</p>
+                      </div>
+                    ) : (
+                      <p className={kpiFoot}>마감일이 없어요</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* ── Trend + summary ── */}
@@ -674,6 +857,86 @@ function ResultPage() {
                             </li>
                           );
                         })}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── When responses arrive + recent ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                  <div className={`${CARD} p-5 lg:p-6 lg:col-span-2 min-w-0`}>
+                    <CardHead
+                      title="응답이 들어오는 시간"
+                      desc={
+                        heatmap.max > 0 && heatmap.peakDay >= 0
+                          ? `${DAYS[heatmap.peakDay]}요일 ${hourLabel(heatmap.peakHour)}에 응답이 가장 많았어요`
+                          : '요일·시간대별 응답 수'
+                      }
+                    />
+                    {heatmap.max === 0 ? (
+                      <EmptyBox title="아직 응답이 없어요" desc="응답이 들어오면 언제 많이 답하는지 보여 드려요" />
+                    ) : (
+                      <div>
+                        <div>
+                          <div className="grid gap-[3px]" style={{ gridTemplateColumns: '22px repeat(24, minmax(0, 1fr))' }}>
+                            {heatmap.grid.map((line, day) => (
+                              <Fragment key={DAYS[day]}>
+                                <span className="self-center text-[11px] leading-none text-secondary-500">{DAYS[day]}</span>
+                                {line.map((v, hour) => (
+                                  <span
+                                    // eslint-disable-next-line react/no-array-index-key
+                                    key={hour}
+                                    title={`${DAYS[day]}요일 ${hourLabel(hour)} · ${v}명`}
+                                    className="aspect-square rounded-[3px]"
+                                    style={{
+                                      backgroundColor: v === 0 ? '#f2f4f6' : `rgba(49, 130, 246, ${0.18 + 0.82 * (v / heatmap.max)})`,
+                                    }}
+                                  />
+                                ))}
+                              </Fragment>
+                            ))}
+                            <span />
+                            {Array.from({ length: 24 }).map((_, h) => (
+                              // eslint-disable-next-line react/no-array-index-key
+                              <span key={h} className="pt-1 text-center text-[10px] text-secondary-400 tabular-nums">
+                                {h % 6 === 0 ? h : ''}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="mt-3 flex items-center justify-end gap-1.5 text-[11px] text-secondary-400">
+                            적음
+                            {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+                              <span
+                                key={t}
+                                className="w-3 h-3 rounded-[3px]"
+                                style={{ backgroundColor: t === 0 ? '#f2f4f6' : `rgba(49, 130, 246, ${0.18 + 0.82 * t})` }}
+                              />
+                            ))}
+                            많음
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`${CARD} p-5 lg:p-6 min-w-0`}>
+                    <CardHead title="최근 응답" desc="가장 최근에 들어온 5건" />
+                    {recentResponses.length === 0 ? (
+                      <EmptyBox title="아직 응답이 없어요" desc="새 응답이 들어오면 여기에 쌓여요" />
+                    ) : (
+                      <ul className="space-y-3.5">
+                        {recentResponses.map((r) => (
+                          <li key={r.key} className="flex items-start gap-3">
+                            <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-baseline justify-between gap-2">
+                                <p className="text-sm font-semibold text-secondary-900 tabular-nums">응답 #{r.no}</p>
+                                <span className="shrink-0 text-xs text-secondary-400">{relativeTime(r.time)}</span>
+                              </div>
+                              <p className="mt-0.5 text-[13px] text-secondary-500 truncate">{r.preview || '답변 없음'}</p>
+                            </div>
+                          </li>
+                        ))}
                       </ul>
                     )}
                   </div>
@@ -760,12 +1023,15 @@ function ResultPage() {
                             <tr key={row.userId} className="hover:bg-secondary-50 transition-colors">
                               <td className="px-4 py-3 text-secondary-400 text-xs tabular-nums">{i + 1}</td>
                               <td className="px-4 py-3 text-secondary-500 text-xs whitespace-nowrap">{formatDate(row.createdAt)}</td>
-                              {row.responses.map((resp, j) => (
-                                // eslint-disable-next-line react/no-array-index-key
-                                <td key={j} className="px-4 py-3 text-secondary-800 text-[13px] max-w-[180px]">
-                                  <span className="block truncate" title={resp}>{resp || '—'}</span>
-                                </td>
-                              ))}
+                              {cellsOf(row).map((cell, j) => {
+                                const text = cellValues(cell).join(', ');
+                                return (
+                                  // eslint-disable-next-line react/no-array-index-key
+                                  <td key={j} className="px-4 py-3 text-secondary-800 text-[13px] max-w-[180px]">
+                                    <span className="block truncate" title={text}>{text || '—'}</span>
+                                  </td>
+                                );
+                              })}
                             </tr>
                           ))}
                         </tbody>
@@ -779,30 +1045,136 @@ function ResultPage() {
                   </div>
                 )}
 
-                {/* ── 질문 비교 탭 ── */}
-                {(activeTab === 'trend' || isPrinting) && (
+                {/* ── 교차 분석 탭 ── */}
+                {(activeTab === 'cross' || isPrinting) && (
+                  <div className={`${CARD} p-5 lg:p-6`}>
+                    <CardHead title="교차 분석" desc="두 질문의 답을 엇갈려 보면 응답자 그룹별 차이가 보여요" />
+                    {choiceQuestions.length < 2 || !crosstab ? (
+                      <EmptyBox title="객관식 질문이 두 개 이상 필요해요" desc="선택형 질문끼리만 엇갈려 볼 수 있어요" />
+                    ) : (
+                      <>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-5 print:hidden">
+                          <select
+                            value={crossRowQ?.questionId}
+                            onChange={(e) => setCrossRowId(Number(e.target.value))}
+                            className={selectClass}
+                            aria-label="가로줄 질문"
+                          >
+                            {choiceQuestions.map((q) => (
+                              <option key={q.questionId} value={q.questionId}>
+                                Q{qNumber.get(q.questionId)}. {q.content}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="shrink-0 text-center text-xs text-secondary-400">×</span>
+                          <select
+                            value={crossColQ?.questionId}
+                            onChange={(e) => setCrossColId(Number(e.target.value))}
+                            className={selectClass}
+                            aria-label="세로줄 질문"
+                          >
+                            {choiceQuestions
+                              .filter((q) => q !== crossRowQ)
+                              .map((q) => (
+                                <option key={q.questionId} value={q.questionId}>
+                                  Q{qNumber.get(q.questionId)}. {q.content}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+
+                        {crosstab.best && crosstab.best.share > 0 && (
+                          <p className="mb-4 rounded-lg bg-primary-50 px-3.5 py-2.5 text-sm leading-relaxed text-secondary-700">
+                            ‘{crosstab.best.a}’{objectParticle(crosstab.best.a)} 고른 사람의{' '}
+                            <b className="font-semibold text-primary-700">{crosstab.best.share}%</b>가 ‘{crosstab.best.b}’
+                            {objectParticle(crosstab.best.b)} 골랐어요.
+                          </p>
+                        )}
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-separate border-spacing-1 text-sm">
+                            <thead>
+                              <tr>
+                                <th className="min-w-[120px] px-2 py-1.5 text-left text-xs font-medium text-secondary-400">
+                                  Q{crossRowQ && qNumber.get(crossRowQ.questionId)} \ Q{crossColQ && qNumber.get(crossColQ.questionId)}
+                                </th>
+                                {crosstab.colOpts.map((o) => (
+                                  <th key={o} className="min-w-[84px] px-2 py-1.5 text-center text-xs font-medium text-secondary-600">
+                                    {o}
+                                  </th>
+                                ))}
+                                <th className="px-2 py-1.5 text-right text-xs font-medium text-secondary-400">합계</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {crosstab.rowOpts.map((ro, ai) => (
+                                <tr key={ro}>
+                                  <th scope="row" className="max-w-[200px] px-2 py-2 text-left text-[13px] font-medium text-secondary-700">
+                                    <span className="block truncate">{ro}</span>
+                                  </th>
+                                  {crosstab.colOpts.map((co, bi) => {
+                                    const v = crosstab.counts[ai][bi];
+                                    const share = crosstab.rowTotals[ai] > 0 ? v / crosstab.rowTotals[ai] : 0;
+                                    const isBest = !!crosstab.best && crosstab.best.ai === ai && crosstab.best.bi === bi;
+                                    return (
+                                      <td
+                                        key={co}
+                                        className={`rounded-lg px-2 py-2 text-center tabular-nums ${isBest ? 'ring-2 ring-inset ring-primary-500' : ''}`}
+                                        style={{ backgroundColor: v === 0 ? '#f9fafb' : `rgba(49, 130, 246, ${0.08 + 0.42 * share})` }}
+                                      >
+                                        <span className="text-[13px] font-semibold text-secondary-900">{v}</span>
+                                        {crosstab.rowTotals[ai] > 0 && (
+                                          <span className="ml-1 text-[11px] text-secondary-600">{Math.round(share * 100)}%</span>
+                                        )}
+                                      </td>
+                                    );
+                                  })}
+                                  <td className="px-2 py-2 text-right text-[13px] text-secondary-500 tabular-nums">
+                                    {crosstab.rowTotals[ai]}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <p className="mt-3 text-xs text-secondary-400">
+                          퍼센트는 가로줄 기준이에요. 복수 선택 질문은 고른 보기마다 한 번씩 셉니다.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* ── 응답률 탭 ── */}
+                {(activeTab === 'rate' || isPrinting) && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div className={`${CARD} p-5 lg:p-6`}>
-                      <CardHead title="질문별 응답 수" desc="객관식 질문마다 몇 명이 답했는지" />
-                      {questionSummary.length === 0 ? (
-                        <EmptyBox title="객관식 질문이 없어요" desc="선택형 질문이 있어야 비교할 수 있어요" />
+                      <CardHead
+                        title="질문별 응답률"
+                        desc={
+                          lowestRate && lowestRate.rate < 100
+                            ? `${lowestRate.label}에서 가장 많이 건너뛰었어요`
+                            : '응답자 중 각 질문에 답한 비율'
+                        }
+                      />
+                      {rows.length === 0 ? (
+                        <EmptyBox title="아직 응답이 없어요" desc="응답이 들어오면 질문마다 얼마나 답했는지 보여 드려요" />
                       ) : (
                         <ul className="flex flex-col gap-4">
-                          {questionSummary.map((q) => {
-                            const pct = questionSummaryMax > 0 ? (q.total / questionSummaryMax) * 100 : 0;
-                            return (
-                              <li key={q.key}>
-                                <div className="flex items-center justify-between gap-3 mb-1.5">
-                                  <span className="flex items-center gap-2 min-w-0">
-                                    <span className="shrink-0 text-[11px] font-bold text-secondary-400 tabular-nums w-6">{q.label}</span>
-                                    <span className="text-sm text-secondary-700 truncate">{q.content}</span>
-                                  </span>
-                                  <span className="shrink-0 text-sm font-semibold text-secondary-900 tabular-nums">{q.total}명</span>
-                                </div>
-                                <Meter pct={pct} />
-                              </li>
-                            );
-                          })}
+                          {responseRates.map((r) => (
+                            <li key={r.key}>
+                              <div className="flex items-center justify-between gap-3 mb-1.5">
+                                <span className="flex items-center gap-2 min-w-0">
+                                  <span className="shrink-0 w-7 text-[11px] font-bold text-secondary-400 tabular-nums">{r.label}</span>
+                                  <span className="text-sm text-secondary-700 truncate">{r.content}</span>
+                                </span>
+                                <span className="shrink-0 text-sm font-semibold text-secondary-900 tabular-nums">
+                                  {r.rate}%<span className="ml-1 text-xs font-normal text-secondary-400">{r.answered}명</span>
+                                </span>
+                              </div>
+                              <Meter pct={r.rate} warn={lowestRate !== null && r.key === lowestRate.key && r.rate < 100} />
+                            </li>
+                          ))}
                         </ul>
                       )}
                     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import { QuestionData } from '../../types/questionData';
+import QuestionShell, { tint } from './QuestionShell';
 
 interface ResponseCheckBoxProps {
   question: QuestionData;
@@ -24,83 +25,52 @@ function ResponseCheckBox({ question, color, index, onOptionSelect, isViewPage }
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Question Header */}
-      <div className="flex items-center gap-3 px-6 pt-6 pb-4">
-        <span
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold text-white"
-          style={{ backgroundColor: color }}
-        >
-          {index}
-        </span>
-        <div className="flex-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">체크박스 (복수선택)</span>
-          <p className="text-base font-semibold text-gray-900 mt-0.5 leading-snug">{question.content}</p>
-        </div>
-      </div>
-
-      {question.imageUrl && (
-        <div className="px-6 pb-4">
-          <img
-            src={question.imageUrl}
-            alt="질문 이미지"
-            className="rounded-xl max-w-full max-h-64 object-contain"
-          />
-        </div>
-      )}
-
-      {/* Options */}
-      <div className="px-6 pb-6 space-y-2">
+    <QuestionShell
+      index={index}
+      color={color}
+      typeLabel={selectedOptions.length > 0 ? `여러 개 고를 수 있어요 · ${selectedOptions.length}개 선택` : '여러 개 고를 수 있어요'}
+      content={question.content}
+      imageUrl={question.imageUrl}
+    >
+      <div className="space-y-2">
         {question.choices?.map((choice) => {
           const isSelected = selectedOptions.includes(choice.choiceId);
-          const content = (
+          const row = (
             <button
               type="button"
-              key={choice.choiceId}
               onClick={() => handleOptionSelect(choice.choiceId)}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 text-left
-                         transition-all duration-150"
-              style={
-                isSelected
-                  ? { borderColor: color, backgroundColor: `${color}12` }
-                  : { borderColor: '#E5E7EB', backgroundColor: 'white' }
-              }
               disabled={isViewPage}
+              className={`flex items-center gap-3 w-full min-h-[48px] px-4 py-3 rounded-xl border text-left transition-colors disabled:cursor-not-allowed ${
+                isSelected ? '' : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300'
+              }`}
+              style={isSelected ? { borderColor: color, backgroundColor: tint(color, 8) } : undefined}
             >
-              {/* Custom checkbox */}
-              <div
-                className="w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-all"
-                style={
-                  isSelected
-                    ? { borderColor: color, backgroundColor: color }
-                    : { borderColor: '#D1D5DB' }
-                }
+              <span
+                className="w-[18px] h-[18px] rounded-[5px] border-2 flex-shrink-0 flex items-center justify-center transition-colors"
+                style={isSelected ? { borderColor: color, backgroundColor: color } : { borderColor: '#d1d6db' }}
               >
                 {isSelected && (
-                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <svg width="10" height="8" viewBox="0 0 11 9" fill="none">
                     <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
-              </div>
-              <span
-                className="text-sm font-medium"
-                style={{ color: isSelected ? color : '#374151' }}
-              >
+              </span>
+              <span className={`text-[15px] ${isSelected ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
                 {choice.option}
               </span>
             </button>
           );
 
           return isViewPage ? (
-            <Tooltip key={choice.choiceId} title="미리보기 모드에서는 선택할 수 없습니다." arrow>
-              <div>{content}</div>
+            <Tooltip key={choice.choiceId} title="미리보기에서는 고를 수 없어요" arrow>
+              <div>{row}</div>
             </Tooltip>
           ) : (
-            <div key={choice.choiceId}>{content}</div>
+            <div key={choice.choiceId}>{row}</div>
           );
         })}
       </div>
-    </div>
+    </QuestionShell>
   );
 }
 

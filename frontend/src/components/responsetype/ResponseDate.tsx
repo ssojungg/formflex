@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { QuestionData } from '../../types/questionData';
+import QuestionShell, { tint } from './QuestionShell';
 
 interface ResponseDateProps {
   question: QuestionData;
@@ -29,55 +30,25 @@ function ResponseDate({ question, color, index, onSubChange, isViewPage }: Respo
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Question Header */}
-      <div className="flex items-center gap-3 px-6 pt-6 pb-4">
-        <span
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold text-white"
-          style={{ backgroundColor: color }}
-        >
-          {index}
+    <QuestionShell index={index} color={color} typeLabel="날짜를 골라 주세요" content={question.content} imageUrl={question.imageUrl}>
+      <div className="relative max-w-xs">
+        <span className="absolute inset-y-0 left-4 flex items-center text-gray-400 pointer-events-none">
+          <CalendarIcon />
         </span>
-        <div className="flex-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">날짜</span>
-          <p className="text-base font-semibold text-gray-900 mt-0.5 leading-snug">{question.content}</p>
-        </div>
+        <input
+          type="date"
+          value={userResponse}
+          onChange={handleChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          disabled={isViewPage}
+          className={`w-full h-12 pl-11 pr-4 rounded-xl border text-[15px] text-gray-900 outline-none transition-[border-color,box-shadow] ${
+            isViewPage ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'
+          } ${isFocused ? '' : 'border-gray-200'}`}
+          style={isFocused ? { borderColor: color, boxShadow: `0 0 0 4px ${tint(color, 15)}` } : undefined}
+        />
       </div>
-
-      {question.imageUrl && (
-        <div className="px-6 pb-4">
-          <img
-            src={question.imageUrl}
-            alt="질문 이미지"
-            className="rounded-xl max-w-full max-h-64 object-contain"
-          />
-        </div>
-      )}
-
-      {/* Date Input */}
-      <div className="px-6 pb-6">
-        <div className="relative">
-          <span className="absolute inset-y-0 left-4 flex items-center text-gray-300 pointer-events-none">
-            <CalendarIcon />
-          </span>
-          <input
-            type="date"
-            value={userResponse}
-            onChange={handleChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            disabled={isViewPage}
-            className="w-full pl-11 pr-4 py-3 rounded-xl text-sm text-gray-700
-                       border-2 outline-none transition-all duration-150"
-            style={{
-              borderColor: isFocused ? color : '#E5E7EB',
-              backgroundColor: isViewPage ? '#F9FAFB' : 'white',
-              cursor: isViewPage ? 'not-allowed' : 'text',
-            }}
-          />
-        </div>
-      </div>
-    </div>
+    </QuestionShell>
   );
 }
 

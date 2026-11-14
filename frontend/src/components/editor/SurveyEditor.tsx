@@ -446,6 +446,60 @@ const EditableInput = React.memo(
 );
 EditableInput.displayName = 'EditableInput';
 
+// ==================== SMALL UI ====================
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function fontStack(font: string) {
+  return font === 'Pretendard'
+    ? '"Pretendard Variable", Pretendard, sans-serif'
+    : `"${font}", "Pretendard Variable", Pretendard, sans-serif`;
+}
+
+function Switch({
+  checked,
+  onChange,
+  color,
+  label,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  color?: string;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={(e) => {
+        e.stopPropagation();
+        onChange(!checked);
+      }}
+      className={`relative inline-flex h-6 w-10 min-h-0 min-w-0 shrink-0 items-center rounded-full transition-colors ${checked ? '' : 'bg-secondary-200'}`}
+      style={checked ? { backgroundColor: color || '#3182f6' } : undefined}
+    >
+      <span
+        className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-[18px]' : 'translate-x-0.5'}`}
+      />
+    </button>
+  );
+}
+
+const TYPE_META: Partial<Record<QuestionType, (typeof QUESTION_TYPES)[number]>> = Object.fromEntries(
+  QUESTION_TYPES.map((t) => [t.type, t]),
+);
+
+const FIELD_BOX = 'flex items-center px-3.5 rounded-xl border border-secondary-200 bg-secondary-50 text-sm text-secondary-400';
+const TOOL_BUTTON =
+  'p-2 rounded-lg text-secondary-500 hover:text-secondary-900 hover:bg-secondary-100 transition-colors disabled:opacity-30 disabled:pointer-events-none';
+
 // ==================== QUESTION CARD ====================
 const QuestionCard = React.memo(
   ({
@@ -487,119 +541,73 @@ const QuestionCard = React.memo(
     onUploadImage: (id: string) => void;
     onRemoveImage: (id: string, index: number) => void;
   }) => {
+    const meta = TYPE_META[question.type];
+    const TypeIcon = meta?.icon;
+    const stop = (fn: () => void) => (e: React.MouseEvent) => {
+      e.stopPropagation();
+      fn();
+    };
+
     return (
-      <Reorder.Item
-        value={question}
-        onClick={() => onSelect(question.id)}
-        className={`group bg-white border-2 transition-all duration-200 ${isSelected ? 'shadow-lg' : 'border-transparent hover:border-secondary-200 shadow-sm hover:shadow-md'}`}
-        style={{
-          borderRadius: cardRadius,
-          ...(isSelected ? { borderColor: themeColor } : {}),
-        }}
-      >
-        <div className="p-5">
+      <Reorder.Item value={question} id={`question-${question.id}`} onClick={() => onSelect(question.id)} className="list-none">
+        <div
+          className="group relative bg-white border border-secondary-200 transition-[border-color,box-shadow] duration-200 hover:border-secondary-300"
+          style={{
+            borderRadius: cardRadius,
+            ...(isSelected ? { borderColor: themeColor, boxShadow: `0 0 0 3px ${themeColor}1f` } : {}),
+          }}
+        >
+        <div className="absolute left-1.5 top-[26px] text-secondary-300 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+          <GripIcon />
+        </div>
+
+        <div className="p-5 sm:p-6">
           {/* Header */}
-          <div className="flex items-start gap-3 mb-4">
-            <div className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-secondary-400">
-              <GripIcon />
-            </div>
-            <div
-              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-semibold"
-              style={{ backgroundColor: themeColor + '22', color: themeColor }}
+          <div className="flex items-start gap-3">
+            <span
+              className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[13px] font-bold tabular-nums"
+              style={{ backgroundColor: `${themeColor}1a`, color: themeColor }}
             >
               {index + 1}
-            </div>
+            </span>
             <div className="flex-1 min-w-0">
               <EditableInput
                 value={question.label}
                 onChange={(val) => onUpdate(question.id, { label: val })}
                 placeholder="질문을 입력하세요"
-                className="w-full text-base font-medium text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-400"
+                className="w-full text-[16px] font-semibold leading-7 text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-400"
               />
-              {question.required && (
-                <span className="inline-block mt-1 text-[10px] font-medium text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
-                  필수
-                </span>
-              )}
-            </div>
-            <div
-              className={`flex items-center gap-0.5 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-            >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenAI(question.id);
-                }}
-                className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                title="AI 생성"
-              >
-                <SparkleIcon />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUploadImage(question.id);
-                }}
-                className="p-1.5 rounded-lg text-secondary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
-                title="이미지 추가"
-              >
-                <ImageIcon />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMove(question.id, 'up');
-                }}
-                disabled={isFirst}
-                className="p-1.5 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 disabled:opacity-30 transition-colors"
-              >
-                <ChevronIcon direction="up" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMove(question.id, 'down');
-                }}
-                disabled={isLast}
-                className="p-1.5 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 disabled:opacity-30 transition-colors"
-              >
-                <ChevronIcon direction="down" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCopy(question.id);
-                }}
-                className="p-1.5 rounded-lg text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 transition-colors"
-              >
-                <CopyIcon />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(question.id);
-                }}
-                className="p-1.5 rounded-lg text-secondary-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-              >
-                <TrashIcon />
-              </button>
+              <div className="mt-0.5 flex items-center gap-2 text-xs text-secondary-500">
+                {meta && TypeIcon && (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="inline-flex scale-75 -ml-0.5 text-secondary-400">
+                      <TypeIcon />
+                    </span>
+                    {meta.label}
+                  </span>
+                )}
+                {question.required && <span className="font-medium text-error">필수</span>}
+              </div>
             </div>
           </div>
 
           {/* Question Images */}
           {question.imageUrls && question.imageUrls.length > 0 && (
-            <div className="ml-10 mb-4 flex gap-2 overflow-x-auto">
+            <div className="mt-4 ml-10 flex gap-2 overflow-x-auto pt-2">
               {question.imageUrls.map((url, i) => (
+                // eslint-disable-next-line react/no-array-index-key
                 <div key={i} className="relative flex-shrink-0">
-                  <img src={url} alt={`Question image ${i + 1}`} className="w-24 h-18 object-cover rounded-lg" />
+                  <img
+                    src={url}
+                    alt={`질문 이미지 ${i + 1}`}
+                    className="w-28 h-20 object-cover rounded-lg border border-secondary-200"
+                  />
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveImage(question.id, i);
-                    }}
-                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center hover:bg-red-600"
+                    onClick={stop(() => onRemoveImage(question.id, i))}
+                    aria-label="이미지 삭제"
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-secondary-900 rounded-full text-white flex items-center justify-center hover:bg-secondary-700"
                   >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
@@ -609,43 +617,37 @@ const QuestionCard = React.memo(
             </div>
           )}
 
-          {/* Question Preview */}
-          <div className="ml-10">
+          {/* Answer preview */}
+          <div className="mt-4 ml-10">
             {(question.type === 'short_text' || question.type === 'email' || question.type === 'number') && (
-              <div className="py-2.5 px-3 bg-secondary-50 rounded-xl text-secondary-400 text-sm border border-secondary-100">
-                {question.type === 'email'
-                  ? '이메일 주소 입력'
-                  : question.type === 'number'
-                    ? '숫자 입력'
-                    : '답변 입력'}
-              </div>
-            )}
-            {question.type === 'long_text' && (
-              <div className="py-3 px-3 bg-secondary-50 rounded-xl text-secondary-400 text-sm border border-secondary-100 h-20">
-                자세한 답변 입력
+              <div className={`${FIELD_BOX} h-11`}>
+                {question.type === 'email' ? 'name@example.com' : question.type === 'number' ? '숫자 입력' : '짧은 답변'}
               </div>
             )}
 
+            {question.type === 'long_text' && <div className={`${FIELD_BOX} h-24 !items-start pt-3`}>자세한 답변</div>}
+
             {(question.type === 'single_choice' || question.type === 'multiple_choice') && question.options && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {question.options.map((opt, i) => (
-                  <div key={opt.id} className="flex items-center gap-2 group/opt">
-                    <div
-                      className={`w-4 h-4 border-2 border-secondary-300 flex-shrink-0 ${question.type === 'single_choice' ? 'rounded-full' : 'rounded'}`}
+                  <div
+                    key={opt.id}
+                    className="flex items-center gap-3 h-11 px-3.5 rounded-xl border border-secondary-200 group/opt"
+                  >
+                    <span
+                      className={`w-[18px] h-[18px] border-2 border-secondary-300 shrink-0 ${question.type === 'single_choice' ? 'rounded-full' : 'rounded-[5px]'}`}
                     />
                     <EditableInput
                       value={opt.text}
                       onChange={(val) => onUpdateOption(question.id, opt.id, val)}
-                      placeholder={`옵션 ${i + 1}`}
-                      className="flex-1 text-sm text-secondary-700 bg-transparent border-none outline-none placeholder:text-secondary-400"
+                      placeholder={`보기 ${i + 1}`}
+                      className="flex-1 min-w-0 text-[15px] text-secondary-800 bg-transparent border-none outline-none placeholder:text-secondary-400"
                     />
                     {isSelected && question.options!.length > 1 && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteOption(question.id, opt.id);
-                        }}
-                        className="opacity-0 group-hover/opt:opacity-100 p-1 rounded text-secondary-400 hover:text-red-500 transition-all"
+                        onClick={stop(() => onDeleteOption(question.id, opt.id))}
+                        aria-label="보기 삭제"
+                        className="p-1 rounded-md text-secondary-300 hover:text-error opacity-0 group-hover/opt:opacity-100 transition-opacity"
                       >
                         <CloseIcon />
                       </button>
@@ -654,14 +656,11 @@ const QuestionCard = React.memo(
                 ))}
                 {isSelected && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddOption(question.id);
-                    }}
-                    className="flex items-center gap-1.5 text-sm py-1"
+                    onClick={stop(() => onAddOption(question.id))}
+                    className="flex items-center gap-1.5 h-10 px-1 text-sm font-medium"
                     style={{ color: themeColor }}
                   >
-                    <PlusIcon /> 옵션 추가
+                    <PlusIcon /> 보기 추가
                   </button>
                 )}
               </div>
@@ -669,30 +668,26 @@ const QuestionCard = React.memo(
 
             {question.type === 'dropdown' && question.options && (
               <div>
-                <select
-                  disabled
-                  className="w-full py-2.5 px-3 bg-secondary-50 rounded-xl text-secondary-400 text-sm border border-secondary-100 appearance-none"
-                >
-                  <option>선택하세요</option>
-                </select>
+                <div className={`${FIELD_BOX} h-11 justify-between`}>
+                  <span>선택해 주세요</span>
+                  <ChevronIcon />
+                </div>
                 {isSelected && (
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-3 space-y-1.5">
                     {question.options.map((opt, i) => (
                       <div key={opt.id} className="flex items-center gap-2 group/opt">
-                        <span className="text-xs text-secondary-400 w-5">{i + 1}.</span>
+                        <span className="w-5 text-right text-xs text-secondary-400 tabular-nums">{i + 1}</span>
                         <EditableInput
                           value={opt.text}
                           onChange={(val) => onUpdateOption(question.id, opt.id, val)}
-                          placeholder={`옵션 ${i + 1}`}
-                          className="flex-1 py-1.5 px-2 text-sm text-secondary-700 bg-secondary-50 rounded-lg border border-secondary-200 outline-none focus:border-primary-500"
+                          placeholder={`보기 ${i + 1}`}
+                          className="flex-1 min-w-0 h-10 px-3 text-sm text-secondary-800 bg-white rounded-lg border border-secondary-200 outline-none focus:border-primary-500"
                         />
                         {question.options!.length > 1 && (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteOption(question.id, opt.id);
-                            }}
-                            className="opacity-0 group-hover/opt:opacity-100 p-1 rounded text-secondary-400 hover:text-red-500 transition-all"
+                            onClick={stop(() => onDeleteOption(question.id, opt.id))}
+                            aria-label="보기 삭제"
+                            className="p-1 rounded-md text-secondary-300 hover:text-error opacity-0 group-hover/opt:opacity-100 transition-opacity"
                           >
                             <CloseIcon />
                           </button>
@@ -700,14 +695,11 @@ const QuestionCard = React.memo(
                       </div>
                     ))}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddOption(question.id);
-                      }}
-                      className="flex items-center gap-1.5 text-sm py-1"
-                    style={{ color: themeColor }}
+                      onClick={stop(() => onAddOption(question.id))}
+                      className="flex items-center gap-1.5 h-10 pl-7 text-sm font-medium"
+                      style={{ color: themeColor }}
                     >
-                      <PlusIcon /> 옵션 추가
+                      <PlusIcon /> 보기 추가
                     </button>
                   </div>
                 )}
@@ -715,11 +707,12 @@ const QuestionCard = React.memo(
             )}
 
             {question.type === 'rating' && (
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 {Array.from({ length: question.ratingMax || 5 }).map((_, i) => (
                   <div
+                    // eslint-disable-next-line react/no-array-index-key
                     key={i}
-                    className="w-9 h-9 rounded-lg bg-secondary-50 border border-secondary-200 flex items-center justify-center text-sm text-secondary-500 font-medium"
+                    className="w-11 h-11 rounded-xl border border-secondary-200 flex items-center justify-center text-sm font-medium text-secondary-500 tabular-nums"
                   >
                     {i + 1}
                   </div>
@@ -728,34 +721,52 @@ const QuestionCard = React.memo(
             )}
 
             {question.type === 'date' && (
-              <div className="py-2.5 px-3 bg-secondary-50 rounded-xl text-secondary-400 text-sm border border-secondary-100 w-44">
-                YYYY-MM-DD
+              <div className={`${FIELD_BOX} h-11 w-52 gap-2`}>
+                <CalendarIcon /> 연도. 월. 일
               </div>
             )}
           </div>
 
-          {/* Settings */}
+          {/* Toolbar */}
           {isSelected && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-4 pt-4 border-t border-secondary-100 ml-10"
-            >
-              <label className="flex items-center gap-2 text-sm text-secondary-600 cursor-pointer">
-                <input
-                  type="checkbox"
+            <div className="mt-5 pt-4 ml-10 border-t border-secondary-100 flex flex-wrap items-center justify-between gap-3">
+              <label className="flex items-center gap-2.5 text-sm text-secondary-700 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                <Switch
                   checked={question.required}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    onUpdate(question.id, { required: e.target.checked });
-                  }}
-                  className="w-4 h-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
+                  onChange={(v) => onUpdate(question.id, { required: v })}
+                  color={themeColor}
+                  label="필수 응답"
                 />
                 필수 응답
               </label>
-            </motion.div>
+              <div className="flex items-center gap-0.5">
+                <button onClick={stop(() => onOpenAI(question.id))} className={TOOL_BUTTON} title="AI로 질문·보기 만들기">
+                  <SparkleIcon />
+                </button>
+                <button onClick={stop(() => onUploadImage(question.id))} className={TOOL_BUTTON} title="이미지 추가">
+                  <ImageIcon />
+                </button>
+                <span className="mx-1 h-4 w-px bg-secondary-200" />
+                <button onClick={stop(() => onMove(question.id, 'up'))} disabled={isFirst} className={TOOL_BUTTON} title="위로">
+                  <ChevronIcon direction="up" />
+                </button>
+                <button onClick={stop(() => onMove(question.id, 'down'))} disabled={isLast} className={TOOL_BUTTON} title="아래로">
+                  <ChevronIcon direction="down" />
+                </button>
+                <button onClick={stop(() => onCopy(question.id))} className={TOOL_BUTTON} title="복제">
+                  <CopyIcon />
+                </button>
+                <button
+                  onClick={stop(() => onDelete(question.id))}
+                  className="p-2 rounded-lg text-secondary-500 hover:text-error hover:bg-red-50 transition-colors"
+                  title="삭제"
+                >
+                  <TrashIcon />
+                </button>
+              </div>
+            </div>
           )}
+        </div>
         </div>
       </Reorder.Item>
     );
@@ -793,7 +804,6 @@ function SurveyEditor() {
   const [reportEmail, setReportEmail] = useState('');
 
   // UI States
-  const [showSettings, setShowSettings] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
@@ -894,14 +904,15 @@ function SurveyEditor() {
       required: false,
       options: ['single_choice', 'multiple_choice', 'dropdown'].includes(type)
         ? [
-            { id: `opt-${Date.now()}-1`, text: '옵션 1' },
-            { id: `opt-${Date.now()}-2`, text: '옵션 2' },
+            { id: `opt-${Date.now()}-1`, text: '보기 1' },
+            { id: `opt-${Date.now()}-2`, text: '보기 2' },
           ]
         : undefined,
       ratingMax: type === 'rating' ? 5 : undefined,
     };
     setQuestions([...questions, newQ]);
     setSelectedQuestionId(newQ.id);
+    return newQ.id;
   };
 
   const updateQuestion = useCallback((id: string, updates: Partial<Question>) => {
@@ -942,7 +953,7 @@ function SurveyEditor() {
       prev.map((q) =>
         q.id !== qId || !q.options
           ? q
-          : { ...q, options: [...q.options, { id: `opt-${Date.now()}`, text: `옵션 ${q.options.length + 1}` }] },
+          : { ...q, options: [...q.options, { id: `opt-${Date.now()}`, text: `보기 ${q.options.length + 1}` }] },
       ),
     );
   }, []);
@@ -1142,11 +1153,174 @@ function SurveyEditor() {
 
   const suggestedTags = ['고객만족', '시장조사', 'HR', '이벤트', 'NPS', 'UX', '피드백'];
 
+  const focusQuestion = (id: string) => {
+    setSelectedQuestionId(id);
+    document.getElementById(`question-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const handleAddQuestion = (type: QuestionType) => {
+    const id = addQuestion(type);
+    window.setTimeout(() => {
+      document.getElementById(`question-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  };
+
+  const dismissCoachMark = () => {
+    setShowCoachMark(false);
+    localStorage.setItem('customize_coach_dismissed', '1');
+  };
+
+  const canvasFont = fontStack(selectedFont);
+  const panelLabel = 'mb-2.5 text-xs font-medium text-secondary-500';
+  const modalPanel = 'relative w-full bg-white rounded-2xl border border-secondary-200 shadow-modal';
+  const inputClass =
+    'w-full h-11 px-3.5 rounded-xl bg-secondary-50 border border-secondary-200 text-sm text-secondary-900 outline-none transition-colors focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10';
+
+  const designPanel = (
+    <div className="p-5 space-y-7">
+      <section>
+        <p className={panelLabel}>테마 색</p>
+        <div className="grid grid-cols-8 gap-2">
+          {THEME_COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => setThemeColor(color)}
+              aria-label={`테마 색 ${color}`}
+              className="w-full aspect-square min-h-0 min-w-0 rounded-full transition-transform hover:scale-110"
+              style={{
+                backgroundColor: color,
+                boxShadow: themeColor === color ? `0 0 0 2px #fff, 0 0 0 4px ${color}` : undefined,
+              }}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <p className={panelLabel}>글꼴</p>
+        <div className="space-y-1.5">
+          {FONTS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setSelectedFont(f)}
+              className={`w-full flex items-center justify-between h-10 px-3 rounded-lg border text-sm transition-colors ${
+                selectedFont === f
+                  ? 'border-secondary-900 text-secondary-900 font-medium'
+                  : 'border-secondary-200 text-secondary-700 hover:bg-secondary-50'
+              }`}
+              style={{ fontFamily: fontStack(f) }}
+            >
+              {f}
+              {selectedFont === f && <CheckIcon />}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <p className={panelLabel}>카드 모서리</p>
+        <div className="grid grid-cols-3 gap-2">
+          {CARD_SHAPES.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setCardShape(s.id)}
+              className={`flex flex-col items-center gap-2 py-3 rounded-lg border text-xs transition-colors ${
+                cardShape === s.id
+                  ? 'border-secondary-900 text-secondary-900 font-medium'
+                  : 'border-secondary-200 text-secondary-600 hover:bg-secondary-50'
+              }`}
+            >
+              <span
+                className="w-9 h-6 border-2 border-current"
+                style={{ borderRadius: s.id === 'sharp' ? 3 : s.id === 'pill' ? 12 : 7 }}
+              />
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <p className={panelLabel}>공개 범위</p>
+        <div className="flex items-center justify-between gap-3 px-3.5 py-3 rounded-lg border border-secondary-200">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-secondary-900">{isPublic ? '전체 공개' : '로그인 필요'}</p>
+            <p className="mt-0.5 text-xs text-secondary-500">
+              {isPublic ? '링크만 있으면 누구나 응답할 수 있어요' : '로그인한 사람만 응답할 수 있어요'}
+            </p>
+          </div>
+          <Switch checked={isPublic} onChange={setIsPublic} label="전체 공개" />
+        </div>
+      </section>
+
+      <section>
+        <p className={panelLabel}>해시태그</p>
+        <div className="flex gap-1.5">
+          <input
+            type="text"
+            value={hashtagInput}
+            onChange={(e) => setHashtagInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                addHashtag();
+              }
+            }}
+            placeholder="#태그"
+            className="flex-1 min-w-0 h-9 px-3 rounded-lg bg-secondary-50 border border-secondary-200 text-sm outline-none focus:bg-white focus:border-primary-500"
+          />
+          <button
+            type="button"
+            onClick={addHashtag}
+            className="h-9 px-3 rounded-lg bg-secondary-900 text-white text-sm font-medium hover:bg-secondary-800 transition-colors"
+          >
+            추가
+          </button>
+        </div>
+        {hashtags.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {hashtags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-0.5 h-7 pl-2.5 pr-1 rounded-md bg-secondary-100 text-xs text-secondary-700"
+              >
+                #{tag}
+                <button
+                  type="button"
+                  onClick={() => setHashtags(hashtags.filter((t) => t !== tag))}
+                  aria-label={`${tag} 삭제`}
+                  className="inline-flex min-h-0 min-w-0 scale-75 text-secondary-400 hover:text-secondary-800"
+                >
+                  <CloseIcon />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {suggestedTags
+            .filter((t) => !hashtags.includes(t))
+            .slice(0, 5)
+            .map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setHashtags([...hashtags, tag])}
+                className="h-7 px-2.5 rounded-md border border-dashed border-secondary-300 text-xs text-secondary-500 hover:text-secondary-800 hover:border-secondary-400 transition-colors"
+              >
+                + {tag}
+              </button>
+            ))}
+        </div>
+      </section>
+    </div>
+  );
+
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50/30"
-      style={{ fontFamily: selectedFont }}
-    >
+    <div className="min-h-screen bg-secondary-50">
       {/* Hidden inputs */}
       <input type="file" ref={coverInputRef} accept="image/*" onChange={handleCoverUpload} className="hidden" />
       <input
@@ -1158,46 +1332,44 @@ function SurveyEditor() {
       />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-secondary-100">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 flex-1 min-w-0 mr-4">
+      <header className="sticky top-0 z-40 h-14 bg-white/90 backdrop-blur border-b border-secondary-200">
+        <div className="h-full px-3 sm:px-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 transition-colors flex-shrink-0"
+              aria-label="뒤로 가기"
+              className="p-2 rounded-lg text-secondary-500 hover:text-secondary-900 hover:bg-secondary-100 transition-colors flex-shrink-0"
             >
               <ArrowLeftIcon />
             </button>
-            <div className="h-6 w-px bg-secondary-200 flex-shrink-0" />
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="설문 제목을 입력하세요"
-              className="text-lg font-semibold text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-400 flex-1 min-w-0"
-            />
+            <div className="hidden sm:block h-5 w-px bg-secondary-200 flex-shrink-0" />
+            <div className="min-w-0 pl-1">
+              <p className="text-sm font-semibold text-secondary-900 truncate">{title.trim() || '제목 없는 설문'}</p>
+              <p className="text-[11px] text-secondary-500">
+                {isSaved ? '임시 저장됨' : `질문 ${questions.length}개`}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2.5 rounded-xl text-secondary-500 hover:text-secondary-700 hover:bg-secondary-100 transition-colors"
-            >
-              <SettingsIcon />
-            </button>
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
             <button
               onClick={() => setShowPreview(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-secondary-600 hover:bg-secondary-100 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-100 transition-colors"
+              title="미리보기"
             >
-              <EyeIcon /> 미리보기
+              <EyeIcon />
+              <span className="hidden sm:inline">미리보기</span>
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-secondary-600 hover:bg-secondary-100 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-1.5 h-9 px-2.5 sm:px-3 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-100 transition-colors"
+              title="임시 저장"
             >
-              <SaveIcon /> {isSaved ? '저장됨' : '저장'}
+              <SaveIcon />
+              <span className="hidden sm:inline">{isSaved ? '저장됨' : '임시 저장'}</span>
             </button>
             <button
               onClick={() => setShowPublish(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-colors text-sm font-medium shadow-sm"
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors"
             >
               <SendIcon /> 배포
             </button>
@@ -1205,46 +1377,119 @@ function SurveyEditor() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex gap-8">
-        {/* Main Editor */}
-        <main className="flex-1 max-w-3xl">
-          {/* Cover Image */}
-          <div
-            onClick={() => coverInputRef.current?.click()}
-            className="relative mb-6 rounded-2xl overƒflow-hidden cursor-pointer group"
-            style={{ backgroundColor: `${themeColor}20`, minHeight: coverImage ? 'auto' : '120px' }}
-          >
-            {coverImage ? (
-              <>
-                <img src={coverImage} alt="Cover" className="w-full h-48 object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <span className="text-white font-medium">커버 이미지 변경</span>
-                </div>
-              </>
+      <div className="flex">
+        {/* Left: question types + outline */}
+        <aside className="hidden lg:flex flex-col self-start sticky top-14 w-60 shrink-0 h-[calc(100vh-3.5rem)] overflow-y-auto bg-white border-r border-secondary-200">
+          <div className="p-3 pt-5">
+            <p className="px-2 mb-2 text-xs font-medium text-secondary-500">질문 추가</p>
+            <div className="space-y-0.5">
+              {QUESTION_TYPES.map(({ type, label, icon: Icon }) => (
+                <button
+                  key={type}
+                  onClick={() => handleAddQuestion(type)}
+                  className="group w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm text-secondary-700 hover:bg-secondary-100 transition-colors"
+                >
+                  <span className="w-7 h-7 rounded-md border border-secondary-200 bg-white flex items-center justify-center text-secondary-500 group-hover:text-secondary-900 transition-colors">
+                    <Icon />
+                  </span>
+                  {label}
+                  <span className="ml-auto text-secondary-400 opacity-0 group-hover:opacity-100 transition-opacity scale-75">
+                    <PlusIcon />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1 p-3 pt-4 border-t border-secondary-100">
+            <p className="px-2 mb-2 text-xs font-medium text-secondary-500">
+              질문 목록 <span className="ml-0.5 text-secondary-400 tabular-nums">{questions.length}</span>
+            </p>
+            {questions.length === 0 ? (
+              <p className="px-2 text-[13px] text-secondary-400">아직 질문이 없어요</p>
             ) : (
-              <div className="flex items-center justify-center h-full py-10 text-secondary-400 group-hover:text-secondary-600 transition-colors">
-                <ImageIcon /> <span className="ml-2">커버 이미지 추가 (클릭)</span>
-              </div>
+              <ol className="space-y-0.5">
+                {questions.map((q, i) => (
+                  <li key={q.id}>
+                    <button
+                      onClick={() => focusQuestion(q.id)}
+                      className={`w-full flex items-start gap-2 px-2 py-1.5 rounded-lg text-left text-[13px] transition-colors ${
+                        selectedQuestionId === q.id
+                          ? 'bg-secondary-100 text-secondary-900 font-medium'
+                          : 'text-secondary-600 hover:bg-secondary-50'
+                      }`}
+                    >
+                      <span className="w-5 shrink-0 text-secondary-400 tabular-nums">{i + 1}</span>
+                      <span className="truncate">{q.label || '제목 없는 질문'}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
             )}
           </div>
+        </aside>
 
-          {/* Description */}
-          <div
-            className="bg-white rounded-2xl p-6 shadow-sm border border-secondary-100 mb-6"
-            style={{ borderRadius: cardRadius }}
-          >
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="설문에 대한 설명을 추가하세요"
-              className="w-full text-secondary-600 bg-transparent border-none outline-none resize-none placeholder:text-secondary-400"
-              rows={2}
-            />
-          </div>
+        {/* Canvas */}
+        <main className="flex-1 min-w-0 px-4 sm:px-8 pt-6 sm:pt-10 pb-32">
+          <div className="max-w-2xl mx-auto space-y-3">
+            {/* Survey header card */}
+            <div
+              className="bg-white border border-secondary-200 overflow-hidden"
+              style={{ borderRadius: cardRadius, fontFamily: canvasFont }}
+            >
+              <div
+                onClick={() => coverInputRef.current?.click()}
+                className="relative h-36 sm:h-44 cursor-pointer group"
+                style={
+                  coverImage
+                    ? undefined
+                    : {
+                        backgroundColor: `${themeColor}14`,
+                        backgroundImage: `radial-gradient(${themeColor}38 1px, transparent 1px)`,
+                        backgroundSize: '16px 16px',
+                      }
+                }
+              >
+                {coverImage ? (
+                  <>
+                    <img src={coverImage} alt="커버" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <span className="text-sm font-medium text-white">커버 이미지 바꾸기</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/90 border border-secondary-200 text-[13px] font-medium text-secondary-600 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                      <ImageIcon /> 커버 이미지 추가
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="px-6 sm:px-8 pt-6 pb-7">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="제목 없는 설문"
+                  className="w-full text-[26px] sm:text-[30px] leading-tight font-bold tracking-[-0.02em] text-secondary-900 bg-transparent border-none outline-none placeholder:text-secondary-300"
+                />
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="응답자에게 보여줄 설명을 적어 주세요 (선택)"
+                  rows={2}
+                  className="mt-2 w-full text-[15px] leading-relaxed text-secondary-600 bg-transparent border-none outline-none resize-none placeholder:text-secondary-400"
+                />
+              </div>
+            </div>
 
-          {/* Questions */}
-          <div className="space-y-3">
-            <Reorder.Group axis="y" values={questions} onReorder={setQuestions}>
+            {/* Questions */}
+            <Reorder.Group
+              axis="y"
+              values={questions}
+              onReorder={setQuestions}
+              className="space-y-3"
+              style={{ fontFamily: canvasFont }}
+            >
               {questions.map((q, i) => (
                 <QuestionCard
                   key={q.id}
@@ -1269,350 +1514,128 @@ function SurveyEditor() {
                 />
               ))}
             </Reorder.Group>
-          </div>
 
-          {/* Add Question */}
-          <div
-            className="mt-6 bg-white rounded-2xl p-5 shadow-sm border border-dashed border-secondary-200"
-            style={{ borderRadius: cardRadius }}
-          >
-            <p className="text-sm font-medium text-secondary-700 mb-3">질문 추가</p>
-            <div className="flex flex-wrap gap-2">
-              {QUESTION_TYPES.map(({ type, label, icon: Icon }) => (
-                <button
-                  key={type}
-                  onClick={() => addQuestion(type)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary-50 text-secondary-600 hover:bg-primary-50 hover:text-primary-700 transition-colors text-sm"
-                >
-                  <Icon /> {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {questions.length === 0 && (
-            <div className="mt-12 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-100 flex items-center justify-center">
-                <PlusIcon />
-              </div>
-              <h3 className="text-lg font-semibold text-secondary-900 mb-1">질문을 추가해보세요</h3>
-              <p className="text-secondary-500">위 버튼을 클릭하여 첫 번째 질문을 추가하세요</p>
-            </div>
-          )}
-        </main>
-
-        {/* Mobile Customize FAB + Coach Mark */}
-        <div className="fixed bottom-6 right-6 z-40 lg:hidden flex flex-col items-end gap-2">
-          <AnimatePresence>
-            {showCoachMark && (
-              <motion.div
-                initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                className="relative text-white text-xs rounded-xl px-3 py-2.5 max-w-[180px] text-center"
-                style={{
-                  backgroundColor: themeColor,
-                  boxShadow: `0 8px 24px ${themeColor}55, 0 2px 8px ${themeColor}33`,
-                }}
+            {questions.length === 0 ? (
+              <div
+                className="bg-white border border-dashed border-secondary-300 px-6 py-10 text-center"
+                style={{ borderRadius: cardRadius }}
               >
-                여기서 디자인을 수정해 보세요!
-                <button
-                  onClick={() => {
-                    setShowCoachMark(false);
-                    localStorage.setItem('customize_coach_dismissed', '1');
-                  }}
-                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-white"
-                  style={{ backgroundColor: `${themeColor}cc` }}
-                >
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-                {/* 말풍선 꼬리 */}
-                <div
-                  className="absolute -bottom-1.5 right-6 w-3 h-3 rotate-45"
-                  style={{ backgroundColor: themeColor }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <button
-            onClick={() => {
-              setShowMobileCustomize(true);
-              setShowCoachMark(false);
-              localStorage.setItem('customize_coach_dismissed', '1');
-            }}
-            className="w-14 h-14 rounded-full text-white shadow-xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
-            style={{ backgroundColor: themeColor }}
-            title="커스터마이징"
-          >
-            <SettingsIcon />
-          </button>
-        </div>
-
-        {/* Mobile Customization Drawer */}
-        <AnimatePresence>
-          {showMobileCustomize && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
-                onClick={() => setShowMobileCustomize(false)}
-              />
-              <motion.aside
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed inset-y-0 right-0 z-50 w-80 max-w-full bg-white shadow-2xl overflow-y-auto lg:hidden"
-              >
-                <div className="p-5 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-secondary-900">커스터마이징</h3>
-                    <button
-                      onClick={() => setShowMobileCustomize(false)}
-                      className="p-2 rounded-lg hover:bg-secondary-100 transition-colors"
-                    >
-                      <CloseIcon />
-                    </button>
-                  </div>
-                  {/* Color Theme */}
-                  <div>
-                    <p className="text-sm font-medium text-secondary-700 mb-2">테마 색상</p>
-                    <div className="flex flex-wrap gap-2">
-                      {THEME_COLORS.map((color) => (
-                        <button
-                          key={color}
-                          onClick={() => setThemeColor(color)}
-                          className={`w-8 h-8 rounded-full transition-all ${themeColor === color ? 'ring-2 ring-offset-2 ring-secondary-400 scale-110' : 'hover:scale-110'}`}
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  {/* Font */}
-                  <div>
-                    <p className="text-sm font-medium text-secondary-700 mb-2">폰트</p>
-                    <select
-                      value={selectedFont}
-                      onChange={(e) => setSelectedFont(e.target.value)}
-                      className="w-full px-3 py-2 bg-secondary-50 border border-secondary-200 rounded-xl text-sm focus:outline-none focus:border-primary-500"
-                    >
-                      {FONTS.map((f) => (
-                        <option key={f} value={f}>{f}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {/* Card Shape */}
-                  <div>
-                    <p className="text-sm font-medium text-secondary-700 mb-2">카드 모양</p>
-                    <div className="flex gap-2">
-                      {CARD_SHAPES.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => setCardShape(s.id)}
-                          className={`flex-1 py-2 text-xs font-medium rounded-lg transition-colors ${cardShape === s.id ? 'text-white' : 'bg-secondary-100 text-secondary-600 hover:bg-secondary-200'}`}
-                          style={cardShape === s.id ? { backgroundColor: themeColor } : undefined}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Hashtags */}
-                  <div>
-                    <p className="text-sm font-medium text-secondary-700 mb-2">해시태그</p>
-                    <div className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={hashtagInput}
-                        onChange={(e) => setHashtagInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                            e.preventDefault();
-                            addHashtag();
-                          }
-                        }}
-                        placeholder="#태그"
-                        className="flex-1 px-3 py-2 bg-secondary-50 border border-secondary-200 rounded-xl text-sm outline-none focus:border-primary-500"
-                      />
-                      <button onClick={addHashtag} className="px-3 py-2 text-white rounded-xl text-sm font-medium" style={{ backgroundColor: themeColor }}>
-                        추가
+                <p className="text-[15px] font-semibold text-secondary-900">첫 질문을 추가해 보세요</p>
+                <p className="mt-1 text-sm text-secondary-500">자주 쓰는 유형부터 골라 보세요.</p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {QUESTION_TYPES.filter((t) => ['single_choice', 'short_text', 'rating'].includes(t.type)).map(
+                    ({ type, label, icon: Icon }) => (
+                      <button
+                        key={type}
+                        onClick={() => handleAddQuestion(type)}
+                        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg border border-secondary-200 bg-white text-sm text-secondary-700 hover:bg-secondary-50 transition-colors"
+                      >
+                        <Icon /> {label}
                       </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {hashtags.map((tag) => (
-                        <span key={tag} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs" style={{ backgroundColor: `${themeColor}20`, color: themeColor }}>
-                          #{tag}
-                          <button onClick={() => setHashtags(hashtags.filter((t) => t !== tag))} className="hover:opacity-70">
-                            <CloseIcon />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                    ),
+                  )}
                 </div>
-              </motion.aside>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Right Sidebar - Customization Panel (Desktop only) */}
-        <aside className="hidden lg:block w-72 flex-shrink-0">
-          <div className="sticky top-24 bg-white rounded-2xl shadow-sm border border-secondary-100 p-5 space-y-6">
-            <h3 className="font-semibold text-secondary-900">커스터마이징</h3>
-
-            {/* Color Theme */}
-            <div>
-              <p className="text-sm font-medium text-secondary-700 mb-2">테마 색상</p>
-              <div className="flex flex-wrap gap-2">
-                {THEME_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setThemeColor(color)}
-                    className={`w-8 h-8 rounded-full transition-all ${themeColor === color ? 'ring-2 ring-offset-2 ring-secondary-400 scale-110' : 'hover:scale-110'}`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
               </div>
-            </div>
-
-            {/* Font */}
-            <div>
-              <p className="text-sm font-medium text-secondary-700 mb-2">폰트</p>
-              <select
-                value={selectedFont}
-                onChange={(e) => setSelectedFont(e.target.value)}
-                className="w-full px-3 py-2 bg-secondary-50 border border-secondary-200 rounded-xl text-sm focus:outline-none focus:border-primary-500"
-              >
-                {FONTS.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Card Shape */}
-            <div>
-              <p className="text-sm font-medium text-secondary-700 mb-2">카드 모양</p>
-              <div className="flex gap-2">
-                {CARD_SHAPES.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setCardShape(s.id)}
-                    className={`flex-1 py-2 text-xs font-medium rounded-lg transition-colors ${cardShape === s.id ? 'text-white' : 'bg-secondary-100 text-secondary-600 hover:bg-secondary-200'}`}
-                    style={cardShape === s.id ? { backgroundColor: themeColor } : undefined}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Hashtags */}
-            <div>
-              <p className="text-sm font-medium text-secondary-700 mb-2">해시태그</p>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={hashtagInput}
-                  onChange={(e) => setHashtagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                      e.preventDefault();
-                      addHashtag();
-                    }
-                  }}
-                  placeholder="#태그"
-                  className="flex-1 px-3 py-2 bg-secondary-50 border border-secondary-200 rounded-xl text-sm outline-none focus:border-primary-500"
-                />
-                <button
-                  onClick={addHashtag}
-                  className="px-3 py-2 text-white rounded-xl text-sm font-medium transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: themeColor }}
-                >
-                  추가
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {hashtags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs"
-                    style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
-                  >
-                    #{tag}
+            ) : (
+              <div className="bg-white border border-secondary-200 p-4 sm:p-5" style={{ borderRadius: cardRadius }}>
+                <p className="mb-3 text-xs font-medium text-secondary-500">질문 추가</p>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                  {QUESTION_TYPES.map(({ type, label, icon: Icon }) => (
                     <button
-                      onClick={() => setHashtags(hashtags.filter((t) => t !== tag))}
-                      className="hover:opacity-60"
+                      key={type}
+                      onClick={() => handleAddQuestion(type)}
+                      className="flex flex-col items-center gap-1.5 py-3 rounded-xl border border-secondary-200 text-xs text-secondary-700 hover:border-secondary-300 hover:bg-secondary-50 transition-colors"
                     >
-                      <CloseIcon />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {suggestedTags
-                  .filter((t) => !hashtags.includes(t))
-                  .slice(0, 4)
-                  .map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => setHashtags([...hashtags, tag])}
-                      className="px-2 py-1 text-xs bg-secondary-100 text-secondary-600 rounded-full hover:bg-secondary-200"
-                    >
-                      #{tag}
+                      <span className="text-secondary-500">
+                        <Icon />
+                      </span>
+                      {label}
                     </button>
                   ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
+        </main>
+
+        {/* Right: design */}
+        <aside className="hidden xl:block self-start sticky top-14 w-72 shrink-0 h-[calc(100vh-3.5rem)] overflow-y-auto bg-white border-l border-secondary-200">
+          <div className="px-5 pt-5">
+            <p className="text-sm font-semibold text-secondary-900">디자인</p>
+            <p className="mt-0.5 text-xs text-secondary-500">응답자가 보는 화면에 적용돼요.</p>
+          </div>
+          {designPanel}
         </aside>
       </div>
 
-      {/* Settings Modal */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          >
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowSettings(false)} />
+      {/* Mobile design button + coach mark */}
+      <div className="fixed bottom-6 right-5 z-40 xl:hidden flex flex-col items-end gap-2.5">
+        <AnimatePresence>
+          {showCoachMark && (
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className="relative max-w-[200px] rounded-xl bg-secondary-900 px-3.5 py-2.5 text-xs leading-relaxed text-white shadow-lg"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-secondary-900">설문 설정</h2>
-                <button onClick={() => setShowSettings(false)} className="p-2 rounded-lg hover:bg-secondary-100">
+              색·글꼴·카드 모양은 여기서 바꿀 수 있어요
+              <button
+                onClick={dismissCoachMark}
+                aria-label="안내 닫기"
+                className="absolute -top-2 -right-2 w-6 h-6 min-h-0 min-w-0 rounded-full bg-secondary-700 text-white flex items-center justify-center"
+              >
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+              <span className="absolute -bottom-1 right-5 w-2.5 h-2.5 rotate-45 bg-secondary-900" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <button
+          onClick={() => {
+            setShowMobileCustomize(true);
+            dismissCoachMark();
+          }}
+          aria-label="디자인 설정 열기"
+          className="w-12 h-12 rounded-full bg-secondary-900 text-white shadow-[0_8px_24px_-6px_rgba(25,31,40,0.45)] flex items-center justify-center hover:bg-secondary-800 transition-colors"
+        >
+          <PaletteIcon />
+        </button>
+      </div>
+
+      {/* Mobile design drawer */}
+      <AnimatePresence>
+        {showMobileCustomize && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-secondary-900/40 xl:hidden"
+              onClick={() => setShowMobileCustomize(false)}
+            />
+            <motion.aside
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+              className="fixed inset-y-0 right-0 z-50 w-80 max-w-[88vw] bg-white shadow-modal overflow-y-auto xl:hidden"
+            >
+              <div className="sticky top-0 z-10 flex items-center justify-between h-14 px-5 bg-white border-b border-secondary-100">
+                <p className="text-sm font-semibold text-secondary-900">디자인</p>
+                <button
+                  onClick={() => setShowMobileCustomize(false)}
+                  aria-label="닫기"
+                  className="p-2 -mr-2 rounded-lg text-secondary-500 hover:bg-secondary-100 transition-colors"
+                >
                   <CloseIcon />
                 </button>
               </div>
-              <div className="space-y-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-secondary-900">공개 설문</p>
-                    <p className="text-sm text-secondary-500">누구나 이 설문을 볼 수 있습니다</p>
-                  </div>
-                  <button
-                    onClick={() => setIsPublic(!isPublic)}
-                    className={`w-11 h-6 rounded-full transition-colors ${isPublic ? 'bg-primary-500' : 'bg-secondary-300'}`}
-                  >
-                    <div
-                      className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${isPublic ? 'translate-x-5' : 'translate-x-0.5'}`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+              {designPanel}
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
 
@@ -1623,99 +1646,113 @@ function SurveyEditor() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
           >
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPreview(false)} />
+            <div className="absolute inset-0 bg-secondary-900/40" onClick={() => setShowPreview(false)} />
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden"
+              initial={{ y: 16, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 16, opacity: 0 }}
+              className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-secondary-50 rounded-2xl border border-secondary-200 shadow-modal overflow-hidden"
             >
-              <div className="sticky top-0 bg-white border-b border-secondary-100 px-6 py-4 flex items-center justify-between">
-                <h2 className="font-semibold text-secondary-900">미리보기</h2>
-                <button onClick={() => setShowPreview(false)} className="p-2 rounded-lg hover:bg-secondary-100">
+              <div className="flex items-center justify-between h-12 px-4 bg-white border-b border-secondary-200 flex-shrink-0">
+                <p className="text-sm font-semibold text-secondary-900">
+                  미리보기 <span className="ml-1 font-normal text-secondary-500">응답자에게 이렇게 보여요</span>
+                </p>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  aria-label="닫기"
+                  className="p-2 -mr-2 rounded-lg text-secondary-500 hover:bg-secondary-100 transition-colors"
+                >
                   <CloseIcon />
                 </button>
               </div>
-              <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
-                {coverImage && (
-                  <img src={coverImage} alt="Cover" className="w-full h-32 object-cover rounded-xl mb-6" />
-                )}
-                <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: `${themeColor}15` }}>
-                  <h1 className="text-xl font-bold text-secondary-900 mb-2">{title || '제목 없는 설문'}</h1>
-                  {description && <p className="text-secondary-600">{description}</p>}
-                </div>
-                <div className="space-y-5">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-8" style={{ fontFamily: canvasFont }}>
+                <div className="max-w-xl mx-auto space-y-3">
+                  <div className="bg-white border border-secondary-200 overflow-hidden" style={{ borderRadius: cardRadius }}>
+                    {coverImage ? (
+                      <img src={coverImage} alt="커버" className="w-full h-36 object-cover" />
+                    ) : (
+                      <div className="h-2" style={{ backgroundColor: themeColor }} />
+                    )}
+                    <div className="p-6">
+                      <h1 className="text-2xl font-bold tracking-[-0.02em] text-secondary-900">
+                        {title || '제목 없는 설문'}
+                      </h1>
+                      {description && (
+                        <p className="mt-2 text-[15px] leading-relaxed text-secondary-600 whitespace-pre-line">{description}</p>
+                      )}
+                    </div>
+                  </div>
+
                   {questions.map((q, i) => (
-                    <div key={q.id} className="p-4 bg-secondary-50 rounded-xl">
-                      <p className="font-medium text-secondary-900 mb-3">
-                        <span className="text-primary-600 mr-2">Q{i + 1}.</span>
+                    <div key={q.id} className="bg-white border border-secondary-200 p-5 sm:p-6" style={{ borderRadius: cardRadius }}>
+                      <p className="mb-4 text-[16px] font-semibold text-secondary-900">
+                        <span className="mr-1.5 tabular-nums" style={{ color: themeColor }}>
+                          {i + 1}.
+                        </span>
                         {q.label}
-                        {q.required && <span className="text-red-500 ml-1">*</span>}
+                        {q.required && <span className="ml-1 text-error">*</span>}
                       </p>
                       {(q.type === 'short_text' || q.type === 'email' || q.type === 'number') && (
-                        <input
-                          type="text"
-                          disabled
-                          placeholder="답변 입력"
-                          className="w-full px-3 py-2.5 rounded-lg bg-white border border-secondary-200 text-sm"
-                        />
+                        <div className={`${FIELD_BOX} h-11`}>
+                          {q.type === 'email' ? 'name@example.com' : q.type === 'number' ? '숫자 입력' : '답변을 입력해 주세요'}
+                        </div>
                       )}
-                      {q.type === 'long_text' && (
-                        <textarea
-                          disabled
-                          placeholder="답변 입력"
-                          rows={3}
-                          className="w-full px-3 py-2.5 rounded-lg bg-white border border-secondary-200 text-sm resize-none"
-                        />
-                      )}
+                      {q.type === 'long_text' && <div className={`${FIELD_BOX} h-24 !items-start pt-3`}>답변을 입력해 주세요</div>}
                       {(q.type === 'single_choice' || q.type === 'multiple_choice') && q.options && (
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           {q.options.map((opt) => (
-                            <label key={opt.id} className="flex items-center gap-2 text-sm text-secondary-700">
-                              <input type={q.type === 'single_choice' ? 'radio' : 'checkbox'} disabled />
+                            <div
+                              key={opt.id}
+                              className="flex items-center gap-3 h-12 px-3.5 rounded-xl border border-secondary-200 text-[15px] text-secondary-800"
+                            >
+                              <span
+                                className={`w-[18px] h-[18px] border-2 border-secondary-300 shrink-0 ${q.type === 'single_choice' ? 'rounded-full' : 'rounded-[5px]'}`}
+                              />
                               {opt.text}
-                            </label>
+                            </div>
                           ))}
                         </div>
                       )}
-                      {q.type === 'dropdown' && q.options && (
-                        <select
-                          disabled
-                          className="w-full px-3 py-2.5 rounded-lg bg-white border border-secondary-200 text-sm"
-                        >
-                          <option>선택하세요</option>
-                          {q.options.map((opt) => (
-                            <option key={opt.id}>{opt.text}</option>
-                          ))}
-                        </select>
+                      {q.type === 'dropdown' && (
+                        <div className={`${FIELD_BOX} h-11 justify-between`}>
+                          <span>선택해 주세요</span>
+                          <ChevronIcon />
+                        </div>
                       )}
                       {q.type === 'rating' && (
-                        <div className="flex gap-2">
-                          {Array.from({ length: q.ratingMax || 5 }).map((_, i) => (
+                        <div className="flex flex-wrap gap-1.5">
+                          {Array.from({ length: q.ratingMax || 5 }).map((_, n) => (
                             <div
-                              key={i}
-                              className="w-10 h-10 rounded-lg bg-white border border-secondary-200 flex items-center justify-center text-sm text-secondary-500"
+                              // eslint-disable-next-line react/no-array-index-key
+                              key={n}
+                              className="w-11 h-11 rounded-xl border border-secondary-200 flex items-center justify-center text-sm font-medium text-secondary-600 tabular-nums"
                             >
-                              {i + 1}
+                              {n + 1}
                             </div>
                           ))}
                         </div>
                       )}
                       {q.type === 'date' && (
-                        <input
-                          type="date"
-                          disabled
-                          className="px-3 py-2.5 rounded-lg bg-white border border-secondary-200 text-sm"
-                        />
+                        <div className={`${FIELD_BOX} h-11 w-52 gap-2`}>
+                          <CalendarIcon /> 연도. 월. 일
+                        </div>
                       )}
                     </div>
                   ))}
+
+                  {questions.length === 0 ? (
+                    <div className="py-12 text-center text-sm text-secondary-500">아직 질문이 없어요</div>
+                  ) : (
+                    <div
+                      className="h-12 rounded-xl flex items-center justify-center text-[15px] font-semibold text-white"
+                      style={{ backgroundColor: themeColor }}
+                    >
+                      제출하기
+                    </div>
+                  )}
                 </div>
-                {questions.length === 0 && (
-                  <div className="text-center py-12 text-secondary-500">아직 질문이 없습니다</div>
-                )}
               </div>
             </motion.div>
           </motion.div>
@@ -1731,145 +1768,135 @@ function SurveyEditor() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPublish(false)} />
+            <div className="absolute inset-0 bg-secondary-900/40" onClick={() => setShowPublish(false)} />
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto"
+              initial={{ y: 16, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 16, opacity: 0 }}
+              className={`${modalPanel} max-w-md max-h-[90vh] flex flex-col`}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-secondary-900">설문 배포</h2>
-                <button onClick={() => setShowPublish(false)} className="p-2 rounded-lg hover:bg-secondary-100">
+              <div className="px-6 pt-6 pb-2 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold tracking-tight text-secondary-900">배포하기</h2>
+                  <p className="mt-1 text-[13px] text-secondary-500">응답을 받기 전에 마지막으로 확인해 주세요.</p>
+                </div>
+                <button
+                  onClick={() => setShowPublish(false)}
+                  aria-label="닫기"
+                  className="p-2 -mr-2 -mt-1 rounded-lg text-secondary-500 hover:bg-secondary-100 transition-colors"
+                >
                   <CloseIcon />
                 </button>
               </div>
 
-              <div className="space-y-5">
+              <div className="px-6 overflow-y-auto divide-y divide-secondary-100">
                 {/* Public/Private */}
-                <div className="flex items-center justify-between p-4 bg-secondary-50 rounded-xl">
+                <div className="py-4 flex items-center justify-between gap-4">
                   <div>
-                    <p className="font-medium text-secondary-900">공개 여부</p>
-                    <p className="text-sm text-secondary-500">
-                      {isPublic ? '전체 공개 (누구나 링크로 접근)' : '로그인 필요'}
+                    <p className="text-sm font-medium text-secondary-900">공개 범위</p>
+                    <p className="mt-0.5 text-[13px] text-secondary-500">
+                      {isPublic ? '전체 공개 · 링크만 있으면 누구나 응답해요' : '로그인한 사람만 응답할 수 있어요'}
                     </p>
                   </div>
-                  <button
-                    onClick={() => setIsPublic(!isPublic)}
-                    className={`w-11 h-6 rounded-full transition-colors ${isPublic ? 'bg-primary-500' : 'bg-secondary-300'}`}
-                  >
-                    <div
-                      className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${isPublic ? 'translate-x-5' : 'translate-x-0.5'}`}
-                    />
-                  </button>
+                  <Switch checked={isPublic} onChange={setIsPublic} label="전체 공개" />
                 </div>
 
                 {/* Deadline */}
-                <div className="p-4 bg-secondary-50 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CalendarIcon />
-                    <p className="font-medium text-secondary-900">마감일 설정</p>
-                  </div>
+                <div className="py-4">
+                  <label htmlFor="publish-deadline" className="flex items-center gap-1.5 text-sm font-medium text-secondary-900">
+                    마감일 <span className="text-error">*</span>
+                  </label>
                   <input
+                    id="publish-deadline"
                     type="date"
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-secondary-200 rounded-lg text-sm outline-none focus:border-primary-500"
+                    className={`mt-2 ${inputClass}`}
                   />
                 </div>
 
                 {/* Hashtags */}
-                <div className="p-4 bg-secondary-50 rounded-xl">
-                  <p className="font-medium text-secondary-900 mb-2">해시태그</p>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {hashtags.map((tag) => (
-                      <span key={tag} className="px-2 py-1 rounded-full bg-primary-100 text-primary-700 text-xs">
-                        #{tag}
-                      </span>
-                    ))}
-                    {hashtags.length === 0 && <span className="text-sm text-secondary-400">설정된 태그 없음</span>}
-                  </div>
+                <div className="py-4">
+                  <p className="text-sm font-medium text-secondary-900">해시태그</p>
+                  {hashtags.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {hashtags.map((tag) => (
+                        <span key={tag} className="inline-flex items-center h-7 px-2.5 rounded-md bg-secondary-100 text-xs text-secondary-700">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-[13px] text-secondary-500">아직 없어요. 디자인 패널에서 추가할 수 있어요.</p>
+                  )}
                 </div>
 
                 {/* Email PDF Report */}
-                <div className="p-4 bg-secondary-50 rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <MailIcon />
-                      <p className="font-medium text-secondary-900">자동 이메일 PDF 서비스</p>
+                <div className="py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-secondary-900">응답이 모이면 리포트 받기</p>
+                      <p className="mt-0.5 text-[13px] text-secondary-500">정한 응답 수에 도달하면 분석 결과를 PDF로 보내드려요.</p>
                     </div>
-                    <button
-                      onClick={() => setEnableEmailReport(!enableEmailReport)}
-                      className={`w-11 h-6 rounded-full transition-colors ${enableEmailReport ? 'bg-primary-500' : 'bg-secondary-300'}`}
-                    >
-                      <div
-                        className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${enableEmailReport ? 'translate-x-5' : 'translate-x-0.5'}`}
-                      />
-                    </button>
+                    <Switch checked={enableEmailReport} onChange={setEnableEmailReport} label="리포트 받기" />
                   </div>
                   {enableEmailReport && (
-                    <div className="space-y-3">
+                    <div className="mt-4 space-y-3">
                       <div>
-                        <label className="text-sm text-secondary-600 block mb-1">응답 수 기준 (명)</label>
-                        {/* Quick-pick buttons */}
-                        <div className="flex gap-1.5 mb-2">
+                        <p className="mb-1.5 text-xs font-medium text-secondary-600">응답 수 기준</p>
+                        <div className="grid grid-cols-5 gap-1 p-1 rounded-xl bg-secondary-100">
                           {[10, 50, 100, 200, 500].map((n) => (
                             <button
                               key={n}
                               type="button"
                               onClick={() => setEmailReportThreshold(n)}
-                              className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${
+                              className={`h-8 rounded-lg text-xs font-medium tabular-nums transition-colors ${
                                 emailReportThreshold === n
-                                  ? 'bg-primary-500 text-white border-primary-500'
-                                  : 'bg-white text-secondary-600 border-secondary-200 hover:border-primary-400'
+                                  ? 'bg-white text-secondary-900 shadow-[0_1px_3px_rgba(25,31,40,0.1)]'
+                                  : 'text-secondary-500 hover:text-secondary-800'
                               }`}
                             >
-                              {n}
+                              {n}명
                             </button>
                           ))}
                         </div>
-                        {/* Custom number input */}
                         <input
                           type="number"
                           min={1}
                           value={emailReportThreshold}
                           onChange={(e) => setEmailReportThreshold(Math.max(1, Number(e.target.value) || 1))}
-                          placeholder="직접 입력"
-                          className="w-full px-3 py-2 bg-white border border-secondary-200 rounded-lg text-sm outline-none focus:border-primary-500"
+                          aria-label="응답 수 직접 입력"
+                          className={`mt-2 ${inputClass}`}
                         />
-                        <p className="text-xs text-secondary-400 mt-1">{emailReportThreshold}명 이상 응답 시 PDF 발송</p>
                       </div>
                       <div>
-                        <label className="text-sm text-secondary-600 block mb-1">수신 이메일</label>
+                        <p className="mb-1.5 text-xs font-medium text-secondary-600">받는 이메일</p>
                         <input
                           type="email"
                           value={reportEmail}
                           onChange={(e) => setReportEmail(e.target.value)}
-                          placeholder="email@example.com"
-                          className="w-full px-3 py-2 bg-white border border-secondary-200 rounded-lg text-sm outline-none focus:border-primary-500"
+                          placeholder="name@example.com"
+                          className={inputClass}
                         />
                       </div>
-                      <p className="text-xs text-secondary-500">
-                        설정한 응답 수 달성 시 분석 리포트를 PDF로 자동 발송합니다
-                      </p>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="px-6 py-4 border-t border-secondary-100 flex gap-2">
                 <button
                   onClick={() => setShowPublish(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-secondary-100 text-secondary-700 font-medium hover:bg-secondary-200 transition-colors"
+                  className="flex-1 h-11 rounded-xl border border-secondary-200 text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
                 >
                   취소
                 </button>
                 <button
                   onClick={handlePublish}
                   disabled={isPublishing}
-                  className="flex-1 py-2.5 rounded-xl bg-primary-500 text-white font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 h-11 rounded-xl bg-primary-500 text-sm font-semibold text-white hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isPublishing ? '배포 중...' : '배포하기'}
+                  {isPublishing ? '배포하는 중…' : '배포하기'}
                 </button>
               </div>
             </motion.div>
@@ -1886,67 +1913,87 @@ function SurveyEditor() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
           >
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAIModal(false)} />
+            <div className="absolute inset-0 bg-secondary-900/40" onClick={() => setShowAIModal(false)} />
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col"
+              initial={{ y: 16, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 16, opacity: 0 }}
+              className={`${modalPanel} max-w-md flex flex-col`}
               style={{ maxHeight: '80vh' }}
             >
-              {/* 헤더 */}
-              <div className="flex items-center justify-between p-4 border-b border-secondary-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-secondary-100 flex items-center justify-center text-sm">🤖</div>
-                  <span className="font-semibold text-secondary-900">AI 옵션 생성</span>
+              <div className="flex items-start justify-between gap-3 p-5 border-b border-secondary-100">
+                <div className="flex items-start gap-3">
+                  <span className="w-9 h-9 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0">
+                    <SparkleIcon />
+                  </span>
+                  <div>
+                    <p className="text-[15px] font-semibold text-secondary-900">AI로 질문·보기 만들기</p>
+                    <p className="mt-0.5 text-[13px] text-secondary-500">원하는 내용을 적으면 몇 가지 안을 만들어 드려요.</p>
+                  </div>
                 </div>
-                <button onClick={() => setShowAIModal(false)} className="p-2 rounded-lg hover:bg-secondary-100">
+                <button
+                  onClick={() => setShowAIModal(false)}
+                  aria-label="닫기"
+                  className="p-2 -mr-2 -mt-1 rounded-lg text-secondary-500 hover:bg-secondary-100 transition-colors"
+                >
                   <CloseIcon />
                 </button>
               </div>
 
-              {/* 버전 카드 목록 */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
                 {aiVersions.length === 0 && !isAiLoading && (
-                  <p className="text-sm text-secondary-400 text-center mt-6">원하는 옵션을 설명해주세요.</p>
+                  <p className="py-8 text-center text-sm text-secondary-500">마음에 드는 안을 고르면 질문에 바로 들어가요.</p>
                 )}
                 {aiVersions.map((result, idx) => (
                   <button
+                    // eslint-disable-next-line react/no-array-index-key
                     key={idx}
                     onClick={() => handleSelectVersion(result)}
-                    className="w-full text-left bg-secondary-50 border border-secondary-200 rounded-xl p-4 hover:border-primary-400 hover:bg-primary-50 transition-all"
+                    className="w-full text-left rounded-xl border border-secondary-200 p-4 hover:border-primary-400 hover:bg-primary-50/40 transition-colors"
                   >
-                    <p className="text-xs font-semibold text-secondary-400 mb-1">Ver {String(idx + 1).padStart(2, '0')}</p>
-                    {result.title && (
-                      <p className="text-sm font-medium text-secondary-800 mb-2">{result.title}</p>
-                    )}
-                    <div className="flex flex-wrap gap-2">
+                    <p className="text-xs font-medium text-secondary-500">안 {idx + 1}</p>
+                    {result.title && <p className="mt-1 text-sm font-semibold text-secondary-900">{result.title}</p>}
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
                       {result.choices.map((c, i) => (
-                        <span key={i} className="px-3 py-1 bg-white border border-secondary-200 rounded-full text-sm text-secondary-700 flex items-center gap-1">
-                          <span className="text-secondary-400">×</span> {c}
+                        <span
+                          // eslint-disable-next-line react/no-array-index-key
+                          key={i}
+                          className="inline-flex items-center h-7 px-2.5 rounded-md bg-secondary-100 text-[13px] text-secondary-700"
+                        >
+                          {c}
                         </span>
                       ))}
                     </div>
                   </button>
                 ))}
                 {isAiLoading && (
-                  <div className="text-center text-sm text-secondary-400 py-4">생성 중...</div>
+                  <div className="rounded-xl border border-secondary-200 p-4 space-y-2.5 animate-pulse">
+                    <div className="h-3 w-12 rounded bg-secondary-100" />
+                    <div className="h-4 w-2/3 rounded bg-secondary-100" />
+                    <div className="flex gap-1.5">
+                      <div className="h-7 w-16 rounded-md bg-secondary-100" />
+                      <div className="h-7 w-20 rounded-md bg-secondary-100" />
+                      <div className="h-7 w-14 rounded-md bg-secondary-100" />
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* 입력창 */}
               <div className="p-4 border-t border-secondary-100 flex gap-2">
                 <input
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleAIGenerate(); }}
-                  placeholder="예: 여자 아이돌 춤신춤왕 5개 만들어줘"
-                  className="flex-1 px-4 py-2.5 bg-secondary-50 border border-secondary-200 rounded-xl text-sm outline-none focus:border-primary-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAIGenerate();
+                  }}
+                  placeholder="예: 카페 신메뉴 맛 평가 보기 5개"
+                  className={inputClass}
                 />
                 <button
                   onClick={handleAIGenerate}
                   disabled={!aiPrompt.trim() || isAiLoading}
-                  className="p-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="만들기"
+                  className="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <SendIcon />
                 </button>

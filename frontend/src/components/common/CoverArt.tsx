@@ -50,11 +50,32 @@ interface CoverArtProps {
   title: string;
   category?: string;
   className?: string;
+  compact?: boolean;
 }
 
-export function CoverArt({ title, category, className = '' }: CoverArtProps) {
+export function CoverArt({ title, category, className = '', compact = false }: CoverArtProps) {
   const key = resolveKey(title, category);
   const p = PALETTES[key];
+
+  if (compact) {
+    return (
+      <div
+        aria-hidden
+        className={`relative w-full h-full overflow-hidden flex items-center justify-center ${className}`}
+        style={{
+          backgroundColor: p.bg,
+          backgroundImage: `radial-gradient(${p.soft} 1px, transparent 1px)`,
+          backgroundSize: '8px 8px',
+        }}
+      >
+        <div className="w-6 h-7 rounded-[4px] bg-white shadow-[0_2px_6px_-2px_rgba(25,31,40,0.2)] p-1 flex flex-col gap-[3px]">
+          <span className="h-[3px] w-3/4 rounded-full" style={{ backgroundColor: p.accent }} />
+          <span className="h-[3px] rounded-full bg-secondary-200" />
+          <span className="h-[3px] w-2/3 rounded-full bg-secondary-200" />
+        </div>
+      </div>
+    );
+  }
   const h = hash(title);
   const flip = h % 2 === 0;
   const tilt = ((h >>> 3) % 3) + 2;

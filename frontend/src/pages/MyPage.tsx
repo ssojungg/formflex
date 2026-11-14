@@ -6,6 +6,7 @@ import useInfiniteList from '../hooks/useInfiniteList';
 import { useAuthStore } from '../store/AuthStore';
 import { getIdAPI, patchProfileAPI } from '../api/myprofile';
 import noImage from '../assets/noImage.png';
+import CoverArt from '../components/common/CoverArt';
 
 // Icons
 const DocumentIcon = () => (
@@ -185,74 +186,63 @@ function MyPage() {
     <div className="min-h-full bg-background-secondary">
       <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
         {/* Profile Header */}
-        <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+        <div className="bg-white rounded-2xl border border-secondary-200 p-5 sm:p-6 mb-5">
+          <div className="flex items-center gap-4 sm:gap-5">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 text-xl sm:text-2xl font-bold flex-shrink-0">
               {displayInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-text-primary truncate">
+              <h1 className="text-[22px] font-bold tracking-[-0.02em] text-secondary-900 truncate">
                 {profileName || profileEmail || '사용자'}
               </h1>
-              <p className="text-text-tertiary truncate">{profileEmail}</p>
-              <div className="flex items-center gap-4 mt-2">
-                <span className="text-sm text-text-tertiary">
-                  가입 ID: {userId}
-                </span>
-              </div>
+              <p className="mt-0.5 text-sm text-secondary-500 truncate">{profileEmail}</p>
             </div>
             <button
               onClick={handleOpenEdit}
-              className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary-50 flex items-center gap-2 flex-shrink-0"
+              className="h-9 px-3.5 text-sm font-medium text-secondary-700 border border-secondary-200 rounded-lg hover:bg-secondary-50 flex items-center gap-1.5 flex-shrink-0 transition-colors"
             >
               <EditIcon />
-              프로필 편집
+              <span className="hidden sm:inline">프로필 편집</span>
             </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border-light">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-text-primary">{myFormsTotalCount ?? mySurveys.length}</p>
-              <p className="text-sm text-text-tertiary">생성한 설문</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-text-primary">{myResponsesTotalCount ?? myResponses.length}</p>
-              <p className="text-sm text-text-tertiary">참여한 설문</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-text-primary">
-                {mySurveys.reduce((acc, s) => acc + (s.attendCount || 0), 0)}
-              </p>
-              <p className="text-sm text-text-tertiary">총 응답 수</p>
-            </div>
+          <div className="grid grid-cols-3 gap-px bg-secondary-100 rounded-xl border border-secondary-200 overflow-hidden mt-5 [&>*]:bg-white">
+            {[
+              { label: '만든 설문', value: myFormsTotalCount ?? mySurveys.length },
+              { label: '참여한 설문', value: myResponsesTotalCount ?? myResponses.length },
+              { label: '받은 응답', value: mySurveys.reduce((acc, s) => acc + (s.attendCount || 0), 0) },
+            ].map((s) => (
+              <div key={s.label} className="px-4 py-3.5">
+                <p className="text-[13px] text-secondary-500">{s.label}</p>
+                <p className="mt-0.5 text-[22px] font-bold tracking-tight text-secondary-900 tabular-nums">{s.value}</p>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-          <div className="flex border-b border-border-light">
+        <div className="bg-white rounded-2xl border border-secondary-200 overflow-hidden">
+          <div className="flex gap-6 px-5 sm:px-6 border-b border-secondary-100">
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'text-primary-500 border-b-2 border-primary-500 bg-primary-50/50'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-secondary-50'
+                  className={`relative flex items-center gap-1.5 py-3.5 text-sm font-medium transition-colors ${
+                    isActive ? 'text-secondary-900' : 'text-secondary-500 hover:text-secondary-800'
                   }`}
                 >
-                  <Icon />
+                  <span className="sm:hidden">
+                    <Icon />
+                  </span>
                   <span className="hidden sm:inline">{tab.label}</span>
                   {tab.count !== undefined && (
-                    <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
-                      activeTab === tab.id ? 'bg-primary-100 text-primary-600' : 'bg-secondary-100 text-secondary-600'
-                    }`}>
-                      {tab.count}
-                    </span>
+                    <span className={`text-xs tabular-nums ${isActive ? 'text-primary-500' : 'text-secondary-400'}`}>{tab.count}</span>
                   )}
+                  {isActive && <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-secondary-900" />}
                 </button>
               );
             })}
@@ -286,7 +276,7 @@ function MyPage() {
                           className="p-4 border border-border-light rounded-xl hover:bg-secondary-50 transition-colors"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden flex-shrink-0">
+                            <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-secondary-100">
                               {survey.mainImageUrl ? (
                                 <img
                                   src={survey.mainImageUrl}
@@ -295,17 +285,16 @@ function MyPage() {
                                   onError={(e) => { (e.target as HTMLImageElement).src = noImage; }}
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-primary-400">
-                                  <DocumentIcon />
-                                </div>
+                                <CoverArt title={survey.title} compact />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-medium text-text-primary truncate">{survey.title}</h3>
-                                <span className={`shrink-0 px-2 py-0.5 text-xs rounded ${
-                                  isActive ? 'bg-primary-100 text-primary-700' : 'bg-secondary-100 text-secondary-600'
+                                <span className={`shrink-0 inline-flex items-center gap-1 text-xs font-medium ${
+                                  isActive ? 'text-emerald-600' : 'text-secondary-500'
                                 }`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-success' : 'bg-secondary-300'}`} />
                                   {isActive ? '진행중' : '종료'}
                                 </span>
                               </div>
@@ -379,7 +368,7 @@ function MyPage() {
                         onClick={() => navigate(`/myanswer?userId=${userId}&surveyId=${survey.surveyId}`)}
                         className="flex items-center gap-4 p-4 border border-border-light rounded-xl hover:bg-secondary-50 transition-colors cursor-pointer"
                       >
-                        <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-secondary-100 to-secondary-200 overflow-hidden flex-shrink-0">
+                        <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-secondary-100">
                           {survey.mainImageUrl ? (
                             <img
                               src={survey.mainImageUrl}
@@ -388,9 +377,7 @@ function MyPage() {
                               onError={(e) => { (e.target as HTMLImageElement).src = noImage; }}
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-secondary-400">
-                              <CheckCircleIcon />
-                            </div>
+                            <CoverArt title={survey.title} compact />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -479,7 +466,7 @@ function MyPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-secondary-900/40 z-50"
               onClick={() => setShowEditModal(false)}
             />
             <motion.div
@@ -489,7 +476,7 @@ function MyPage() {
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
               <div
-                className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+                className="bg-white rounded-2xl border border-secondary-200 shadow-modal w-full max-w-md p-6"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Modal Header */}
@@ -505,7 +492,7 @@ function MyPage() {
 
                 {/* Avatar */}
                 <div className="flex justify-center mb-6">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-3xl font-bold">
+                  <div className="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 text-2xl font-bold">
                     {editName ? editName.charAt(0).toUpperCase() : displayInitial}
                   </div>
                 </div>
@@ -575,7 +562,7 @@ function MyPage() {
                   <p className="mt-3 text-sm text-red-500">{editError}</p>
                 )}
                 {editSuccess && (
-                  <p className="mt-3 text-sm text-green-600 font-medium">저장되었습니다!</p>
+                  <p className="mt-3 text-sm text-emerald-600 font-medium">저장했어요</p>
                 )}
 
                 {/* Actions */}

@@ -4,15 +4,7 @@ import { Survey } from '../../types/survey';
 import { useAuthStore } from '../../store/AuthStore';
 import SurveyCoverMenu from '../survey/SurveyCoverMenu';
 import Alert from '../common/Alert';
-
-const DocumentIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-    <path d="M14 2v6h6" />
-    <path d="M16 13H8" />
-    <path d="M16 17H8" />
-  </svg>
-);
+import CoverArt from '../common/CoverArt';
 
 const MoreIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,7 +27,6 @@ export function FormListItem({ survey }: FormListItemProps) {
 
   const isActive = new Date(survey.deadline) > new Date();
   const isMyFormPage = location.pathname.includes('/myform');
-  const completionRate = Math.floor(Math.random() * 30) + 70;
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -89,8 +80,8 @@ export function FormListItem({ survey }: FormListItemProps) {
       >
         {/* Title Column */}
         <div className="col-span-5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary-100 text-primary-500 flex items-center justify-center flex-shrink-0">
-            <DocumentIcon />
+          <div className="w-12 h-9 rounded-md overflow-hidden flex-shrink-0 border border-secondary-100">
+            <CoverArt title={survey.title} compact />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -109,13 +100,9 @@ export function FormListItem({ survey }: FormListItemProps) {
 
         {/* Status Column */}
         <div className="col-span-2">
-          <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium
-            ${isActive 
-              ? 'bg-primary-50 text-primary-600'
-              : 'bg-red-50 text-red-600'}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-primary-500' : 'bg-red-500'}`} />
-            {isActive ? 'Active' : 'Closed'}
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${isActive ? 'text-emerald-600' : 'text-secondary-500'}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-success' : 'bg-secondary-300'}`} />
+            {isActive ? '진행중' : '종료'}
           </span>
         </div>
 
@@ -124,17 +111,9 @@ export function FormListItem({ survey }: FormListItemProps) {
           {(survey.attendCount || 0).toLocaleString()}
         </div>
 
-        {/* Completion Rate Column */}
-        <div className="col-span-2">
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-secondary-100 rounded-full overflow-hidden max-w-[100px]">
-              <div
-                className="h-full bg-primary-500 rounded-full"
-                style={{ width: `${completionRate}%` }}
-              />
-            </div>
-            <span className="text-sm text-text-secondary">{completionRate}%</span>
-          </div>
+        {/* Deadline Column */}
+        <div className="col-span-2 text-sm text-text-secondary">
+          {survey.deadline ? formatDate(survey.deadline) : '—'}
         </div>
 
         {/* Date Column */}

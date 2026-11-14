@@ -16,6 +16,8 @@ import { useAuthStore } from '../store/AuthStore';
 import Loading from '../components/common/Loading';
 import { formatDeadlineDate } from '../utils/formatDeadlineDate';
 import { useNavbarStore } from '../store/NavbarStore';
+import { tint } from '../components/responsetype/QuestionShell';
+import logo from '../assets/logo.svg';
 
 const fontClasses: { [key: string]: string } = {
   pretendard: 'font-pretendardFont',
@@ -50,7 +52,7 @@ function ResponseForm() {
   const surveyId = Number(searchParams.get('id'));
   const myId = useAuthStore((state) => state.userId);
   const myName = useAuthStore((state) => state.userName);
-  const [showError, setShowError] = useState(false);
+  const [errorKind, setErrorKind] = useState<'unanswered' | 'submit' | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const activeItem = useNavbarStore((state) => state.activeItem);
   const [responseSubmit, setResponseSubmit] = useState<ResponseSubmit>({ userId: 0, questions: [] });
@@ -102,7 +104,7 @@ function ResponseForm() {
       queryClient.invalidateQueries({ queryKey: ['surveyData', surveyId], refetchType: 'all' });
       setShowSuccess(true);
     },
-    onError: () => setShowError(true),
+    onError: () => setErrorKind('submit'),
   };
 
   const mutation = useMutation(mutationOptions);
@@ -125,9 +127,10 @@ function ResponseForm() {
         (q.subContent && q.subContent.trim() !== ''),
     );
     if (allAnswered) {
-      await mutation.mutateAsync(responseSubmit);
+      // onError가 실패 안내를 띄우므로 여기서는 거부를 삼킨다.
+      await mutation.mutateAsync(responseSubmit).catch(() => {});
     } else {
-      setShowError(true);
+      setErrorKind('unanswered');
     }
   };
 
@@ -166,7 +169,7 @@ function ResponseForm() {
         type="error"
         message="설문지를 불러오지 못하였습니다."
         buttonText="확인"
-        buttonClick={() => navigate('/all')}
+        buttonClick={() => navigate('/surveys')}
       />
     );
   }
@@ -177,204 +180,221 @@ function ResponseForm() {
     return '/surveys'; // covers 'surveys', old 'all', and all other cases → always return to survey dashboard
   })();
 
+  const accentColor = surveyData.color || '#3182F6';
+  const fontClass = fontClasses[surveyData.font] || fontClasses.pretendard;
+
   if (showSuccess) {
     return (
-      <Alert
-        type="success"
-        message="제출에 성공하였습니다."
-        buttonText="확인"
-        buttonClick={() => navigate(returnPath)}
-      />
+      <div className={`${fontClass} min-h-screen bg-gray-50 flex items-center justify-center px-5`}>
+        <div className="w-full max-w-sm text-center">
+          <span
+            className="mx-auto w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: tint(accentColor, 14), color: accentColor }}
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+          <h1 className="mt-5 text-[24px] font-bold tracking-[-0.02em] text-gray-900">응답해 주셔서 고마워요</h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-gray-500 break-keep">
+            ‘{surveyData.title}’ 응답이 잘 전달됐어요.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate(returnPath)}
+            className="mt-8 w-full h-12 rounded-xl text-[15px] font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: accentColor }}
+          >
+            {returnPath === '/myform' ? '내 설문으로 돌아가기' : '다른 설문 둘러보기'}
+          </button>
+        </div>
+      </div>
     );
   }
 
-  if (showError) {
-    return (
-      <Alert
-        type="error"
-        message="모든 질문에 답변해주세요."
-        buttonText="확인"
-        buttonClick={() => setShowError(false)}
-      />
-    );
-  }
-
-  const accentColor = surveyData.color || '#3182F6';
+  const deadlineText = surveyData.deadline ? formatDeadlineDate(surveyData.deadline) : '';
 
   return (
-    <div
-      className={`${fontClasses[surveyData.font] || fontClasses.pretendard} min-h-screen`}
-      style={{ backgroundColor: `${accentColor}08` }}
-    >
-      {/* Progress Bar (sticky top) */}
+    <div className={`${fontClass} min-h-screen bg-gray-50`}>
+      {/* Progress (sticky top) */}
       {!isViewPage && (
-        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
-          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center gap-3">
-            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="sticky top-0 z-20 bg-white/85 backdrop-blur border-b border-gray-200">
+          <div className="max-w-2xl mx-auto px-5 h-12 flex items-center gap-3">
+            <p className="hidden sm:block flex-1 min-w-0 truncate text-sm font-medium text-gray-700">{surveyData.title}</p>
+            <div className="flex-1 sm:flex-none sm:w-48 h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-500"
+                className="h-full rounded-full transition-[width] duration-500"
                 style={{ width: `${progress}%`, backgroundColor: accentColor }}
               />
             </div>
-            <span className="text-xs font-medium text-gray-400 whitespace-nowrap">
-              {answeredCount} / {totalCount}
+            <span className="text-xs font-medium text-gray-500 tabular-nums whitespace-nowrap">
+              {answeredCount}/{totalCount}
             </span>
           </div>
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
-
-        {/* Cover Image */}
-        {surveyData.mainImageUrl && (
-          <div className="mb-6 rounded-2xl overflow-hidden shadow-sm">
-            <img
-              src={surveyData.mainImageUrl}
-              alt="설문 커버"
-              className="w-full h-48 object-cover"
-            />
-          </div>
-        )}
-
-        {/* Header Card */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-5 border border-gray-100">
-          {/* Color accent bar */}
-          <div className="h-2 w-full" style={{ backgroundColor: accentColor }} />
-
-          <div className="px-7 py-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-3 leading-tight">
+      <main className="max-w-2xl mx-auto px-4 sm:px-5 py-6 sm:py-10 space-y-3">
+        {/* Header card */}
+        <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          {surveyData.mainImageUrl ? (
+            <img src={surveyData.mainImageUrl} alt="설문 커버" className="w-full h-40 sm:h-52 object-cover" />
+          ) : (
+            <div className="h-1.5" style={{ backgroundColor: accentColor }} />
+          )}
+          <div className="px-5 sm:px-7 py-6">
+            <h1 className="text-[24px] sm:text-[28px] font-bold leading-tight tracking-[-0.02em] text-gray-900 break-keep">
               {surveyData.title}
             </h1>
             {surveyData.description && (
-              <p className="text-sm text-gray-500 mb-5 leading-relaxed">{surveyData.description}</p>
+              <p className="mt-3 text-[15px] leading-relaxed text-gray-600 whitespace-pre-line break-keep">
+                {surveyData.description}
+              </p>
             )}
-
-            <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-50">
-              <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-gray-500">
+              <span className="inline-flex items-center gap-1.5">
                 <UserIcon />
-                <span>{surveyData.userName}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                <CalendarIcon />
-                <span>생성일 {formatDeadlineDate(surveyData.createdAt)}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                <CalendarIcon />
-                <span>마감일 {formatDeadlineDate(surveyData.deadline)}</span>
-              </div>
+                {surveyData.userName}
+              </span>
+              {deadlineText && (
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarIcon />
+                  {deadlineText} 마감
+                </span>
+              )}
+              <span>질문 {surveyData.questions.length}개</span>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Questions */}
-        <div className="space-y-4">
-          {surveyData.questions.map((question, index) => {
-            const props = {
-              index: index + 1,
-              question,
-              color: accentColor,
-              buttonStyle: surveyData.buttonStyle,
-              isViewPage,
-            };
+        {surveyData.questions.map((question, index) => {
+          const props = {
+            index: index + 1,
+            question,
+            color: accentColor,
+            buttonStyle: surveyData.buttonStyle,
+            isViewPage,
+          };
 
-            switch (question.type) {
-              case 'MULTIPLE_CHOICE':
+          switch (question.type) {
+            case 'MULTIPLE_CHOICE':
+              return (
+                <ResponseMultipleChoice
+                  key={question.questionId}
+                  {...props}
+                  onOptionSelect={(id) => handleOptionSelect(id, question.questionId)}
+                />
+              );
+            case 'SUBJECTIVE_QUESTION':
+              if (question.format === 'rating') {
                 return (
-                  <ResponseMultipleChoice
-                    key={question.questionId}
-                    {...props}
-                    onOptionSelect={(id) => handleOptionSelect(id, question.questionId)}
-                  />
-                );
-              case 'SUBJECTIVE_QUESTION':
-                if (question.format === 'rating') {
-                  return (
-                    <ResponseRating
-                      key={question.questionId}
-                      {...props}
-                      onSubChange={(res) => handleSubChange(res, question.questionId)}
-                    />
-                  );
-                }
-                if (question.format === 'email') {
-                  return (
-                    <ResponseEmail
-                      key={question.questionId}
-                      {...props}
-                      onSubChange={(res) => handleSubChange(res, question.questionId)}
-                    />
-                  );
-                }
-                if (question.format === 'date') {
-                  return (
-                    <ResponseDate
-                      key={question.questionId}
-                      {...props}
-                      onSubChange={(res) => handleSubChange(res, question.questionId)}
-                    />
-                  );
-                }
-                return (
-                  <ResponseSubjective
+                  <ResponseRating
                     key={question.questionId}
                     {...props}
                     onSubChange={(res) => handleSubChange(res, question.questionId)}
                   />
                 );
-              case 'CHECKBOX':
+              }
+              if (question.format === 'email') {
                 return (
-                  <ResponseCheckBox
+                  <ResponseEmail
                     key={question.questionId}
                     {...props}
-                    onOptionSelect={(opts) => handleCheckBoxSelect(opts, question.questionId)}
+                    onSubChange={(res) => handleSubChange(res, question.questionId)}
                   />
                 );
-              case 'DROPDOWN':
+              }
+              if (question.format === 'date') {
                 return (
-                  <ResponseDropDown
+                  <ResponseDate
                     key={question.questionId}
                     {...props}
-                    onOptionSelect={(id) => handleOptionSelect(id, question.questionId)}
+                    onSubChange={(res) => handleSubChange(res, question.questionId)}
                   />
                 );
-              default:
-                return null;
-            }
-          })}
-        </div>
+              }
+              return (
+                <ResponseSubjective
+                  key={question.questionId}
+                  {...props}
+                  onSubChange={(res) => handleSubChange(res, question.questionId)}
+                />
+              );
+            case 'CHECKBOX':
+              return (
+                <ResponseCheckBox
+                  key={question.questionId}
+                  {...props}
+                  onOptionSelect={(opts) => handleCheckBoxSelect(opts, question.questionId)}
+                />
+              );
+            case 'DROPDOWN':
+              return (
+                <ResponseDropDown
+                  key={question.questionId}
+                  {...props}
+                  onOptionSelect={(id) => handleOptionSelect(id, question.questionId)}
+                />
+              );
+            default:
+              return null;
+          }
+        })}
 
-        {/* Bottom Actions */}
-        <div className="mt-8 flex items-center gap-3">
-          {!isViewPage && (
-            isSurveyOwner ? (
-              <div className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-center bg-gray-100 text-gray-400 border border-gray-200">
-                본인이 만든 설문에는 응답할 수 없습니다
+        {/* Bottom actions */}
+        <div className="pt-4 flex flex-col-reverse sm:flex-row gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(returnPath)}
+            className={`h-12 rounded-xl border border-gray-200 bg-white text-[15px] font-medium text-gray-600 hover:bg-gray-50 transition-colors ${
+              isViewPage ? 'w-full' : 'sm:w-32'
+            }`}
+          >
+            나가기
+          </button>
+          {!isViewPage &&
+            (isSurveyOwner ? (
+              <div className="flex-1 h-12 flex items-center justify-center rounded-xl bg-gray-100 text-sm font-medium text-gray-500">
+                내가 만든 설문에는 응답할 수 없어요
               </div>
             ) : (
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="flex-1 py-3.5 rounded-xl text-sm font-semibold text-white
-                           transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+                disabled={mutation.isPending}
+                className="flex-1 h-12 rounded-xl text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ backgroundColor: accentColor }}
               >
-                제출하기
+                {mutation.isPending ? '보내는 중…' : '제출하기'}
               </button>
-            )
-          )}
-          <button
-            type="button"
-            onClick={() => navigate(returnPath)}
-            className="py-3.5 rounded-xl text-sm font-medium text-gray-500 border border-gray-200
-                       hover:bg-gray-50 transition-colors"
-            style={{ width: isViewPage ? '100%' : '30%' }}
-          >
-            나가기
-          </button>
+            ))}
         </div>
 
-        <p className="text-center text-xs text-gray-300 mt-6 mb-4">Powered by FormFlex</p>
-      </div>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="mx-auto !mt-10 mb-4 flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <img src={logo} alt="" className="w-4 h-4" />
+          FormFlex로 만든 설문
+        </button>
+      </main>
+
+      {errorKind && (
+        <Alert
+          type="error"
+          title={errorKind === 'unanswered' ? '아직 답하지 않은 질문이 있어요' : '제출하지 못했어요'}
+          message={
+            errorKind === 'unanswered'
+              ? '모든 질문에 답한 뒤 다시 제출해 주세요.'
+              : '잠시 후 다시 시도해 주세요. 문제가 계속되면 설문 작성자에게 알려 주세요.'
+          }
+          buttonText="확인"
+          buttonClick={() => setErrorKind(null)}
+          onClose={() => setErrorKind(null)}
+        />
+      )}
     </div>
   );
 }

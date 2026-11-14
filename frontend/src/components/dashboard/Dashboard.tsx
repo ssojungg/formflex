@@ -154,7 +154,7 @@ export function Dashboard({
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-xl md:text-2xl font-semibold text-text-primary">
-            {isMyFormPage ? 'My Forms' : '템플릿 라이브러리'}
+            {isMyFormPage ? '내 설문' : location.pathname.includes('/myresponses') ? '참여한 설문' : '설문 목록'}
           </h1>
         </div>
 
@@ -215,15 +215,15 @@ export function Dashboard({
             <div className="flex bg-secondary-100 rounded-xl p-1">
               {[
                 { value: 'all', label: `전체 (${surveyData.surveys?.length || 0})` },
-                { value: 'active', label: `Active (${activeSurveys})` },
-                { value: 'closed', label: `Closed (${closedSurveys})` },
+                { value: 'active', label: `진행중 (${activeSurveys})` },
+                { value: 'closed', label: `종료 (${closedSurveys})` },
               ].map((tab) => (
                 <button
                   key={tab.value}
                   onClick={() => setFilterStatus(tab.value as FilterStatus)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all
-                    ${filterStatus === tab.value 
-                      ? 'bg-primary-500 text-white' 
+                    ${filterStatus === tab.value
+                      ? 'bg-white text-text-primary shadow-[0_1px_3px_rgba(25,31,40,0.1)]'
                       : 'text-text-secondary hover:text-text-primary'}`}
                 >
                   {tab.label}
@@ -308,7 +308,7 @@ export function Dashboard({
                   <div className="col-span-5">제목</div>
                   <div className="col-span-2">상태</div>
                   <div className="col-span-2">응답 수</div>
-                  <div className="col-span-2">완료율</div>
+                  <div className="col-span-2">마감일</div>
                   <div className="col-span-1">수정일</div>
                 </div>
                 

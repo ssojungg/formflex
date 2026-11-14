@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { QuestionData } from '../../types/questionData';
+import QuestionShell from './QuestionShell';
 
 interface ResponseRatingProps {
   question: QuestionData;
@@ -20,61 +21,39 @@ function ResponseRating({ question, color, index, onSubChange, isViewPage }: Res
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Question Header */}
-      <div className="flex items-center gap-3 px-6 pt-6 pb-4">
-        <span
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold text-white"
-          style={{ backgroundColor: color }}
-        >
-          {index}
-        </span>
-        <div className="flex-1">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">평점</span>
-          <p className="text-base font-semibold text-gray-900 mt-0.5 leading-snug">{question.content}</p>
-        </div>
+    <QuestionShell
+      index={index}
+      color={color}
+      typeLabel={`1~${max}점 중 골라 주세요`}
+      content={question.content}
+      imageUrl={question.imageUrl}
+    >
+      <div className="flex items-center gap-2">
+        {Array.from({ length: max }).map((_, i) => {
+          const value = i + 1;
+          const isSelected = selected === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              disabled={isViewPage}
+              onClick={() => handleSelect(value)}
+              aria-pressed={isSelected}
+              className={`flex-1 h-12 sm:h-14 rounded-xl border flex items-center justify-center text-base font-semibold tabular-nums transition-colors disabled:cursor-not-allowed ${
+                isSelected ? 'text-white' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-300'
+              }`}
+              style={isSelected ? { borderColor: color, backgroundColor: color } : undefined}
+            >
+              {value}
+            </button>
+          );
+        })}
       </div>
-
-      {question.imageUrl && (
-        <div className="px-6 pb-4">
-          <img
-            src={question.imageUrl}
-            alt="질문 이미지"
-            className="rounded-xl max-w-full max-h-64 object-contain"
-          />
-        </div>
-      )}
-
-      {/* Rating Scale */}
-      <div className="px-6 pb-6">
-        <div className="flex items-center justify-between gap-2">
-          {Array.from({ length: max }).map((_, i) => {
-            const value = i + 1;
-            const isSelected = selected === value;
-            return (
-              <button
-                key={value}
-                type="button"
-                disabled={isViewPage}
-                onClick={() => handleSelect(value)}
-                className="flex-1 aspect-square max-h-14 rounded-xl border-2 flex items-center justify-center text-base font-semibold transition-all disabled:cursor-not-allowed"
-                style={{
-                  borderColor: isSelected ? color : '#E5E7EB',
-                  backgroundColor: isSelected ? color : 'white',
-                  color: isSelected ? 'white' : '#9CA3AF',
-                }}
-              >
-                {value}
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex items-center justify-between mt-2 px-1">
-          <span className="text-xs text-gray-400">매우 불만족</span>
-          <span className="text-xs text-gray-400">매우 만족</span>
-        </div>
+      <div className="flex items-center justify-between mt-2 px-0.5 text-xs text-gray-400">
+        <span>매우 불만족</span>
+        <span>매우 만족</span>
       </div>
-    </div>
+    </QuestionShell>
   );
 }
 
